@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
@@ -27,10 +28,13 @@ export default function AppHeader({ user, isAdmin }: Props) {
     <header className="glass mb-5 rounded-2xl p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <img
+          <Image
             alt="Super League logo"
             className="h-24 w-24 rounded-3xl object-cover shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
             src="/super-league-shield-logo.png"
+            width={96}
+            height={96}
+            priority
           />
           <div>
             <p className="mb-1 text-xs uppercase tracking-[0.2em] text-cyan-200/80">World Cup 2026</p>

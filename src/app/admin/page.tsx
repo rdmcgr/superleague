@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import AppHeader from "@/components/AppHeader";
@@ -10,6 +10,23 @@ import { prettyStatus } from "@/lib/format";
 import { supabase } from "@/lib/supabase-browser";
 import type { Chapter, Pick, Profile, Question, ResultTeam, Team } from "@/lib/types";
 import { useAuthResync } from "@/lib/useAuthResync";
+
+function buildGradeState(qs: Question[], rows: ResultTeam[]) {
+  const next: Record<number, { teamIds: number[]; points: number }> = {};
+  for (const q of qs) {
+    next[q.id] = { teamIds: [], points: q.points ?? 10 };
+  }
+  for (const row of rows) {
+    const existing = next[row.question_id];
+    if (existing) {
+      existing.teamIds.push(row.team_id);
+      existing.points = row.points;
+    } else {
+      next[row.question_id] = { teamIds: [row.team_id], points: row.points };
+    }
+  }
+  return next;
+}
 
 export default function AdminPage() {
   useAuthResync();
@@ -21,17 +38,12 @@ export default function AdminPage() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [resultTeams, setResultTeams] = useState<ResultTeam[]>([]);
   const [allPicks, setAllPicks] = useState<Pick[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [gradeState, setGradeState] = useState<Record<number, { teamIds: number[]; points: number }>>({});
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
 
-  useEffect(() => {
-    void loadAdmin();
-  }, []);
-
-  async function loadAdmin() {
+  const loadAdmin = useCallback(async () => {
     setLoading(true);
 
     const {
@@ -73,12 +85,15 @@ export default function AdminPage() {
     setChapters(chaptersRes.data ?? []);
     setQuestions(questionsRes.data ?? []);
     setTeams(teamsRes.data ?? []);
-    setResultTeams(resultTeamsRes.data ?? []);
     setGradeState(buildGradeState(questionsRes.data ?? [], resultTeamsRes.data ?? []));
     setAllProfiles(profilesRes.data ?? []);
     setAllPicks(picksRes.data ?? []);
     setLoading(false);
-  }
+  }, [router]);
+
+  useEffect(() => {
+    void loadAdmin();
+  }, [loadAdmin]);
 
   async function setChapterStatus(chapterId: number, status: Chapter["status"]) {
     setSaving(true);
@@ -122,23 +137,6 @@ export default function AdminPage() {
     }
     setNotice({ text: "Question added.", tone: "success" });
     await loadAdmin();
-  }
-
-  function buildGradeState(qs: Question[], rows: ResultTeam[]) {
-    const next: Record<number, { teamIds: number[]; points: number }> = {};
-    for (const q of qs) {
-      next[q.id] = { teamIds: [], points: q.points ?? 10 };
-    }
-    for (const row of rows) {
-      const existing = next[row.question_id];
-      if (existing) {
-        existing.teamIds.push(row.team_id);
-        existing.points = row.points;
-      } else {
-        next[row.question_id] = { teamIds: [row.team_id], points: row.points };
-      }
-    }
-    return next;
   }
 
   function updateGradeTeams(questionId: number, teamIds: number[]) {
@@ -384,7 +382,7 @@ function QuestionEditor({
   useEffect(() => {
     setText(question.prompt);
     setLabel(question.short_label ?? "");
-  }, [question.prompt]);
+  }, [question.prompt, question.short_label]);
 
   return (
     <article className="rounded-xl border border-white/15 bg-white/5 p-3">

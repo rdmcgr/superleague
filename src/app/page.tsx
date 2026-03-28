@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import AppHeader from "@/components/AppHeader";
@@ -34,11 +34,7 @@ export default function HomePage() {
   const [gradedTeams, setGradedTeams] = useState<Map<number, Set<number>>>(new Map());
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
 
-  useEffect(() => {
-    void loadPage();
-  }, []);
-
-  async function loadPage() {
+  const loadPage = useCallback(async () => {
     setLoading(true);
 
     const {
@@ -94,7 +90,11 @@ export default function HomePage() {
     }
 
     setLoading(false);
-  }
+  }, [router]);
+
+  useEffect(() => {
+    void loadPage();
+  }, [loadPage]);
 
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
 

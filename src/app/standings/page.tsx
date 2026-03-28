@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import AppHeader from "@/components/AppHeader";
@@ -26,11 +26,7 @@ export default function StandingsPage() {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    void load();
-  }, []);
-
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
 
     const {
@@ -75,7 +71,11 @@ export default function StandingsPage() {
       }
     }
     setLoading(false);
-  }
+  }, [router]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   if (loading) {
     return <Loading label="Loading standings..." />;

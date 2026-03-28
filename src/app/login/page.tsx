@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-browser";
 import Notice from "@/components/Notice";
@@ -12,18 +13,18 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    void checkSession();
-  }, []);
-
-  async function checkSession() {
+  const checkSession = useCallback(async () => {
     const {
       data: { session }
     } = await supabase.auth.getSession();
     if (session) {
       router.replace("/");
     }
-  }
+  }, [router]);
+
+  useEffect(() => {
+    void checkSession();
+  }, [checkSession]);
 
   async function googleSignIn() {
     setLoading(true);
@@ -45,10 +46,13 @@ export default function LoginPage() {
     <div className="mx-auto mt-2 max-w-md">
       <div className="glass rounded-2xl p-7">
         <div className="mb-4 flex justify-center">
-          <img
+          <Image
             alt="Super League logo"
             className="h-40 w-40 rounded-2xl object-cover shadow-[0_16px_36px_rgba(0,0,0,0.35)]"
             src="/super-league-shield-logo.png"
+            width={160}
+            height={160}
+            priority
           />
         </div>
         <p className="mb-2 text-xs uppercase tracking-[0.22em] text-cyan-200/80">World Cup 2026</p>
