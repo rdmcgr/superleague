@@ -11,6 +11,7 @@ export type Profile = {
   email: string;
   display_name: string | null;
   avatar_url: string | null;
+  shit_talk: string | null;
   is_admin: boolean;
 };
 

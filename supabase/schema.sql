@@ -7,6 +7,7 @@ create table if not exists public.profiles (
   email text not null,
   display_name text,
   avatar_url text,
+  shit_talk text,
   is_admin boolean not null default false,
   created_at timestamptz not null default now()
 );

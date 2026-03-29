@@ -20,6 +20,7 @@ export default function StandingsPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [rows, setRows] = useState<StandingRow[]>([]);
   const [profileAvatars, setProfileAvatars] = useState<Record<string, string>>({});
+  const [profileShitTalk, setProfileShitTalk] = useState<Record<string, string>>({});
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -48,7 +49,7 @@ export default function StandingsPage() {
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code").order("name"),
-      supabase.from("profiles").select("id,avatar_url")
+      supabase.from("profiles").select("id,avatar_url,shit_talk")
     ]);
 
     if (profileRes.error || standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error) {
@@ -63,12 +64,17 @@ export default function StandingsPage() {
     setQuestions(questionsRes.data ?? []);
     setTeams(teamsRes.data ?? []);
     const avatarMap: Record<string, string> = {};
+    const talkMap: Record<string, string> = {};
     for (const p of avatarsRes.data ?? []) {
       if (p.avatar_url) {
         avatarMap[p.id] = p.avatar_url;
       }
+      if (p.shit_talk) {
+        talkMap[p.id] = p.shit_talk;
+      }
     }
     setProfileAvatars(avatarMap);
+    setProfileShitTalk(talkMap);
 
     const lockedIds = (chaptersRes.data ?? []).filter((c) => c.status !== "open" && c.status !== "draft").map((c) => c.id);
     if (lockedIds.length) {
@@ -176,11 +182,11 @@ export default function StandingsPage() {
                 </select>
               </div>
 
-              {selectedPlayerId ? (
-                <div className="grid gap-3 md:grid-cols-2">
-                  {chapters
-                    .filter((chapter) => chapter.status === "locked" || chapter.status === "graded")
-                    .map((chapter) => (
+            {selectedPlayerId ? (
+              <div className="grid gap-3 md:grid-cols-2">
+                {chapters
+                  .filter((chapter) => chapter.status === "locked" || chapter.status === "graded")
+                  .map((chapter) => (
                     <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3" key={`player-${chapter.id}`}>
                       <p className="mb-2 text-sm font-semibold text-slate-200">{chapter.name}</p>
                       <ul className="space-y-1 text-sm text-slate-300">
@@ -198,13 +204,17 @@ export default function StandingsPage() {
                             </li>
                             );
                           })}
-                      </ul>
-                    </div>
-                  ))}
+                    </ul>
+                  </div>
+                ))}
+                <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3 md:col-span-2">
+                  <p className="mb-2 text-sm font-semibold text-slate-200">Shit Talk</p>
+                  <p className="text-sm text-slate-300">{profileShitTalk[selectedPlayerId] || "—"}</p>
                 </div>
-              ) : (
-                <p className="text-xs text-slate-400">Select a player to view their picks.</p>
-              )}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">Select a player to view their picks.</p>
+            )}
             </section>
           ) : null}
 
