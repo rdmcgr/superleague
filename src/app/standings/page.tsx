@@ -164,14 +164,17 @@ export default function StandingsPage() {
                           const updatedAt = profileShitTalkUpdatedAt[row.user_id];
                           const updatedTs = updatedAt ? new Date(updatedAt).getTime() : 0;
                           const seenTs = seenMap[row.user_id] || 0;
-                          const hasNew = updatedTs > seenTs && Boolean(profileShitTalk[row.user_id]);
+                          const hasTalk = Boolean(profileShitTalk[row.user_id]);
+                          const hasNew = updatedTs > seenTs && hasTalk;
                           const ring = hasNew ? "ring-2 ring-emerald-400/90 ring-offset-2 ring-offset-slate-900/70" : "";
                           return (
                             <button
                               type="button"
                               onClick={() => {
+                                if (!hasTalk) return;
                                 setTalkDetail({ userId: row.user_id });
                               }}
+                              disabled={!hasTalk}
                               className={`rounded-full ${ring}`}
                             >
                           {profileAvatars[row.user_id] ? (
