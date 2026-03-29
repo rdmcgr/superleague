@@ -26,6 +26,7 @@ export default function ShitTalkToast() {
         .from("profiles")
         .select("id,display_name,email,shit_talk_updated_at")
         .not("shit_talk_updated_at", "is", null)
+        .not("shit_talk", "is", null)
         .neq("id", session.user.id)
         .order("shit_talk_updated_at", { ascending: false })
         .limit(1);
@@ -35,6 +36,8 @@ export default function ShitTalkToast() {
       const latest = data[0];
       const latestAt = new Date(latest.shit_talk_updated_at as string).getTime();
       if (latestAt <= seenAt) return;
+      const maxAgeMs = 24 * 60 * 60 * 1000;
+      if (Date.now() - latestAt > maxAgeMs) return;
 
       const name = latest.display_name || latest.email || "Someone";
       setMessage(`New Shit Talk from ${name}.`);
