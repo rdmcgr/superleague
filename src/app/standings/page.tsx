@@ -257,9 +257,12 @@ export default function StandingsPage() {
                           const q = questions.find((q) => q.id === p.question_id);
                           const label = q?.short_label || q?.prompt || "Question";
                           return (
-                            <li key={p.id}>
-                              {(p.profiles?.display_name || p.profiles?.email || "Player") + ` (${label})`}
-                            </li>
+                          <li key={p.id}>
+                            {(() => {
+                              const profile = Array.isArray(p.profiles) ? p.profiles[0] : null;
+                              return (profile?.display_name || profile?.email || "Player") + ` (${label})`;
+                            })()}
+                          </li>
                           );
                         })}
                       </ul>
@@ -286,5 +289,5 @@ type PickWithUser = {
   profiles: {
     display_name: string | null;
     email: string;
-  } | null;
+  }[] | null;
 };
