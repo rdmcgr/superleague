@@ -15,8 +15,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <main className="app-shell">
           {children}
           <footer className="mt-10 text-center text-xs text-slate-300/80">
-            <p>© {year} SUPERLEAGUE.PARTY</p>
-            <p>Made with ❤️ in PDX.</p>
+            <p>© {year} SUPERLEAGUE.PARTY. An OWS joint.</p>
           </footer>
         </main>
       </body>
