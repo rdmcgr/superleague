@@ -43,6 +43,7 @@ export default function AdminPage() {
   const [gradeState, setGradeState] = useState<Record<number, { teamIds: number[]; points: number }>>({});
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string>("");
+  const [cooldownTargetId, setCooldownTargetId] = useState<string>("");
 
   const loadAdmin = useCallback(async () => {
     setLoading(true);
@@ -235,6 +236,27 @@ export default function AdminPage() {
     setSaving(false);
   }
 
+  async function resetShitTalkCooldown() {
+    if (!cooldownTargetId) return;
+    const target = allProfiles.find((p) => p.id === cooldownTargetId);
+    const name = target?.display_name || target?.email || "this user";
+    const ok = window.confirm(`Reset Shit Talk cooldown for ${name}? They can post immediately.`);
+    if (!ok) return;
+
+    setSaving(true);
+    setNotice(null);
+    const res = await supabase.rpc("reset_shit_talk_cooldown_by_admin", { target_user_id: cooldownTargetId });
+    if (res.error) {
+      setNotice({ text: res.error.message, tone: "danger" });
+      setSaving(false);
+      return;
+    }
+    setNotice({ text: "Shit Talk cooldown reset.", tone: "success" });
+    setCooldownTargetId("");
+    await loadAdmin();
+    setSaving(false);
+  }
+
   if (loading) return <Loading label="Loading admin dashboard..." />;
 
   const isAdmin = Boolean(profile?.is_admin);
@@ -383,6 +405,38 @@ export default function AdminPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          </section>
+
+          <section className="glass rounded-2xl p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="section-title">Reset Shit Talk Cooldown</h2>
+              <span className="chip">Admin</span>
+            </div>
+            <p className="mb-3 text-sm text-slate-300">
+              Allows a user to post new Shit Talk immediately.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                className="min-w-[260px] rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                value={cooldownTargetId}
+                onChange={(e) => setCooldownTargetId(e.target.value)}
+              >
+                <option value="">Select user</option>
+                {allProfiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.display_name || p.email}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                disabled={saving || !cooldownTargetId}
+                onClick={() => void resetShitTalkCooldown()}
+              >
+                Reset Cooldown
+              </button>
             </div>
           </section>
 

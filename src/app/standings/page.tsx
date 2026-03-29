@@ -21,6 +21,7 @@ export default function StandingsPage() {
   const [rows, setRows] = useState<StandingRow[]>([]);
   const [profileAvatars, setProfileAvatars] = useState<Record<string, string>>({});
   const [profileShitTalk, setProfileShitTalk] = useState<Record<string, string>>({});
+  const [profileShitTalkUpdatedAt, setProfileShitTalkUpdatedAt] = useState<Record<string, string>>({});
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -50,7 +51,7 @@ export default function StandingsPage() {
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code").order("name"),
-      supabase.from("profiles").select("id,avatar_url,shit_talk")
+      supabase.from("profiles").select("id,avatar_url,shit_talk,shit_talk_updated_at")
     ]);
 
     if (profileRes.error || standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error) {
@@ -66,6 +67,7 @@ export default function StandingsPage() {
     setTeams(teamsRes.data ?? []);
     const avatarMap: Record<string, string> = {};
     const talkMap: Record<string, string> = {};
+    const talkUpdatedMap: Record<string, string> = {};
     for (const p of avatarsRes.data ?? []) {
       if (p.avatar_url) {
         avatarMap[p.id] = p.avatar_url;
@@ -73,9 +75,13 @@ export default function StandingsPage() {
       if (p.shit_talk) {
         talkMap[p.id] = p.shit_talk;
       }
+      if (p.shit_talk_updated_at) {
+        talkUpdatedMap[p.id] = p.shit_talk_updated_at;
+      }
     }
     setProfileAvatars(avatarMap);
     setProfileShitTalk(talkMap);
+    setProfileShitTalkUpdatedAt(talkUpdatedMap);
 
     const lockedIds = (chaptersRes.data ?? []).filter((c) => c.status !== "open" && c.status !== "draft").map((c) => c.id);
     if (lockedIds.length) {
@@ -97,6 +103,24 @@ export default function StandingsPage() {
   if (loading) {
     return <Loading label="Loading standings..." />;
   }
+
+  const seenKey = "shit_talk_seen_by_user";
+  const seenMap: Record<string, number> = (() => {
+    try {
+      const raw = localStorage.getItem(seenKey);
+      return raw ? (JSON.parse(raw) as Record<string, number>) : {};
+    } catch {
+      return {};
+    }
+  })();
+
+  const markSeen = (userId: string) => {
+    const updatedAt = profileShitTalkUpdatedAt[userId];
+    if (!updatedAt) return;
+    const ts = new Date(updatedAt).getTime();
+    const next = { ...seenMap, [userId]: ts };
+    localStorage.setItem(seenKey, JSON.stringify(next));
+  };
 
   return (
     <>
@@ -136,11 +160,20 @@ export default function StandingsPage() {
                     <td className="px-2 py-2 font-semibold">{index + 1}</td>
                     <td className="px-2 py-2">
                       <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setTalkDetail({ userId: row.user_id })}
-                          className="rounded-full"
-                        >
+                        {(() => {
+                          const updatedAt = profileShitTalkUpdatedAt[row.user_id];
+                          const updatedTs = updatedAt ? new Date(updatedAt).getTime() : 0;
+                          const seenTs = seenMap[row.user_id] || 0;
+                          const hasNew = updatedTs > seenTs && Boolean(profileShitTalk[row.user_id]);
+                          const ring = hasNew ? "ring-2 ring-emerald-400/90 ring-offset-2 ring-offset-slate-900/70" : "";
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTalkDetail({ userId: row.user_id });
+                              }}
+                              className={`rounded-full ${ring}`}
+                            >
                           {profileAvatars[row.user_id] ? (
                             <Image
                               alt="Player avatar"
@@ -154,14 +187,15 @@ export default function StandingsPage() {
                               {(row.display_name || "P").slice(0, 1).toUpperCase()}
                             </span>
                           )}
-                        </button>
-                        <button
+                            </button>
+                          );
+                        })()}
+                        <a
                           className="text-left text-slate-100 underline decoration-white/20 hover:decoration-white"
-                          type="button"
-                          onClick={() => setTalkDetail({ userId: row.user_id })}
+                          href={`/players/${row.user_id}`}
                         >
                           {row.display_name || "Player"}
-                        </button>
+                        </a>
                       </div>
                     </td>
                     <td className="px-2 py-2">{row.total_points}</td>
@@ -357,7 +391,14 @@ export default function StandingsPage() {
                             <p className="text-xs text-slate-400">Shit Talk</p>
                           </div>
                         </div>
-                        <button className="btn btn-secondary" type="button" onClick={() => setTalkDetail(null)}>
+                        <button
+                          className="btn btn-secondary"
+                          type="button"
+                          onClick={() => {
+                            markSeen(talkDetail.userId);
+                            setTalkDetail(null);
+                          }}
+                        >
                           Close
                         </button>
                       </div>
