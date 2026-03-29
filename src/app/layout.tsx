@@ -17,7 +17,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
           <ShitTalkToast />
           <footer className="mt-10 text-center text-xs text-slate-300/80">
-            <p>© {year} SUPERLEAGUE.PARTY. An OWS joint.</p>
+            <p>© {year} SUPERLEAGUE.PARTY. AN OWS JOINT.</p>
             <p>Made with ❤️ in PDX.</p>
           </footer>
         </main>

@@ -57,7 +57,7 @@ export default function LoginPage() {
         </div>
         <p className="mb-2 text-xs uppercase tracking-[0.22em] text-cyan-200/80">World Cup 2026</p>
         <h1 className="mb-2 text-2xl font-bold">Super League</h1>
-        <p className="mb-6 text-sm text-slate-300">Join the Super League today! Sign in with your Google account, make your picks, and they will save. Come back anytime before the tourney to change your picks.</p>
+        <p className="mb-6 text-sm text-slate-300">Join the Super League today! Sign in with your Google account, make your picks for the 2026 World Cup, and they will save. Come back anytime before the tourney to change your picks.</p>
 
         {error ? (
           <div className="mb-4">

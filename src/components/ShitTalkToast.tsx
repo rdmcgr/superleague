@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-browser";
 
-const STORAGE_KEY = "shit_talk_toast_seen_at";
+const SEEN_PAGE_KEY = "shit_talk_last_seen_page_at";
 
 export default function ShitTalkToast() {
   const [message, setMessage] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
-  const queueRef = useRef<{ label: string; ts: number }[]>([]);
-  const timeoutRef = useRef<number | undefined>(undefined);
+  const [linkable, setLinkable] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const run = async () => {
@@ -18,7 +19,7 @@ export default function ShitTalkToast() {
       } = await supabase.auth.getSession();
       if (!session) return;
 
-      const seenAtRaw = localStorage.getItem(STORAGE_KEY);
+      const seenAtRaw = localStorage.getItem(SEEN_PAGE_KEY);
       const seenAt = seenAtRaw ? Number(seenAtRaw) : 0;
 
       const { data, error } = await supabase
@@ -26,43 +27,45 @@ export default function ShitTalkToast() {
         .select("id,display_name,email,shit_talk_updated_at")
         .not("shit_talk_updated_at", "is", null)
         .neq("id", session.user.id)
-        .gt("shit_talk_updated_at", new Date(seenAt).toISOString())
-        .order("shit_talk_updated_at", { ascending: true });
+        .order("shit_talk_updated_at", { ascending: false })
+        .limit(1);
 
       if (error || !data || data.length === 0) return;
 
-      queueRef.current = data.map((row) => {
-        const name = row.display_name || row.email || "Someone";
-        const ts = new Date(row.shit_talk_updated_at as string).getTime();
-        return { label: `New Shit Talk from ${name}.`, ts };
-      });
+      const latest = data[0];
+      const latestAt = new Date(latest.shit_talk_updated_at as string).getTime();
+      if (latestAt <= seenAt) return;
 
-      const showNext = () => {
-        const next = queueRef.current.shift();
-        if (!next) return;
-        setMessage(next.label);
-        setVisible(true);
-        localStorage.setItem(STORAGE_KEY, String(next.ts));
-        timeoutRef.current = window.setTimeout(() => {
-          setVisible(false);
-          timeoutRef.current = window.setTimeout(showNext, 500);
-        }, 4500);
-      };
-
-      showNext();
+      const name = latest.display_name || latest.email || "Someone";
+      setMessage(`New Shit Talk from ${name}.`);
+      setLinkable(true);
+      setVisible(true);
     };
 
     void run();
 
-    return () => {
-      if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-    };
   }, []);
 
   if (!message || !visible) return null;
 
   return (
-    <div className="fixed top-5 left-1/2 z-50 w-[92%] max-w-xl -translate-x-1/2 rounded-xl border-2 border-red-400/80 bg-slate-950/95 p-3 text-sm text-slate-100 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+    <div
+      className="fixed top-5 left-1/2 z-50 w-[92%] max-w-xl -translate-x-1/2 rounded-xl border-2 border-red-400/80 bg-slate-950/95 p-3 text-sm text-slate-100 shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
+      role="button"
+      tabIndex={0}
+      onClick={() => {
+        if (!linkable) return;
+        router.push("/shit-talk");
+        setVisible(false);
+      }}
+      onKeyDown={(e) => {
+        if (!linkable) return;
+        if (e.key === "Enter" || e.key === " ") {
+          router.push("/shit-talk");
+          setVisible(false);
+        }
+      }}
+    >
       <div className="flex items-center justify-between gap-3">
         <span>{message}</span>
         <button

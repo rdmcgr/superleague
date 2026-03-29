@@ -82,19 +82,21 @@ export default function AppHeader({ user, isAdmin }: Props) {
 
         {user ? (
           <div className="flex items-center gap-2 text-sm">
-            {avatarUrl ? (
-              <Image
-                alt="User avatar"
-                className="h-8 w-8 rounded-full object-cover"
-                src={avatarUrl}
-                width={32}
-                height={32}
-              />
-            ) : (
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-semibold">
-                {(user.email || "U").slice(0, 1).toUpperCase()}
-              </span>
-            )}
+            <Link className="rounded-full" href="/profile">
+              {avatarUrl ? (
+                <Image
+                  alt="User avatar"
+                  className="h-8 w-8 rounded-full object-cover"
+                  src={avatarUrl}
+                  width={32}
+                  height={32}
+                />
+              ) : (
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-semibold">
+                  {(user.email || "U").slice(0, 1).toUpperCase()}
+                </span>
+              )}
+            </Link>
             <Link className="chip hover:text-white" href="/profile">
               {user.email}
             </Link>

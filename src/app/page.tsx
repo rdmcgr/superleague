@@ -205,7 +205,7 @@ export default function HomePage() {
           <div className="mb-2 flex items-center justify-between">
             <h2 className="section-title">How It Works</h2>
             <div className="flex items-center gap-2">
-              <span className="chip">Super League Rules</span>
+              <span className="chip">Rules</span>
               <button
                 className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
                 onClick={() => setShowHowItWorks(false)}

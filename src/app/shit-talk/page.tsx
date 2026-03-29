@@ -49,7 +49,11 @@ export default function ShitTalkPage() {
     }
 
     setIsAdmin(Boolean(profileRes.data?.is_admin));
-    setUpdates((updatesRes.data ?? []) as ShitTalkUpdate[]);
+    const list = (updatesRes.data ?? []) as ShitTalkUpdate[];
+    setUpdates(list);
+    if (list.length && list[0].shit_talk_updated_at) {
+      localStorage.setItem("shit_talk_last_seen_page_at", String(new Date(list[0].shit_talk_updated_at).getTime()));
+    }
     setLoading(false);
   }, [router]);
 
