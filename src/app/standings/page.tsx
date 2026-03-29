@@ -45,7 +45,7 @@ export default function StandingsPage() {
     setUser(session.user);
 
     const [profileRes, standingsRes, chaptersRes, questionsRes, teamsRes, avatarsRes] = await Promise.all([
-      supabase.from("profiles").select("id,email,display_name,avatar_url,shit_talk,is_admin").eq("id", session.user.id).single(),
+      supabase.from("profiles").select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,is_admin").eq("id", session.user.id).single(),
       supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").order("total_points", { ascending: false }),
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
