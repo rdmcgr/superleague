@@ -12,6 +12,7 @@ export type Profile = {
   display_name: string | null;
   avatar_url: string | null;
   shit_talk: string | null;
+  shit_talk_updated_at: string | null;
   is_admin: boolean;
 };
 

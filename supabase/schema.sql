@@ -8,6 +8,7 @@ create table if not exists public.profiles (
   display_name text,
   avatar_url text,
   shit_talk text,
+  shit_talk_updated_at timestamptz,
   is_admin boolean not null default false,
   created_at timestamptz not null default now()
 );
@@ -152,6 +153,39 @@ create trigger protect_admin_flag_trigger
 before update on public.profiles
 for each row
 execute function public.protect_admin_flag();
+
+create or replace function public.enforce_shit_talk_cooldown()
+returns trigger
+language plpgsql
+as $$
+declare
+  actor_is_admin boolean;
+begin
+  select p.is_admin into actor_is_admin
+  from public.profiles p
+  where p.id = auth.uid();
+
+  if coalesce(actor_is_admin, false) = true then
+    new.shit_talk_updated_at = now();
+    return new;
+  end if;
+
+  if new.shit_talk is distinct from old.shit_talk then
+    if old.shit_talk_updated_at is not null and now() < old.shit_talk_updated_at + interval '24 hours' then
+      raise exception 'Shit talk can only be changed once every 24 hours';
+    end if;
+    new.shit_talk_updated_at = now();
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists enforce_shit_talk_cooldown_trigger on public.profiles;
+create trigger enforce_shit_talk_cooldown_trigger
+before update on public.profiles
+for each row
+execute function public.enforce_shit_talk_cooldown();
 
 -- Chapters, questions, teams, results readable to all authenticated users
 create policy "Chapters readable"

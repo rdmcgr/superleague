@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [shitTalk, setShitTalk] = useState("");
+  const [now, setNow] = useState<Date>(new Date());
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
 
   const loadProfile = useCallback(async () => {
@@ -36,7 +37,7 @@ export default function ProfilePage() {
 
     const profileRes = await supabase
       .from("profiles")
-      .select("id,email,display_name,avatar_url,shit_talk,is_admin")
+      .select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,is_admin")
       .eq("id", session.user.id)
       .single();
 
@@ -55,8 +56,32 @@ export default function ProfilePage() {
     void loadProfile();
   }, [loadProfile]);
 
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const cooldown = useMemo(() => {
+    if (!profile?.shit_talk_updated_at) return { locked: false, remaining: "" };
+    const last = new Date(profile.shit_talk_updated_at);
+    const unlockAt = new Date(last.getTime() + 24 * 60 * 60 * 1000);
+    if (now >= unlockAt) return { locked: false, remaining: "" };
+    const diffMs = unlockAt.getTime() - now.getTime();
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    return { locked: true, remaining: `${pad(hours)}:${pad(minutes)}:${pad(seconds)}` };
+  }, [now, profile?.shit_talk_updated_at]);
+
+  const remainingChars = useMemo(() => 200 - shitTalk.length, [shitTalk.length]);
+
   async function save() {
     if (!profile) return;
+    if (cooldown.locked) {
+      setNotice({ text: "Shit talk can only be changed once every 24 hours.", tone: "danger" });
+      return;
+    }
     setSaving(true);
     setNotice(null);
 
@@ -132,13 +157,22 @@ export default function ProfilePage() {
               value={shitTalk}
               onChange={(e) => setShitTalk(e.target.value)}
               placeholder="Say something memorable. Keep it fun."
+              disabled={cooldown.locked}
             />
           </label>
-          <p className="mt-1 text-xs text-slate-400">Visible to other players. 200 character max.</p>
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+            <span>Visible to other players. 200 character max.</span>
+            <span>{remainingChars} characters remaining</span>
+          </div>
+          {cooldown.locked ? (
+            <p className="mt-1 text-xs text-amber-200">
+              Shit talk locked. You can edit again in {cooldown.remaining}.
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-6">
-          <button className="btn btn-primary" onClick={() => void save()} disabled={saving} type="button">
+          <button className="btn btn-primary" onClick={() => void save()} disabled={saving || cooldown.locked} type="button">
             {saving ? "Saving..." : "Save Shit Talk"}
           </button>
         </div>
