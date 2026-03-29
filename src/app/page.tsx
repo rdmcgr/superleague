@@ -49,7 +49,7 @@ export default function HomePage() {
     setUser(session.user);
 
     const [profileRes, chaptersRes, questionsRes, teamsRes, myPicksRes, resultTeamsRes] = await Promise.all([
-      supabase.from("profiles").select("id,email,display_name,avatar_url,is_admin").eq("id", session.user.id).single(),
+      supabase.from("profiles").select("id,email,display_name,avatar_url,shit_talk,is_admin").eq("id", session.user.id).single(),
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").eq("is_active", true).order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code").order("name"),
