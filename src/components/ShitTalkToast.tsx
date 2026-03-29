@@ -62,11 +62,11 @@ export default function ShitTalkToast() {
   if (!message || !visible) return null;
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 max-w-sm rounded-xl border border-white/15 bg-slate-950/90 p-3 text-sm text-slate-100 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+    <div className="fixed top-5 left-1/2 z-50 w-[92%] max-w-xl -translate-x-1/2 rounded-xl border-2 border-red-400/80 bg-slate-950/95 p-3 text-sm text-slate-100 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
       <div className="flex items-center justify-between gap-3">
         <span>{message}</span>
         <button
-          className="rounded-md border border-white/15 bg-white/10 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200"
+          className="rounded-md border border-red-400/40 bg-red-400/10 px-2 py-1 text-xs uppercase tracking-[0.14em] text-red-100"
           onClick={() => {
             setVisible(false);
           }}
