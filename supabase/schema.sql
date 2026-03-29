@@ -187,6 +187,31 @@ before update on public.profiles
 for each row
 execute function public.enforce_shit_talk_cooldown();
 
+create or replace function public.delete_user_by_admin(target_user_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  actor_is_admin boolean;
+begin
+  select p.is_admin into actor_is_admin
+  from public.profiles p
+  where p.id = auth.uid();
+
+  if coalesce(actor_is_admin, false) = false then
+    raise exception 'Only admins can delete users';
+  end if;
+
+  if target_user_id = auth.uid() then
+    raise exception 'Admins cannot delete themselves';
+  end if;
+
+  delete from auth.users where id = target_user_id;
+end;
+$$;
+
 -- Chapters, questions, teams, results readable to all authenticated users
 create policy "Chapters readable"
 on public.chapters

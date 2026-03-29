@@ -39,6 +39,7 @@ export default function ShitTalkPage() {
         .from("profiles")
         .select("id,display_name,email,avatar_url,shit_talk,shit_talk_updated_at")
         .not("shit_talk", "is", null)
+        .neq("shit_talk", "")
         .order("shit_talk_updated_at", { ascending: false })
     ]);
 
@@ -73,6 +74,7 @@ export default function ShitTalkPage() {
       return;
     }
     setNotice("Shit Talk removed.");
+    setUpdates((prev) => prev.filter((u) => u.id !== userId));
     await load();
   }
 

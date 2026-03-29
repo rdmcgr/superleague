@@ -42,6 +42,7 @@ export default function AdminPage() {
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [gradeState, setGradeState] = useState<Record<number, { teamIds: number[]; points: number }>>({});
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string>("");
 
   const loadAdmin = useCallback(async () => {
     setLoading(true);
@@ -213,6 +214,27 @@ export default function AdminPage() {
     setSaving(false);
   }
 
+  async function deleteUser() {
+    if (!deleteTargetId) return;
+    const target = allProfiles.find((p) => p.id === deleteTargetId);
+    const name = target?.display_name || target?.email || "this user";
+    const ok = window.confirm(`Are you sure you want to permanently delete ${name}? This cannot be undone.`);
+    if (!ok) return;
+
+    setSaving(true);
+    setNotice(null);
+    const res = await supabase.rpc("delete_user_by_admin", { target_user_id: deleteTargetId });
+    if (res.error) {
+      setNotice({ text: res.error.message, tone: "danger" });
+      setSaving(false);
+      return;
+    }
+    setNotice({ text: "User deleted.", tone: "success" });
+    setDeleteTargetId("");
+    await loadAdmin();
+    setSaving(false);
+  }
+
   if (loading) return <Loading label="Loading admin dashboard..." />;
 
   const isAdmin = Boolean(profile?.is_admin);
@@ -361,6 +383,38 @@ export default function AdminPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          </section>
+
+          <section className="glass rounded-2xl p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="section-title">Delete User</h2>
+              <span className="chip">Permanent</span>
+            </div>
+            <p className="mb-3 text-sm text-slate-300">
+              This permanently deletes the user and all their picks. This cannot be undone.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                className="min-w-[260px] rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                value={deleteTargetId}
+                onChange={(e) => setDeleteTargetId(e.target.value)}
+              >
+                <option value="">Select user</option>
+                {allProfiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.display_name || p.email}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="btn btn-danger"
+                type="button"
+                disabled={saving || !deleteTargetId}
+                onClick={() => void deleteUser()}
+              >
+                Delete User
+              </button>
             </div>
           </section>
         </div>
