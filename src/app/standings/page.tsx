@@ -28,7 +28,6 @@ export default function StandingsPage() {
   const [detail, setDetail] = useState<{ chapterId: number; teamId: number } | null>(null);
   const [talkDetail, setTalkDetail] = useState<{ userId: string } | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
-  const [recentUpdates, setRecentUpdates] = useState<ProfileUpdate[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -45,22 +44,16 @@ export default function StandingsPage() {
 
     setUser(session.user);
 
-    const [profileRes, standingsRes, chaptersRes, questionsRes, teamsRes, avatarsRes, updatesRes] = await Promise.all([
+    const [profileRes, standingsRes, chaptersRes, questionsRes, teamsRes, avatarsRes] = await Promise.all([
       supabase.from("profiles").select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,is_admin").eq("id", session.user.id).single(),
       supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").order("total_points", { ascending: false }),
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code").order("name"),
-      supabase.from("profiles").select("id,avatar_url,shit_talk"),
-      supabase
-        .from("profiles")
-        .select("id,display_name,email,shit_talk_updated_at,avatar_url")
-        .not("shit_talk_updated_at", "is", null)
-        .order("shit_talk_updated_at", { ascending: false })
-        .limit(8)
+      supabase.from("profiles").select("id,avatar_url,shit_talk")
     ]);
 
-    if (profileRes.error || standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error || updatesRes.error) {
+    if (profileRes.error || standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error) {
       setError("Could not load standings. Ensure SQL view standings_live exists.");
       setLoading(false);
       return;
@@ -71,7 +64,6 @@ export default function StandingsPage() {
     setChapters(chaptersRes.data ?? []);
     setQuestions(questionsRes.data ?? []);
     setTeams(teamsRes.data ?? []);
-    setRecentUpdates((updatesRes.data ?? []) as ProfileUpdate[]);
     const avatarMap: Record<string, string> = {};
     const talkMap: Record<string, string> = {};
     for (const p of avatarsRes.data ?? []) {
@@ -114,43 +106,6 @@ export default function StandingsPage() {
         <Notice text={error} tone="danger" />
       ) : (
         <section className="glass rounded-2xl p-4">
-          {recentUpdates.length ? (
-            <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">Recent Updates</h3>
-                <span className="chip">Shit Talk</span>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {recentUpdates.map((u) => {
-                  const name = u.display_name || u.email || "Player";
-                  const when = u.shit_talk_updated_at ? new Date(u.shit_talk_updated_at).toLocaleString() : "";
-                  return (
-                    <div key={`update-${u.id}`} className="rounded-lg border border-white/10 bg-slate-950/50 p-3 text-sm">
-                      <div className="flex items-center gap-2">
-                        {u.avatar_url ? (
-                          <Image
-                            alt="Player avatar"
-                            className="h-7 w-7 rounded-full object-cover"
-                            src={u.avatar_url}
-                            width={28}
-                            height={28}
-                          />
-                        ) : (
-                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[10px] font-semibold">
-                            {name.slice(0, 1).toUpperCase()}
-                          </span>
-                        )}
-                        <div>
-                          <p className="font-semibold text-slate-100">{name}</p>
-                          <p className="text-xs text-slate-400">{when}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
           <div className="mb-4 rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-slate-300">
             <p className="mb-1 font-semibold uppercase tracking-[0.14em] text-slate-200">Points available</p>
             {chapters.map((chapter) => {
@@ -427,12 +382,4 @@ type PickWithUser = {
     display_name: string | null;
     email: string;
   }[] | null;
-};
-
-type ProfileUpdate = {
-  id: string;
-  display_name: string | null;
-  email: string;
-  shit_talk_updated_at: string | null;
-  avatar_url: string | null;
 };
