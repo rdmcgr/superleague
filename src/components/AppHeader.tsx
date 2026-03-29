@@ -19,7 +19,11 @@ const links = [
 export default function AppHeader({ user, isAdmin }: Props) {
   const pathname = usePathname();
   const avatarUrl =
-    (user?.user_metadata && (user.user_metadata.avatar_url || user.user_metadata.picture)) || null;
+    (user?.user_metadata && (user.user_metadata.avatar_url || user.user_metadata.picture)) ||
+    (user?.identities &&
+      user.identities[0]?.identity_data &&
+      (user.identities[0].identity_data.avatar_url || user.identities[0].identity_data.picture)) ||
+    null;
 
   async function signOut() {
     await supabase.auth.signOut();
