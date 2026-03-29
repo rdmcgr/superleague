@@ -166,7 +166,13 @@ begin
   where p.id = auth.uid();
 
   if coalesce(actor_is_admin, false) = true then
-    new.shit_talk_updated_at = now();
+    -- Allow admins to reset the cooldown by setting shit_talk_updated_at to NULL.
+    if new.shit_talk_updated_at is null and new.shit_talk is not distinct from old.shit_talk then
+      return new;
+    end if;
+    if new.shit_talk is distinct from old.shit_talk then
+      new.shit_talk_updated_at = now();
+    end if;
     return new;
   end if;
 
