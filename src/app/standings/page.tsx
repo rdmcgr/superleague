@@ -26,6 +26,7 @@ export default function StandingsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [visiblePicks, setVisiblePicks] = useState<PickWithUser[]>([]);
   const [detail, setDetail] = useState<{ chapterId: number; teamId: number } | null>(null);
+  const [talkDetail, setTalkDetail] = useState<{ userId: string } | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
@@ -148,7 +149,13 @@ export default function StandingsPage() {
                             {(row.display_name || "P").slice(0, 1).toUpperCase()}
                           </span>
                         )}
-                        <span>{row.display_name || "Player"}</span>
+                        <button
+                          className="text-left text-slate-100 underline decoration-white/20 hover:decoration-white"
+                          type="button"
+                          onClick={() => setTalkDetail({ userId: row.user_id })}
+                        >
+                          {row.display_name || "Player"}
+                        </button>
                       </div>
                     </td>
                     <td className="px-2 py-2">{row.total_points}</td>
@@ -303,6 +310,54 @@ export default function StandingsPage() {
                           );
                         })}
                       </ul>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          ) : null}
+
+          {talkDetail ? (
+            <div
+              className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-4 sm:items-center"
+              onClick={() => setTalkDetail(null)}
+            >
+              <div
+                className="glass w-full max-w-md rounded-2xl p-5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {(() => {
+                  const row = rows.find((r) => r.user_id === talkDetail.userId);
+                  const message = profileShitTalk[talkDetail.userId] || "—";
+                  return (
+                    <>
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {profileAvatars[talkDetail.userId] ? (
+                            <Image
+                              alt="Player avatar"
+                              className="h-10 w-10 rounded-full object-cover"
+                              src={profileAvatars[talkDetail.userId]}
+                              width={40}
+                              height={40}
+                            />
+                          ) : (
+                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xs font-semibold">
+                              {(row?.display_name || "P").slice(0, 1).toUpperCase()}
+                            </span>
+                          )}
+                          <div>
+                            <h3 className="text-base font-semibold">{row?.display_name || "Player"}</h3>
+                            <p className="text-xs text-slate-400">Shit Talk</p>
+                          </div>
+                        </div>
+                        <button className="btn btn-secondary" type="button" onClick={() => setTalkDetail(null)}>
+                          Close
+                        </button>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3 text-sm text-slate-200">
+                        {message}
+                      </div>
                     </>
                   );
                 })()}
