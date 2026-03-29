@@ -114,7 +114,6 @@ export default function StandingsPage() {
         <Notice text={error} tone="danger" />
       ) : (
         <section className="glass rounded-2xl p-4">
-          <h2 className="section-title mb-4">League Standings</h2>
           {recentUpdates.length ? (
             <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
               <div className="mb-3 flex items-center justify-between">
@@ -165,6 +164,7 @@ export default function StandingsPage() {
               );
             })}
           </div>
+          <h2 className="section-title mb-4">League Standings</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
