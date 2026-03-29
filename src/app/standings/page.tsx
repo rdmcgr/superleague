@@ -8,6 +8,7 @@ import Loading from "@/components/Loading";
 import Notice from "@/components/Notice";
 import { supabase } from "@/lib/supabase-browser";
 import { flagForCode } from "@/lib/flags";
+import Image from "next/image";
 import type { Chapter, Profile, Question, StandingRow, Team } from "@/lib/types";
 import { useAuthResync } from "@/lib/useAuthResync";
 
@@ -18,6 +19,7 @@ export default function StandingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [rows, setRows] = useState<StandingRow[]>([]);
+  const [profileAvatars, setProfileAvatars] = useState<Record<string, string>>({});
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -40,15 +42,16 @@ export default function StandingsPage() {
 
     setUser(session.user);
 
-    const [profileRes, standingsRes, chaptersRes, questionsRes, teamsRes] = await Promise.all([
-      supabase.from("profiles").select("id,email,display_name,is_admin").eq("id", session.user.id).single(),
+    const [profileRes, standingsRes, chaptersRes, questionsRes, teamsRes, avatarsRes] = await Promise.all([
+      supabase.from("profiles").select("id,email,display_name,avatar_url,is_admin").eq("id", session.user.id).single(),
       supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").order("total_points", { ascending: false }),
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
-      supabase.from("teams").select("id,name,code").order("name")
+      supabase.from("teams").select("id,name,code").order("name"),
+      supabase.from("profiles").select("id,avatar_url")
     ]);
 
-    if (profileRes.error || standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error) {
+    if (profileRes.error || standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error) {
       setError("Could not load standings. Ensure SQL view standings_live exists.");
       setLoading(false);
       return;
@@ -59,6 +62,13 @@ export default function StandingsPage() {
     setChapters(chaptersRes.data ?? []);
     setQuestions(questionsRes.data ?? []);
     setTeams(teamsRes.data ?? []);
+    const avatarMap: Record<string, string> = {};
+    for (const p of avatarsRes.data ?? []) {
+      if (p.avatar_url) {
+        avatarMap[p.id] = p.avatar_url;
+      }
+    }
+    setProfileAvatars(avatarMap);
 
     const lockedIds = (chaptersRes.data ?? []).filter((c) => c.status !== "open" && c.status !== "draft").map((c) => c.id);
     if (lockedIds.length) {
@@ -117,7 +127,24 @@ export default function StandingsPage() {
                 {rows.map((row, index) => (
                   <tr className="border-b border-white/10" key={row.user_id}>
                     <td className="px-2 py-2 font-semibold">{index + 1}</td>
-                    <td className="px-2 py-2">{row.display_name || "Player"}</td>
+                    <td className="px-2 py-2">
+                      <div className="flex items-center gap-2">
+                        {profileAvatars[row.user_id] ? (
+                          <Image
+                            alt="Player avatar"
+                            className="h-7 w-7 rounded-full object-cover"
+                            src={profileAvatars[row.user_id]}
+                            width={28}
+                            height={28}
+                          />
+                        ) : (
+                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[10px] font-semibold">
+                            {(row.display_name || "P").slice(0, 1).toUpperCase()}
+                          </span>
+                        )}
+                        <span>{row.display_name || "Player"}</span>
+                      </div>
+                    </td>
                     <td className="px-2 py-2">{row.total_points}</td>
                     <td className="px-2 py-2">{row.correct_picks}</td>
                   </tr>

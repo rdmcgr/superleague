@@ -6,6 +6,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text not null,
   display_name text,
+  avatar_url text,
   is_admin boolean not null default false,
   created_at timestamptz not null default now()
 );
@@ -91,8 +92,9 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, display_name)
+  insert into public.profiles (id, email, display_name, avatar_url)
   values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)))
+        , coalesce(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture')
   on conflict (id) do nothing;
 
   return new;
