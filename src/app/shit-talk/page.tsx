@@ -65,10 +65,7 @@ export default function ShitTalkPage() {
   async function clearShitTalk(userId: string) {
     if (!isAdmin) return;
     setNotice(null);
-    const res = await supabase
-      .from("profiles")
-      .update({ shit_talk: null, shit_talk_updated_at: null })
-      .eq("id", userId);
+    const res = await supabase.rpc("clear_shit_talk_by_admin", { target_user_id: userId });
     if (res.error) {
       setNotice(res.error.message);
       return;

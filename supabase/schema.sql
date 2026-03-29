@@ -212,6 +212,29 @@ begin
 end;
 $$;
 
+create or replace function public.clear_shit_talk_by_admin(target_user_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  actor_is_admin boolean;
+begin
+  select p.is_admin into actor_is_admin
+  from public.profiles p
+  where p.id = auth.uid();
+
+  if coalesce(actor_is_admin, false) = false then
+    raise exception 'Only admins can clear shit talk';
+  end if;
+
+  update public.profiles
+  set shit_talk = null, shit_talk_updated_at = null
+  where id = target_user_id;
+end;
+$$;
+
 -- Chapters, questions, teams, results readable to all authenticated users
 create policy "Chapters readable"
 on public.chapters
