@@ -79,8 +79,11 @@ export default function ProfilePage() {
   async function save() {
     if (!profile) return;
     if (cooldown.locked) {
-      setNotice({ text: "Shit talk can only be changed once every 24 hours.", tone: "danger" });
-      return;
+      await loadProfile();
+      if (cooldown.locked) {
+        setNotice({ text: "Shit talk can only be changed once every 24 hours.", tone: "danger" });
+        return;
+      }
     }
     setSaving(true);
     setNotice(null);
