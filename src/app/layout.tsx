@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ShitTalkToast from "@/components/ShitTalkToast";
 
 export const metadata: Metadata = {
   title: "World Cup 2026 Super League",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <main className="app-shell">
           {children}
+          <ShitTalkToast />
           <footer className="mt-10 text-center text-xs text-slate-300/80">
             <p>© {year} SUPERLEAGUE.PARTY. An OWS joint.</p>
             <p>Made with ❤️ in PDX.</p>
