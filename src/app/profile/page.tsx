@@ -61,6 +61,16 @@ export default function ProfilePage() {
     return () => clearInterval(t);
   }, []);
 
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        void loadProfile();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [loadProfile]);
+
   const cooldown = useMemo(() => {
     if (!profile?.shit_talk_updated_at) return { locked: false, remaining: "" };
     const last = new Date(profile.shit_talk_updated_at);
