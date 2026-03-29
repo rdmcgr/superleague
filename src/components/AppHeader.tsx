@@ -13,8 +13,7 @@ type Props = {
 
 const links = [
   { href: "/", label: "Picks" },
-  { href: "/standings", label: "Standings" },
-  { href: "/profile", label: "Profile" }
+  { href: "/standings", label: "Standings" }
 ];
 
 export default function AppHeader({ user, isAdmin }: Props) {
@@ -91,7 +90,9 @@ export default function AppHeader({ user, isAdmin }: Props) {
                 {(user.email || "U").slice(0, 1).toUpperCase()}
               </span>
             )}
-            <span className="chip">{user.email}</span>
+            <Link className="chip hover:text-white" href="/profile">
+              {user.email}
+            </Link>
             <button className="btn btn-secondary" onClick={signOut} type="button">
               Sign Out
             </button>

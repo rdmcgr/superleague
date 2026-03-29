@@ -15,10 +15,8 @@ export default function ProfilePage() {
   useAuthResync();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [displayName, setDisplayName] = useState("");
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
 
   const loadProfile = useCallback(async () => {
@@ -47,34 +45,12 @@ export default function ProfilePage() {
     }
 
     setProfile(profileRes.data);
-    setDisplayName(profileRes.data.display_name ?? "");
     setLoading(false);
   }, [router]);
 
   useEffect(() => {
     void loadProfile();
   }, [loadProfile]);
-
-  async function save() {
-    if (!profile) return;
-    setSaving(true);
-    setNotice(null);
-
-    const res = await supabase
-      .from("profiles")
-      .update({ display_name: displayName.trim() || null })
-      .eq("id", profile.id);
-
-    if (res.error) {
-      setNotice({ text: res.error.message, tone: "danger" });
-      setSaving(false);
-      return;
-    }
-
-    setNotice({ text: "Profile updated.", tone: "success" });
-    await loadProfile();
-    setSaving(false);
-  }
 
   if (loading) return <Loading label="Loading profile..." />;
 
@@ -100,7 +76,7 @@ export default function ProfilePage() {
           )}
           <div>
             <h1 className="text-2xl font-bold">Your Profile</h1>
-            <p className="text-sm text-slate-300">Update how your name appears to others.</p>
+            <p className="text-sm text-slate-300">Your Google profile name and avatar.</p>
           </div>
         </div>
 
@@ -117,17 +93,11 @@ export default function ProfilePage() {
           <label className="text-sm text-slate-300">
             Display name
             <input
-              className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm text-slate-400"
+              value={profile?.display_name || ""}
+              disabled
             />
           </label>
-        </div>
-
-        <div className="mt-6">
-          <button className="btn btn-primary" onClick={() => void save()} disabled={saving} type="button">
-            {saving ? "Saving..." : "Save Profile"}
-          </button>
         </div>
       </section>
     </>
