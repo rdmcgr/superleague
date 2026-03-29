@@ -1,12 +1,39 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { User } from "@supabase/supabase-js";
 import AppHeader from "@/components/AppHeader";
+import { supabase } from "@/lib/supabase-browser";
+import { useAuthResync } from "@/lib/useAuthResync";
 
 export default function PaymentPage() {
+  useAuthResync();
+  const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+      if (!session) return;
+      setUser(session.user);
+      const profileRes = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", session.user.id)
+        .single();
+      if (!profileRes.error) {
+        setIsAdmin(Boolean(profileRes.data?.is_admin));
+      }
+    };
+    void load();
+  }, []);
+
   return (
     <>
-      <AppHeader user={null} isAdmin={false} />
+      <AppHeader user={user} isAdmin={isAdmin} />
       <section className="glass rounded-2xl p-6">
         <h1 className="mb-2 text-2xl font-bold">Entry Fee Payment</h1>
         <p className="mb-6 text-sm text-slate-300">
