@@ -287,6 +287,7 @@ select
 from public.profiles p
 left join public.picks pk on pk.user_id = p.id
 left join public.result_teams rt on rt.question_id = pk.question_id and rt.team_id = pk.team_id
+where p.is_admin = false
 group by p.id, p.display_name, p.email;
 
 grant select on public.standings_live to authenticated;

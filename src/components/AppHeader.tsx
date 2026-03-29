@@ -18,6 +18,8 @@ const links = [
 
 export default function AppHeader({ user, isAdmin }: Props) {
   const pathname = usePathname();
+  const avatarUrl =
+    (user?.user_metadata && (user.user_metadata.avatar_url || user.user_metadata.picture)) || null;
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -71,6 +73,19 @@ export default function AppHeader({ user, isAdmin }: Props) {
 
         {user ? (
           <div className="flex items-center gap-2 text-sm">
+            {avatarUrl ? (
+              <Image
+                alt="User avatar"
+                className="h-8 w-8 rounded-full object-cover"
+                src={avatarUrl}
+                width={32}
+                height={32}
+              />
+            ) : (
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-semibold">
+                {(user.email || "U").slice(0, 1).toUpperCase()}
+              </span>
+            )}
             <span className="chip">{user.email}</span>
             <button className="btn btn-secondary" onClick={signOut} type="button">
               Sign Out
