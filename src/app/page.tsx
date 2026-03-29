@@ -33,6 +33,7 @@ export default function HomePage() {
   const [allVisiblePicks, setAllVisiblePicks] = useState<PickWithUser[]>([]);
   const [gradedTeams, setGradedTeams] = useState<Map<number, Set<number>>>(new Map());
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
+  const [showHowItWorks, setShowHowItWorks] = useState(true);
 
   const loadPage = useCallback(async () => {
     setLoading(true);
@@ -199,27 +200,38 @@ export default function HomePage() {
 
       {notice ? <div className="mb-4"><Notice text={notice.text} tone={notice.tone} /></div> : null}
 
-      <section className="glass mb-6 rounded-2xl p-4">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="section-title">How It Works</h2>
-          <span className="chip">Super League Rules</span>
-        </div>
-        <ul className="space-y-2 text-sm text-slate-200/90">
-          <li>Pick one team per question. Each team can be used only once per stage.</li>
-          <li>Stages open one at a time. Group Stage picks due by June 8th, Knockout Stage picks due by June 28th.</li>
-          <li>Picks lock and become visible to all participants when the stage locks.</li>
-          <li>Correct answer point value varies by quesiton.</li>
-          <li>
-            One entry per person -- $40 fee to enter.{" "}
-            <a
-              className="inline-flex items-center rounded-md border border-cyan-200/40 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100 hover:bg-cyan-200/20"
-              href="/payment"
-            >
-              Venmo
-            </a>
-          </li>
-        </ul>
-      </section>
+      {showHowItWorks ? (
+        <section className="glass mb-6 rounded-2xl p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="section-title">How It Works</h2>
+            <div className="flex items-center gap-2">
+              <span className="chip">Super League Rules</span>
+              <button
+                className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+                onClick={() => setShowHowItWorks(false)}
+                type="button"
+              >
+                Hide
+              </button>
+            </div>
+          </div>
+          <ul className="space-y-2 text-sm text-slate-200/90">
+            <li>Pick one team per question. Each team can be used only once per stage.</li>
+            <li>Stages open one at a time. Group Stage picks due by June 8th, Knockout Stage picks due by June 28th.</li>
+            <li>Picks lock and become visible to all participants when the stage locks.</li>
+            <li>Correct answer point value varies by quesiton.</li>
+            <li>
+              One entry per person -- $40 fee to enter.{" "}
+              <a
+                className="inline-flex items-center rounded-md border border-cyan-200/40 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100 hover:bg-cyan-200/20"
+                href="/payment"
+              >
+                Venmo
+              </a>
+            </li>
+          </ul>
+        </section>
+      ) : null}
 
       {chapters.map((chapter) => {
         const qs = chapterQuestions(chapter.id);

@@ -18,6 +18,7 @@ export default function ShitTalkPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [updates, setUpdates] = useState<ShitTalkUpdate[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -56,12 +57,28 @@ export default function ShitTalkPage() {
     void load();
   }, [load]);
 
+  async function clearShitTalk(userId: string) {
+    if (!isAdmin) return;
+    setNotice(null);
+    const res = await supabase
+      .from("profiles")
+      .update({ shit_talk: null, shit_talk_updated_at: null })
+      .eq("id", userId);
+    if (res.error) {
+      setNotice(res.error.message);
+      return;
+    }
+    setNotice("Shit Talk removed.");
+    await load();
+  }
+
   if (loading) return <Loading label="Loading shit talk..." />;
 
   return (
     <>
       <AppHeader user={user} isAdmin={isAdmin} />
       {error ? <Notice text={error} tone="danger" /> : null}
+      {notice ? <div className="mb-3"><Notice text={notice} tone="success" /></div> : null}
 
       <section className="glass rounded-2xl p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -95,6 +112,15 @@ export default function ShitTalkPage() {
                       <p className="text-xs text-slate-400">{when}</p>
                     </div>
                   </div>
+                  {isAdmin ? (
+                    <button
+                      className="rounded-md border border-red-400/40 bg-red-400/10 px-2 py-1 text-xs uppercase tracking-[0.14em] text-red-100"
+                      onClick={() => void clearShitTalk(u.id)}
+                      type="button"
+                    >
+                      Remove
+                    </button>
+                  ) : null}
                 </div>
                 <p className="text-sm text-slate-200">{u.shit_talk}</p>
               </article>

@@ -55,7 +55,9 @@ export default function AppHeader({ user, isAdmin }: Props) {
             return (
               <Link
                 className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                  active ? "bg-white/20 text-white" : "bg-white/10 text-slate-200 hover:bg-white/15"
+                  active
+                    ? "bg-white/20 text-white ring-2 ring-red-400/80"
+                    : "bg-white/10 text-slate-200 hover:bg-white/15"
                 }`}
                 key={link.href}
                 href={link.href}
@@ -67,7 +69,9 @@ export default function AppHeader({ user, isAdmin }: Props) {
           {isAdmin ? (
             <Link
               className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                pathname === "/admin" ? "bg-white/20 text-white" : "bg-white/10 text-slate-200 hover:bg-white/15"
+                pathname === "/admin"
+                  ? "bg-white/20 text-white ring-2 ring-red-400/80"
+                  : "bg-white/10 text-slate-200 hover:bg-white/15"
               }`}
               href="/admin"
             >
