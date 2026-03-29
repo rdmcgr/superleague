@@ -51,7 +51,7 @@ export default function HomePage() {
     const [profileRes, chaptersRes, questionsRes, teamsRes, myPicksRes, resultTeamsRes] = await Promise.all([
       supabase.from("profiles").select("id,email,display_name,is_admin").eq("id", session.user.id).single(),
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
-      supabase.from("questions").select("id,chapter_id,prompt,order_index,points,is_active").eq("is_active", true).order("chapter_id").order("order_index"),
+      supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").eq("is_active", true).order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code").order("name"),
       supabase.from("picks").select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at").eq("user_id", session.user.id),
       supabase.from("result_teams").select("question_id,team_id")
