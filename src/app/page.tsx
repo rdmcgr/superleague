@@ -16,7 +16,7 @@ type PickWithUser = Pick & {
   profiles: {
     display_name: string | null;
     email: string;
-  } | null;
+  }[] | null;
 };
 
 export default function HomePage() {
@@ -303,7 +303,10 @@ export default function HomePage() {
                             .filter((p) => p.question_id === q.id)
                             .map((p) => (
                               <li key={p.id}>
-                                {(p.profiles?.display_name || p.profiles?.email || "Player") + ": "}
+                                {(() => {
+                                  const profile = Array.isArray(p.profiles) ? p.profiles[0] : null;
+                                  return (profile?.display_name || profile?.email || "Player") + ": ";
+                                })()}
                                 {(() => {
                                   const team = teamMap.get(p.team_id);
                                   if (!team) return "Unknown";
