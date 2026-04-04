@@ -37,7 +37,7 @@ export default function ProfilePage() {
 
     const profileRes = await supabase
       .from("profiles")
-      .select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,is_admin")
+      .select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
       .eq("id", session.user.id)
       .single();
 
@@ -48,6 +48,10 @@ export default function ProfilePage() {
     }
 
     setProfile(profileRes.data);
+    if (!profileRes.data.invite_code_used && !profileRes.data.is_admin) {
+      router.replace("/invite");
+      return;
+    }
     setShitTalk(profileRes.data.shit_talk ?? "");
     setLoading(false);
   }, [router]);

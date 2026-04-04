@@ -13,6 +13,8 @@ export type Profile = {
   avatar_url: string | null;
   shit_talk: string | null;
   shit_talk_updated_at: string | null;
+  invite_code_used: string | null;
+  invite_approved_at: string | null;
   is_admin: boolean;
 };
 

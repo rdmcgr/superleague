@@ -45,8 +45,25 @@ export default function StandingsPage() {
 
     setUser(session.user);
 
-    const [profileRes, standingsRes, chaptersRes, questionsRes, teamsRes, avatarsRes] = await Promise.all([
-      supabase.from("profiles").select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,is_admin").eq("id", session.user.id).single(),
+    const profileRes = await supabase
+      .from("profiles")
+      .select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profileRes.error) {
+      setError("Could not load standings. Ensure SQL view standings_live exists.");
+      setLoading(false);
+      return;
+    }
+
+    setProfile(profileRes.data);
+    if (!profileRes.data.invite_code_used && !profileRes.data.is_admin) {
+      router.replace("/invite");
+      return;
+    }
+
+    const [standingsRes, chaptersRes, questionsRes, teamsRes, avatarsRes] = await Promise.all([
       supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").order("total_points", { ascending: false }),
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
@@ -54,13 +71,11 @@ export default function StandingsPage() {
       supabase.from("profiles").select("id,avatar_url,shit_talk,shit_talk_updated_at")
     ]);
 
-    if (profileRes.error || standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error) {
+    if (standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error) {
       setError("Could not load standings. Ensure SQL view standings_live exists.");
       setLoading(false);
       return;
     }
-
-    setProfile(profileRes.data);
     setRows(standingsRes.data ?? []);
     setChapters(chaptersRes.data ?? []);
     setQuestions(questionsRes.data ?? []);

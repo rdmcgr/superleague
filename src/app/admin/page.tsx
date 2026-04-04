@@ -59,18 +59,34 @@ export default function AdminPage() {
 
     setUser(session.user);
 
-    const [profileRes, chaptersRes, questionsRes, teamsRes, resultTeamsRes, profilesRes, picksRes] = await Promise.all([
-      supabase.from("profiles").select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,is_admin").eq("id", session.user.id).single(),
+    const profileRes = await supabase
+      .from("profiles")
+      .select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profileRes.error) {
+      setNotice({ text: "Could not load admin data.", tone: "danger" });
+      setLoading(false);
+      return;
+    }
+
+    setProfile(profileRes.data);
+    if (!profileRes.data.is_admin && !profileRes.data.invite_code_used) {
+      router.replace("/invite");
+      return;
+    }
+
+    const [chaptersRes, questionsRes, teamsRes, resultTeamsRes, profilesRes, picksRes] = await Promise.all([
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code").order("name"),
       supabase.from("result_teams").select("question_id,team_id,points"),
-      supabase.from("profiles").select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,is_admin").order("created_at"),
+      supabase.from("profiles").select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin").order("created_at"),
       supabase.from("picks").select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at")
     ]);
 
     if (
-      profileRes.error ||
       chaptersRes.error ||
       questionsRes.error ||
       teamsRes.error ||
@@ -82,8 +98,6 @@ export default function AdminPage() {
       setLoading(false);
       return;
     }
-
-    setProfile(profileRes.data);
     setChapters(chaptersRes.data ?? []);
     setQuestions(questionsRes.data ?? []);
     setTeams(teamsRes.data ?? []);

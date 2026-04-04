@@ -42,8 +42,25 @@ export default function PlayerProfilePage() {
 
     setUser(session.user);
 
-    const [viewerRes, profileRes, chaptersRes, questionsRes, teamsRes, standingRes] = await Promise.all([
-      supabase.from("profiles").select("is_admin").eq("id", session.user.id).single(),
+    const viewerRes = await supabase
+      .from("profiles")
+      .select("is_admin,invite_code_used,invite_approved_at")
+      .eq("id", session.user.id)
+      .single();
+
+    if (viewerRes.error) {
+      setError("Could not load player profile.");
+      setLoading(false);
+      return;
+    }
+
+    setIsAdmin(Boolean(viewerRes.data?.is_admin));
+    if (!viewerRes.data?.invite_code_used && !viewerRes.data?.is_admin) {
+      router.replace("/invite");
+      return;
+    }
+
+    const [profileRes, chaptersRes, questionsRes, teamsRes, standingRes] = await Promise.all([
       supabase
         .from("profiles")
         .select("id,email,display_name,avatar_url,shit_talk")
@@ -55,13 +72,11 @@ export default function PlayerProfilePage() {
       supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").eq("user_id", userId).maybeSingle()
     ]);
 
-    if (viewerRes.error || profileRes.error || chaptersRes.error || questionsRes.error || teamsRes.error) {
+    if (profileRes.error || chaptersRes.error || questionsRes.error || teamsRes.error) {
       setError("Could not load player profile.");
       setLoading(false);
       return;
     }
-
-    setIsAdmin(Boolean(viewerRes.data?.is_admin));
     setProfile(profileRes.data as PlayerProfile);
     setChapters(chaptersRes.data ?? []);
     setQuestions(questionsRes.data ?? []);

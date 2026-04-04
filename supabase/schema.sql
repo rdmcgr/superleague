@@ -9,9 +9,19 @@ create table if not exists public.profiles (
   avatar_url text,
   shit_talk text,
   shit_talk_updated_at timestamptz,
+  invite_code_used text,
+  invite_approved_at timestamptz,
   is_admin boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+create table if not exists public.invite_codes (
+  code text primary key,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+alter table public.invite_codes enable row level security;
 
 create table if not exists public.chapters (
   id bigint generated always as identity primary key,
@@ -121,7 +131,17 @@ alter table public.result_teams enable row level security;
 create policy "Profiles readable by authenticated users"
 on public.profiles
 for select
-using (auth.role() = 'authenticated');
+using (
+  auth.role() = 'authenticated'
+  and (
+    auth.uid() = id
+    or exists (
+      select 1 from public.profiles p
+      where p.id = auth.uid()
+        and (p.invite_code_used is not null or p.is_admin)
+    )
+  )
+);
 
 create policy "Users can update own profile"
 on public.profiles
@@ -268,27 +288,57 @@ $$;
 create policy "Chapters readable"
 on public.chapters
 for select
-using (auth.role() = 'authenticated');
+using (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
 
 create policy "Questions readable"
 on public.questions
 for select
-using (auth.role() = 'authenticated');
+using (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
 
 create policy "Teams readable"
 on public.teams
 for select
-using (auth.role() = 'authenticated');
+using (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
 
 create policy "Results readable"
 on public.results
 for select
-using (auth.role() = 'authenticated');
+using (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
 
 create policy "Result teams readable"
 on public.result_teams
 for select
-using (auth.role() = 'authenticated');
+using (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
 
 -- Admin write policies
 create policy "Admin can manage chapters"
@@ -325,7 +375,14 @@ with check (exists (select 1 from public.profiles p where p.id = auth.uid() and 
 create policy "Users can read own picks anytime"
 on public.picks
 for select
-using (user_id = auth.uid());
+using (
+  user_id = auth.uid()
+  and exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
 
 create policy "All users can read picks after chapter locked"
 on public.picks
@@ -336,6 +393,11 @@ using (
     from public.chapters c
     where c.id = picks.chapter_id
       and c.status in ('locked', 'graded')
+  )
+  and exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
   )
 );
 
@@ -355,6 +417,11 @@ with check (
       and q.chapter_id = chapter_id
       and q.is_active = true
   )
+  and exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
 );
 
 create policy "Users can update own picks in open chapter"
@@ -367,6 +434,11 @@ using (
     where c.id = picks.chapter_id
       and c.status = 'open'
   )
+  and exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
 )
 with check (
   user_id = auth.uid()
@@ -374,6 +446,11 @@ with check (
     select 1 from public.chapters c
     where c.id = chapter_id
       and c.status = 'open'
+  )
+  and exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
   )
 );
 
@@ -387,7 +464,64 @@ using (
     where c.id = picks.chapter_id
       and c.status = 'open'
   )
+  and exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
 );
+
+create or replace function public.redeem_invite_code(input_code text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from public.invite_codes c
+    where c.code = input_code and c.is_active = true
+  ) then
+    raise exception 'Invalid invite code';
+  end if;
+
+  update public.profiles
+  set invite_code_used = input_code, invite_approved_at = now()
+  where id = auth.uid();
+end;
+$$;
+
+create or replace function public.enforce_invite_code_change()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.invite_code_used is distinct from old.invite_code_used then
+    if new.invite_code_used is null then
+      return new;
+    end if;
+    if not exists (
+      select 1 from public.invite_codes c
+      where c.code = new.invite_code_used and c.is_active = true
+    ) then
+      raise exception 'Invalid invite code';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists enforce_invite_code_change_trigger on public.profiles;
+create trigger enforce_invite_code_change_trigger
+before update on public.profiles
+for each row
+execute function public.enforce_invite_code_change();
+
+insert into public.invite_codes (code, is_active)
+values
+  ('moorefun', true),
+  ('superbedparty', true)
+on conflict (code) do nothing;
 
 create or replace view public.standings_live
 with (security_invoker = true)
@@ -401,7 +535,7 @@ select
 from public.profiles p
 left join public.picks pk on pk.user_id = p.id
 left join public.result_teams rt on rt.question_id = pk.question_id and rt.team_id = pk.team_id
-where p.is_admin = false
+where p.is_admin = false and p.invite_code_used is not null
 group by p.id, p.display_name, p.email;
 
 grant select on public.standings_live to authenticated;

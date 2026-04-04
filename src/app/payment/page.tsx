@@ -21,11 +21,15 @@ export default function PaymentPage() {
       setUser(session.user);
       const profileRes = await supabase
         .from("profiles")
-        .select("is_admin")
+        .select("is_admin,invite_code_used,invite_approved_at")
         .eq("id", session.user.id)
         .single();
       if (!profileRes.error) {
         setIsAdmin(Boolean(profileRes.data?.is_admin));
+        if (!profileRes.data?.invite_code_used && !profileRes.data?.is_admin) {
+          window.location.href = "/invite";
+          return;
+        }
       }
     };
     void load();

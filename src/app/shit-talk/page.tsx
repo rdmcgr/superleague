@@ -33,23 +33,36 @@ export default function ShitTalkPage() {
 
     setUser(session.user);
 
-    const [profileRes, updatesRes] = await Promise.all([
-      supabase.from("profiles").select("is_admin").eq("id", session.user.id).single(),
-      supabase
-        .from("profiles")
-        .select("id,display_name,email,avatar_url,shit_talk,shit_talk_updated_at")
-        .not("shit_talk", "is", null)
-        .neq("shit_talk", "")
-        .order("shit_talk_updated_at", { ascending: false })
-    ]);
+    const profileRes = await supabase
+      .from("profiles")
+      .select("is_admin,invite_code_used,invite_approved_at")
+      .eq("id", session.user.id)
+      .single();
 
-    if (profileRes.error || updatesRes.error) {
+    if (profileRes.error) {
       setError("Could not load shit talk updates.");
       setLoading(false);
       return;
     }
 
     setIsAdmin(Boolean(profileRes.data?.is_admin));
+    if (!profileRes.data?.invite_code_used && !profileRes.data?.is_admin) {
+      router.replace("/invite");
+      return;
+    }
+
+    const updatesRes = await supabase
+      .from("profiles")
+      .select("id,display_name,email,avatar_url,shit_talk,shit_talk_updated_at")
+      .not("shit_talk", "is", null)
+      .neq("shit_talk", "")
+      .order("shit_talk_updated_at", { ascending: false });
+
+    if (updatesRes.error) {
+      setError("Could not load shit talk updates.");
+      setLoading(false);
+      return;
+    }
     const list = (updatesRes.data ?? []) as ShitTalkUpdate[];
     setUpdates(list);
     if (list.length && list[0].shit_talk_updated_at) {
