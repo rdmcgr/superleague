@@ -3,7 +3,7 @@ import "./globals.css";
 import ShitTalkToast from "@/components/ShitTalkToast";
 
 export const metadata: Metadata = {
-  title: "World Cup 2026 Super League",
+  title: "Super League",
   description: "Private prediction league with chapter-based one-and-done team picks."
 };
 
