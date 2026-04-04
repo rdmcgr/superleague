@@ -138,6 +138,21 @@ export default function PlayerProfilePage() {
             </div>
           </div>
 
+          {(() => {
+            const groupStage = chapters.find((c) => c.slug === "group-stage");
+            const q1 = groupStage ? questions.find((q) => q.chapter_id === groupStage.id && q.order_index === 1) : null;
+            const pick = q1 ? picks.find((p) => p.question_id === q1.id) : null;
+            const team = pick ? teamMap.get(pick.team_id) : null;
+            return (
+              <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="mb-1 text-xs uppercase tracking-[0.16em] text-slate-400">Group Stage Q1</p>
+                <p className="text-sm text-slate-200">
+                  {team ? `${flagForCode(team.code)} ${team.name}` : "No pick"}
+                </p>
+              </div>
+            );
+          })()}
+
           {standing ? (
             <div className="mb-6 grid gap-3 sm:grid-cols-3">
               <StatCard label="Points" value={standing.total_points} />
