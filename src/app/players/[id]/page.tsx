@@ -145,7 +145,7 @@ export default function PlayerProfilePage() {
             const team = pick ? teamMap.get(pick.team_id) : null;
             return (
               <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="mb-1 text-xs uppercase tracking-[0.16em] text-slate-400">Group Stage Q1</p>
+                <p className="mb-1 text-xs uppercase tracking-[0.16em] text-slate-400">Group Stage Pick For Tourney Winner</p>
                 <p className="text-sm text-slate-200">
                   {team ? `${flagForCode(team.code)} ${team.name}` : "No pick"}
                 </p>
