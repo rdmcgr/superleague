@@ -4,7 +4,11 @@ import ShitTalkToast from "@/components/ShitTalkToast";
 
 export const metadata: Metadata = {
   title: "Super League",
-  description: "Private prediction league with chapter-based one-and-done team picks."
+  description: "Private prediction league with chapter-based one-and-done team picks.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-touch-icon.png"
+  }
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
