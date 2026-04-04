@@ -119,7 +119,6 @@ export default function PlayerProfilePage() {
             )}
             <div>
               <h1 className="text-2xl font-bold">{profile.display_name || profile.email}</h1>
-              <p className="text-sm text-slate-300">Shit Talk</p>
               <p className="text-sm text-slate-200">{profile.shit_talk || "—"}</p>
             </div>
           </div>
