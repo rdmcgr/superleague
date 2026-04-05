@@ -124,7 +124,9 @@ export default function ShitTalkPage() {
                       </span>
                     )}
                     <div>
-                      <p className="font-semibold text-slate-100">{name}</p>
+                      <a className="font-semibold text-slate-100 underline decoration-white/20 hover:decoration-white" href={`/players/${u.id}`}>
+                        {name}
+                      </a>
                       <p className="text-xs text-slate-400">{when}</p>
                     </div>
                   </div>
