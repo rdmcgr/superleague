@@ -142,6 +142,8 @@ export default function SideBetsPage() {
   const myBets = bets.filter((bet) => bet.creator_id === user?.id || bet.taker_id === user?.id);
   const isTakenForSettlement = (bet: BetRow) =>
     Boolean(bet.taker_id) && bet.status !== "closed" && bet.status !== "cancelled";
+  const isAdminManageableBet = (bet: BetRow) =>
+    (Boolean(bet.taker_id) || bet.status === "closed") && bet.status !== "cancelled";
 
   const resetForm = () => {
     setTeamA("");
@@ -196,8 +198,7 @@ export default function SideBetsPage() {
     setSubmitting(true);
     setNotice(null);
 
-    const payload: Partial<SideBet> & { creator_id: string } = {
-      creator_id: user.id,
+    const payload: Partial<SideBet> = {
       team_a_id: Number(teamA),
       team_b_id: Number(teamB),
       bet_type: betType,
@@ -209,8 +210,10 @@ export default function SideBetsPage() {
     };
 
     const res = editingBetId
-      ? await supabase.from("side_bets").update(payload).eq("id", editingBetId).eq("creator_id", user.id).eq("status", "open")
-      : await supabase.from("side_bets").insert(payload).select();
+      ? profile?.is_admin
+        ? await supabase.from("side_bets").update(payload).eq("id", editingBetId)
+        : await supabase.from("side_bets").update(payload).eq("id", editingBetId).eq("creator_id", user.id).eq("status", "open")
+      : await supabase.from("side_bets").insert({ ...payload, creator_id: user.id }).select();
     if (res.error) {
       setNotice(res.error.message);
       setSubmitting(false);
@@ -266,6 +269,34 @@ export default function SideBetsPage() {
 
   async function adminSettleBet(bet: BetRow, winnerId: string) {
     await settleBet(bet, winnerId);
+  }
+
+  async function adminReopenBet(bet: BetRow) {
+    if (!profile?.is_admin) return;
+    setNotice(null);
+    const res = await supabase
+      .from("side_bets")
+      .update({
+        status: "open",
+        taker_id: null,
+        winner_id: null,
+        settled_at: null
+      })
+      .eq("id", bet.id);
+    if (res.error) {
+      setNotice(res.error.message);
+      return;
+    }
+
+    loadBetIntoForm({
+      ...bet,
+      status: "open",
+      taker_id: null,
+      winner_id: null,
+      settled_at: null
+    });
+    setNotice("Bet reopened for editing.");
+    await load();
   }
 
   async function submitComment(betId: number) {
@@ -628,10 +659,10 @@ export default function SideBetsPage() {
       {profile?.is_admin ? (
         <section className="glass mt-6 rounded-2xl p-5">
           <h2 className="mb-3 text-lg font-semibold">Admin Bet Overrides</h2>
-          <p className="text-sm text-slate-300">Settle any taken bet in case of disputes.</p>
+          <p className="text-sm text-slate-300">Reopen, edit, or settle any matched bet in case of disputes.</p>
           <div className="mt-4 space-y-3">
             {bets
-              .filter((bet) => isTakenForSettlement(bet))
+              .filter((bet) => isAdminManageableBet(bet))
               .map((bet) => {
                 const opponentName = renderUserName(bet.taker);
                 return (
@@ -644,8 +675,16 @@ export default function SideBetsPage() {
                         <p className="mt-1 text-xs text-slate-500">
                           Posted by {renderUserName(bet.creator)} vs {opponentName}
                         </p>
+                        <p className="mt-1 text-xs text-slate-500">Status: {bet.status}</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
+                        <button
+                          className="btn btn-secondary"
+                          type="button"
+                          onClick={() => void adminReopenBet(bet)}
+                        >
+                          Reopen & Edit
+                        </button>
                         <button
                           className="btn btn-secondary"
                           type="button"
@@ -665,8 +704,8 @@ export default function SideBetsPage() {
                   </article>
                 );
               })}
-            {bets.filter((bet) => isTakenForSettlement(bet)).length === 0 ? (
-              <p className="text-sm text-slate-400">No taken bets to settle.</p>
+            {bets.filter((bet) => isAdminManageableBet(bet)).length === 0 ? (
+              <p className="text-sm text-slate-400">No matched bets to manage.</p>
             ) : null}
           </div>
         </section>
