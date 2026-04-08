@@ -29,6 +29,7 @@ export default function StandingsPage() {
   const [detail, setDetail] = useState<{ chapterId: number; teamId: number } | null>(null);
   const [talkDetail, setTalkDetail] = useState<{ userId: string } | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
+  const [showPointsAvailable, setShowPointsAvailable] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -145,19 +146,30 @@ export default function StandingsPage() {
         <Notice text={error} tone="danger" />
       ) : (
         <section className="glass rounded-2xl p-4">
-          <div className="mb-4 rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-slate-300">
-            <p className="mb-1 font-semibold uppercase tracking-[0.14em] text-slate-200">Points available</p>
-            {chapters.map((chapter) => {
-              const total = questions
-                .filter((q) => q.chapter_id === chapter.id)
-                .reduce((sum, q) => sum + (q.points ?? 0), 0);
-              return (
-                <p key={chapter.id}>
-                  {chapter.name}: {total} pts
-                </p>
-              );
-            })}
-          </div>
+          {showPointsAvailable ? (
+            <div className="mb-4 rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-slate-300">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <p className="font-semibold uppercase tracking-[0.14em] text-slate-200">Points available</p>
+                <button
+                  className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+                  type="button"
+                  onClick={() => setShowPointsAvailable(false)}
+                >
+                  Hide
+                </button>
+              </div>
+              {chapters.map((chapter) => {
+                const total = questions
+                  .filter((q) => q.chapter_id === chapter.id)
+                  .reduce((sum, q) => sum + (q.points ?? 0), 0);
+                return (
+                  <p key={chapter.id}>
+                    {chapter.name}: {total} pts
+                  </p>
+                );
+              })}
+            </div>
+          ) : null}
           <h2 className="section-title mb-4">League Standings</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
