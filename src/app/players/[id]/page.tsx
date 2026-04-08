@@ -158,11 +158,13 @@ export default function PlayerProfilePage() {
             const team5 = pick5 ? teamMap.get(pick5.team_id) : null;
             return (
               <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="mb-1 text-xs uppercase tracking-[0.16em] text-slate-400">Group Stage Pick For Tourney Winner</p>
-                <p className="text-sm text-slate-200">
-                  {team ? `${flagForCode(team.code)} ${team.name}` : "No pick"}
-                </p>
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
+                    <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Stage Pick For Tourney Winner</p>
+                    <p className="text-sm text-slate-200">
+                      {team ? `${flagForCode(team.code)} ${team.name}` : "No pick"}
+                    </p>
+                  </div>
                   <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
                     <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Winners</p>
                     <p className="text-sm text-slate-200">
@@ -172,7 +174,7 @@ export default function PlayerProfilePage() {
                       {groupClosed && team3 ? `${flagForCode(team3.code)} ${team3.name}` : "No pick"}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
+                  <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3 md:col-span-2">
                     <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Additional Knockout Stage Qualifiers</p>
                     <p className="text-sm text-slate-200">
                       {groupClosed && team4 ? `${flagForCode(team4.code)} ${team4.name}` : "No pick"}
