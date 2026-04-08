@@ -51,6 +51,7 @@ export default function SideBetsPage() {
   const [spreadValue, setSpreadValue] = useState<string>("");
   const [stake, setStake] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [editingBetId, setEditingBetId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [commentDrafts, setCommentDrafts] = useState<Record<number, string>>({});
   const [commentSubmitting, setCommentSubmitting] = useState<number | null>(null);
@@ -148,6 +149,20 @@ export default function SideBetsPage() {
     setSpreadValue("");
     setStake("");
     setDescription("");
+    setEditingBetId(null);
+  };
+
+  const loadBetIntoForm = (bet: BetRow) => {
+    setEditingBetId(bet.id);
+    setTeamA(String(bet.team_a_id));
+    setTeamB(String(bet.team_b_id));
+    setBetType(bet.bet_type);
+    setSpreadTeam(bet.spread_team_id ? String(bet.spread_team_id) : "");
+    setSpreadValue(bet.spread_value === null ? "" : Number(bet.spread_value).toFixed(1));
+    setStake(String(bet.stake_amount));
+    setDescription(bet.description ?? "");
+    setShowIntro(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const validate = () => {
@@ -191,7 +206,9 @@ export default function SideBetsPage() {
       status: "open"
     };
 
-    const res = await supabase.from("side_bets").insert(payload).select();
+    const res = editingBetId
+      ? await supabase.from("side_bets").update(payload).eq("id", editingBetId).eq("creator_id", user.id).eq("status", "open")
+      : await supabase.from("side_bets").insert(payload).select();
     if (res.error) {
       setNotice(res.error.message);
       setSubmitting(false);
@@ -199,7 +216,7 @@ export default function SideBetsPage() {
     }
 
     resetForm();
-    setNotice("Side bet posted.");
+    setNotice(editingBetId ? "Side bet updated." : "Side bet posted.");
     await load();
     setSubmitting(false);
   }
@@ -450,6 +467,7 @@ export default function SideBetsPage() {
                   <select
                     className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
                     value={spreadTeam}
+                    disabled
                     onChange={(e) => setSpreadTeam(e.target.value)}
                   >
                     <option value="">Select team</option>
@@ -484,8 +502,13 @@ export default function SideBetsPage() {
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <button className="btn btn-primary" type="button" onClick={createBet} disabled={submitting}>
-                {submitting ? "Posting..." : "Post Side Bet"}
+                {submitting ? (editingBetId ? "Saving..." : "Posting...") : editingBetId ? "Save Changes" : "Post Side Bet"}
               </button>
+              {editingBetId ? (
+                <button className="btn btn-secondary" type="button" onClick={resetForm} disabled={submitting}>
+                  Cancel Edit
+                </button>
+              ) : null}
               <p className="text-xs text-slate-400">Stake is required. All bets are real money.</p>
             </div>
           </div>
@@ -513,9 +536,14 @@ export default function SideBetsPage() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {isCreator ? (
-                        <button className="btn btn-secondary" type="button" onClick={() => void cancelBet(bet.id)}>
-                          Cancel
-                        </button>
+                        <>
+                          <button className="btn btn-secondary" type="button" onClick={() => loadBetIntoForm(bet)}>
+                            Edit
+                          </button>
+                          <button className="btn btn-secondary" type="button" onClick={() => void cancelBet(bet.id)}>
+                            Cancel
+                          </button>
+                        </>
                       ) : (
                         <button className="btn btn-primary" type="button" onClick={() => void takeBet(bet.id)}>
                           Take Bet
@@ -575,6 +603,15 @@ export default function SideBetsPage() {
                           </button>
                         </div>
                         <p className="text-[11px] text-slate-500">Both sides can settle. Use only when agreed.</p>
+                      </div>
+                    ) : isCreator && bet.status === "open" ? (
+                      <div className="flex flex-wrap gap-2">
+                        <button className="btn btn-secondary" type="button" onClick={() => loadBetIntoForm(bet)}>
+                          Edit
+                        </button>
+                        <button className="btn btn-secondary" type="button" onClick={() => void cancelBet(bet.id)}>
+                          Cancel
+                        </button>
                       </div>
                     ) : null}
                   </div>
