@@ -60,3 +60,32 @@ export type StandingRow = {
   correct_picks: number;
   total_picks: number;
 };
+
+export type SideBetStatus = "open" | "taken" | "closed" | "cancelled";
+
+export type SideBetType = "moneyline" | "spread";
+
+export type SideBet = {
+  id: number;
+  creator_id: string;
+  taker_id: string | null;
+  team_a_id: number;
+  team_b_id: number;
+  bet_type: SideBetType;
+  spread_team_id: number | null;
+  spread_value: number | null;
+  stake_amount: number;
+  description: string | null;
+  status: SideBetStatus;
+  winner_id: string | null;
+  settled_at: string | null;
+  created_at: string;
+};
+
+export type SideBetComment = {
+  id: number;
+  bet_id: number;
+  user_id: string;
+  message: string;
+  created_at: string;
+};

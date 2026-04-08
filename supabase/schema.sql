@@ -23,6 +23,52 @@ create table if not exists public.invite_codes (
 
 alter table public.invite_codes enable row level security;
 
+create table if not exists public.side_bets (
+  id bigint generated always as identity primary key,
+  creator_id uuid not null references public.profiles(id) on delete cascade,
+  taker_id uuid references public.profiles(id) on delete set null,
+  team_a_id bigint not null references public.teams(id),
+  team_b_id bigint not null references public.teams(id),
+  bet_type text not null check (bet_type in ('moneyline', 'spread')),
+  spread_team_id bigint references public.teams(id),
+  spread_value numeric(4,1),
+  stake_amount numeric(10,2) not null,
+  description text,
+  status text not null default 'open' check (status in ('open', 'taken', 'closed', 'cancelled')),
+  winner_id uuid references public.profiles(id) on delete set null,
+  settled_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.side_bet_comments (
+  id bigint generated always as identity primary key,
+  bet_id bigint not null references public.side_bets(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  message text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.side_bets add column if not exists winner_id uuid references public.profiles(id) on delete set null;
+alter table public.side_bets add column if not exists settled_at timestamptz;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'side_bets_winner_check'
+  ) then
+    alter table public.side_bets
+    add constraint side_bets_winner_check
+    check (
+      winner_id is null
+      or winner_id = creator_id
+      or winner_id = taker_id
+    );
+  end if;
+end;
+$$;
+
 create table if not exists public.chapters (
   id bigint generated always as identity primary key,
   slug text not null unique,
@@ -126,6 +172,8 @@ alter table public.teams enable row level security;
 alter table public.picks enable row level security;
 alter table public.results enable row level security;
 alter table public.result_teams enable row level security;
+alter table public.side_bets enable row level security;
+alter table public.side_bet_comments enable row level security;
 
 -- Profiles
 create policy "Profiles readable by authenticated users"
@@ -340,6 +388,28 @@ using (
   )
 );
 
+create policy "Side bets readable"
+on public.side_bets
+for select
+using (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
+
+create policy "Side bet comments readable"
+on public.side_bet_comments
+for select
+using (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
+
 -- Admin write policies
 create policy "Admin can manage chapters"
 on public.chapters
@@ -464,6 +534,95 @@ using (
     where c.id = picks.chapter_id
       and c.status = 'open'
   )
+  and exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
+
+create policy "Users can create side bets"
+on public.side_bets
+for insert
+with check (
+  creator_id = auth.uid()
+  and exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
+
+create policy "Users can update their own open bets"
+on public.side_bets
+for update
+using (
+  creator_id = auth.uid()
+  and status = 'open'
+)
+with check (
+  creator_id = auth.uid()
+  and status in ('open', 'cancelled')
+);
+
+create policy "Users can take open bets"
+on public.side_bets
+for update
+using (
+  status = 'open'
+  and creator_id <> auth.uid()
+)
+with check (
+  status in ('taken', 'open')
+);
+
+create policy "Creators can settle taken bets"
+on public.side_bets
+for update
+using (
+  creator_id = auth.uid()
+  and status = 'taken'
+)
+with check (
+  creator_id = auth.uid()
+  and status in ('taken', 'closed')
+);
+
+create policy "Takers can settle taken bets"
+on public.side_bets
+for update
+using (
+  taker_id = auth.uid()
+  and status = 'taken'
+)
+with check (
+  taker_id = auth.uid()
+  and status in ('taken', 'closed')
+);
+
+create policy "Admins can settle any bet"
+on public.side_bets
+for update
+using (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and p.is_admin = true
+  )
+)
+with check (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and p.is_admin = true
+  )
+);
+
+create policy "Users can create bet comments"
+on public.side_bet_comments
+for insert
+with check (
+  user_id = auth.uid()
   and exists (
     select 1 from public.profiles p
     where p.id = auth.uid()

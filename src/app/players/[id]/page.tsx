@@ -27,6 +27,7 @@ export default function PlayerProfilePage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [picks, setPicks] = useState<PickRow[]>([]);
   const [standing, setStanding] = useState<StandingRow | null>(null);
+  const [betStats, setBetStats] = useState<{ wins: number; losses: number }>({ wins: 0, losses: 0 });
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -60,7 +61,7 @@ export default function PlayerProfilePage() {
       return;
     }
 
-    const [profileRes, chaptersRes, questionsRes, teamsRes, standingRes] = await Promise.all([
+    const [profileRes, chaptersRes, questionsRes, teamsRes, standingRes, betsRes] = await Promise.all([
       supabase
         .from("profiles")
         .select("id,email,display_name,avatar_url,shit_talk")
@@ -69,10 +70,15 @@ export default function PlayerProfilePage() {
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code").order("name"),
-      supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").eq("user_id", userId).maybeSingle()
+      supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").eq("user_id", userId).maybeSingle(),
+      supabase
+        .from("side_bets")
+        .select("id,creator_id,taker_id,winner_id,status")
+        .eq("status", "closed")
+        .or(`creator_id.eq.${userId},taker_id.eq.${userId}`)
     ]);
 
-    if (profileRes.error || chaptersRes.error || questionsRes.error || teamsRes.error) {
+    if (profileRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || betsRes.error) {
       setError("Could not load player profile.");
       setLoading(false);
       return;
@@ -82,6 +88,14 @@ export default function PlayerProfilePage() {
     setQuestions(questionsRes.data ?? []);
     setTeams(teamsRes.data ?? []);
     setStanding(standingRes.data ?? null);
+    const closedBets = (betsRes.data ?? []) as { creator_id: string; taker_id: string | null; winner_id: string | null }[];
+    const wins = closedBets.filter((bet) => bet.winner_id === userId).length;
+    const losses = closedBets.filter((bet) => {
+      if (!bet.winner_id) return false;
+      const involved = bet.creator_id === userId || bet.taker_id === userId;
+      return involved && bet.winner_id !== userId;
+    }).length;
+    setBetStats({ wins, losses });
 
     const lockedIds = (chaptersRes.data ?? [])
       .filter((c) => c.status === "locked" || c.status === "graded")
@@ -192,6 +206,8 @@ export default function PlayerProfilePage() {
             <div className="mb-6 grid gap-3 sm:grid-cols-2">
               <StatCard label="Points" value={standing.total_points} />
               <StatCard label="Correct" value={standing.correct_picks} />
+              <StatCard label="Bets Won" value={betStats.wins} />
+              <StatCard label="Bets Lost" value={betStats.losses} />
             </div>
           ) : null}
         </section>

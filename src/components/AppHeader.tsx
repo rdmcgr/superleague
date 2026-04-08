@@ -14,7 +14,8 @@ type Props = {
 const links = [
   { href: "/", label: "Picks" },
   { href: "/standings", label: "Standings" },
-  { href: "/shit-talk", label: "Shit Talk" }
+  { href: "/shit-talk", label: "Shit Talk" },
+  { href: "/side-bets", label: "Side Bets" }
 ];
 
 export default function AppHeader({ user, isAdmin }: Props) {
