@@ -13,7 +13,7 @@ type Props = {
 
 const links = [
   { href: "/", label: "Picks" },
-  { href: "/standings", label: "Standings" },
+  { href: "/standings", label: "Table" },
   { href: "/shit-talk", label: "Shit Talk" },
   { href: "/side-bets", label: "Side Bet" }
 ];
