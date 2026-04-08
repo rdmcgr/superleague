@@ -143,12 +143,47 @@ export default function PlayerProfilePage() {
             const q1 = groupStage ? questions.find((q) => q.chapter_id === groupStage.id && q.order_index === 1) : null;
             const pick = q1 ? picks.find((p) => p.question_id === q1.id) : null;
             const team = pick ? teamMap.get(pick.team_id) : null;
+            const groupClosed = Boolean(groupStage && (groupStage.status === "locked" || groupStage.status === "graded"));
+            const q2 = groupStage ? questions.find((q) => q.chapter_id === groupStage.id && q.order_index === 2) : null;
+            const q3 = groupStage ? questions.find((q) => q.chapter_id === groupStage.id && q.order_index === 3) : null;
+            const q4 = groupStage ? questions.find((q) => q.chapter_id === groupStage.id && q.order_index === 4) : null;
+            const q5 = groupStage ? questions.find((q) => q.chapter_id === groupStage.id && q.order_index === 5) : null;
+            const pick2 = q2 ? picks.find((p) => p.question_id === q2.id) : null;
+            const pick3 = q3 ? picks.find((p) => p.question_id === q3.id) : null;
+            const pick4 = q4 ? picks.find((p) => p.question_id === q4.id) : null;
+            const pick5 = q5 ? picks.find((p) => p.question_id === q5.id) : null;
+            const team2 = pick2 ? teamMap.get(pick2.team_id) : null;
+            const team3 = pick3 ? teamMap.get(pick3.team_id) : null;
+            const team4 = pick4 ? teamMap.get(pick4.team_id) : null;
+            const team5 = pick5 ? teamMap.get(pick5.team_id) : null;
             return (
               <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
                 <p className="mb-1 text-xs uppercase tracking-[0.16em] text-slate-400">Group Stage Pick For Tourney Winner</p>
                 <p className="text-sm text-slate-200">
                   {team ? `${flagForCode(team.code)} ${team.name}` : "No pick"}
                 </p>
+                {groupClosed ? (
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
+                      <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Winners</p>
+                      <p className="text-sm text-slate-200">
+                        {team2 ? `${flagForCode(team2.code)} ${team2.name}` : "No pick"}
+                      </p>
+                      <p className="text-sm text-slate-200">
+                        {team3 ? `${flagForCode(team3.code)} ${team3.name}` : "No pick"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
+                      <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Additional Knockout Stage Qualifiers</p>
+                      <p className="text-sm text-slate-200">
+                        {team4 ? `${flagForCode(team4.code)} ${team4.name}` : "No pick"}
+                      </p>
+                      <p className="text-sm text-slate-200">
+                        {team5 ? `${flagForCode(team5.code)} ${team5.name}` : "No pick"}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             );
           })()}
