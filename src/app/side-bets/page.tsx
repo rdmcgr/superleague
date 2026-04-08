@@ -464,13 +464,13 @@ export default function SideBetsPage() {
 
       {showIntro ? (
         <section className="glass mb-6 rounded-2xl p-5">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <div>
+          <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+            <div className="min-w-0">
               <h1 className="text-2xl font-bold">Side Bets</h1>
               <p className="text-sm text-slate-300">Make real money side bets with other users!</p>
             </div>
             <button
-              className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+              className="justify-self-end rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
               onClick={() => setShowIntro(false)}
               type="button"
             >
