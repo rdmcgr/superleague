@@ -671,7 +671,7 @@ export default function SideBetsPage() {
                       </p>
                       {bet.status === "closed" ? (
                         <p className="mt-2 inline-flex items-center rounded-full border border-emerald-300/35 bg-emerald-400/12 px-3 py-1 text-xs font-semibold tracking-[0.06em] text-emerald-100">
-                          Confirmed Winner: {renderWinner(bet)}
+                          Winner: {renderWinner(bet)}
                         </p>
                       ) : null}
                       {bet.description ? <p className="mt-2 text-sm text-slate-200">{bet.description}</p> : null}
@@ -736,6 +736,11 @@ export default function SideBetsPage() {
                           Posted by {renderUserName(bet.creator)} vs {opponentName}
                         </p>
                         <p className="mt-1 text-xs text-slate-500">Status: {bet.status}</p>
+                        {bet.status === "closed" ? (
+                          <p className="mt-2 inline-flex items-center rounded-full border border-emerald-300/35 bg-emerald-400/12 px-3 py-1 text-xs font-semibold tracking-[0.06em] text-emerald-100">
+                            Winner: {renderWinner(bet)}
+                          </p>
+                        ) : null}
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <button
