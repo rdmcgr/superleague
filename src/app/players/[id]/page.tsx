@@ -154,37 +154,11 @@ export default function PlayerProfilePage() {
           })()}
 
           {standing ? (
-            <div className="mb-6 grid gap-3 sm:grid-cols-3">
+            <div className="mb-6 grid gap-3 sm:grid-cols-2">
               <StatCard label="Points" value={standing.total_points} />
               <StatCard label="Correct" value={standing.correct_picks} />
-              <StatCard label="Picks" value={standing.total_picks} />
             </div>
           ) : null}
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {chapters
-              .filter((c) => c.status === "locked" || c.status === "graded")
-              .map((chapter) => (
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4" key={chapter.id}>
-                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">
-                    {chapter.name}
-                  </h3>
-                  <ul className="space-y-1 text-sm text-slate-300">
-                    {questions
-                      .filter((q) => q.chapter_id === chapter.id)
-                      .map((q) => {
-                        const pick = picks.find((p) => p.question_id === q.id);
-                        const team = pick ? teamMap.get(pick.team_id) : null;
-                        return (
-                          <li key={`player-${chapter.id}-${q.id}`}>
-                            Q{q.order_index} ({q.short_label || q.prompt}): {team ? `${flagForCode(team.code)} ${team.name}` : "No pick"}
-                          </li>
-                        );
-                      })}
-                  </ul>
-                </div>
-              ))}
-          </div>
         </section>
       ) : null}
     </>
