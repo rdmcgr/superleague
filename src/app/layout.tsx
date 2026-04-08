@@ -26,10 +26,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <span>© {year} SUPERLEAGUE.PARTY. AN</span>
               <Image
                 alt="OWS"
-                className="inline-block h-4 w-4 rounded-sm object-contain"
-                height={16}
+                className="inline-block h-5 w-5 rounded-sm object-contain"
+                height={20}
                 src="/ows-nwo-logo.png"
-                width={16}
+                width={20}
               />
               <span>JOINT.</span>
             </p>
