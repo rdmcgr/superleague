@@ -670,7 +670,9 @@ export default function SideBetsPage() {
                         {renderUserName(bet.taker)} confirmed winner as {renderSelectedWinner(bet, bet.taker_selected_winner_id)}
                       </p>
                       {bet.status === "closed" ? (
-                        <p className="mt-1 text-xs text-slate-400">Winner: {renderWinner(bet)}</p>
+                        <p className="mt-2 inline-flex items-center rounded-full border border-emerald-300/35 bg-emerald-400/12 px-3 py-1 text-xs font-semibold tracking-[0.06em] text-emerald-100">
+                          Confirmed Winner: {renderWinner(bet)}
+                        </p>
                       ) : null}
                       {bet.description ? <p className="mt-2 text-sm text-slate-200">{bet.description}</p> : null}
                     </div>
