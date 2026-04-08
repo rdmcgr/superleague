@@ -140,6 +140,8 @@ export default function SideBetsPage() {
 
   const openBets = bets.filter((bet) => bet.status === "open");
   const myBets = bets.filter((bet) => bet.creator_id === user?.id || bet.taker_id === user?.id);
+  const isTakenForSettlement = (bet: BetRow) =>
+    Boolean(bet.taker_id) && bet.status !== "closed" && bet.status !== "cancelled";
 
   const resetForm = () => {
     setTeamA("");
@@ -569,7 +571,7 @@ export default function SideBetsPage() {
               const isCreator = bet.creator_id === user?.id;
               const isTaker = bet.taker_id === user?.id;
               const opponentName = isCreator ? renderUserName(bet.taker) : renderUserName(bet.creator);
-              const canSettle = (isCreator || isTaker) && bet.status === "taken" && bet.taker_id;
+              const canSettle = (isCreator || isTaker) && isTakenForSettlement(bet);
               return (
                 <article key={bet.id} className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -629,7 +631,7 @@ export default function SideBetsPage() {
           <p className="text-sm text-slate-300">Settle any taken bet in case of disputes.</p>
           <div className="mt-4 space-y-3">
             {bets
-              .filter((bet) => bet.status === "taken")
+              .filter((bet) => isTakenForSettlement(bet))
               .map((bet) => {
                 const opponentName = renderUserName(bet.taker);
                 return (
@@ -663,7 +665,7 @@ export default function SideBetsPage() {
                   </article>
                 );
               })}
-            {bets.filter((bet) => bet.status === "taken").length === 0 ? (
+            {bets.filter((bet) => isTakenForSettlement(bet)).length === 0 ? (
               <p className="text-sm text-slate-400">No taken bets to settle.</p>
             ) : null}
           </div>
