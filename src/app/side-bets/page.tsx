@@ -260,7 +260,7 @@ export default function SideBetsPage() {
     const teamBInfo = teamMap.get(String(bet.team_b_id));
     const flagA = teamAInfo ? flagForCode(teamAInfo.code) : null;
     const flagB = teamBInfo ? flagForCode(teamBInfo.code) : null;
-    return `${flagA ? flagA + " " : ""}${teamAInfo?.name ?? "Team A"} vs ${flagB ? flagB + " " : ""}${teamBInfo?.name ?? "Team B"}`;
+    return `${flagA ? flagA + " " : ""}${teamAInfo?.name ?? "I'm Backing"} vs ${flagB ? flagB + " " : ""}${teamBInfo?.name ?? "Opponent"}`;
   };
 
   const renderBetLine = (bet: BetRow) => {
@@ -351,7 +351,7 @@ export default function SideBetsPage() {
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">Post a side bet</h2>
           <div className="grid gap-3 md:grid-cols-2">
             <label className="text-sm text-slate-200">
-              Team A
+              I'm Backing
               <select
                 className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
                 value={teamA}
@@ -366,7 +366,7 @@ export default function SideBetsPage() {
               </select>
             </label>
             <label className="text-sm text-slate-200">
-              Team B
+              Opponent
               <select
                 className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
                 value={teamB}
