@@ -230,7 +230,6 @@ export default function StandingsPage() {
                 <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">
                   Player Picks Lookup
                 </h3>
-                <span className="chip">View any player</span>
               </div>
               <div className="mb-4 flex flex-wrap items-center gap-3">
                 <select
