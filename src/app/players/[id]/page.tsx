@@ -162,28 +162,26 @@ export default function PlayerProfilePage() {
                 <p className="text-sm text-slate-200">
                   {team ? `${flagForCode(team.code)} ${team.name}` : "No pick"}
                 </p>
-                {groupClosed ? (
-                  <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
-                      <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Winners</p>
-                      <p className="text-sm text-slate-200">
-                        {team2 ? `${flagForCode(team2.code)} ${team2.name}` : "No pick"}
-                      </p>
-                      <p className="text-sm text-slate-200">
-                        {team3 ? `${flagForCode(team3.code)} ${team3.name}` : "No pick"}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
-                      <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Additional Knockout Stage Qualifiers</p>
-                      <p className="text-sm text-slate-200">
-                        {team4 ? `${flagForCode(team4.code)} ${team4.name}` : "No pick"}
-                      </p>
-                      <p className="text-sm text-slate-200">
-                        {team5 ? `${flagForCode(team5.code)} ${team5.name}` : "No pick"}
-                      </p>
-                    </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
+                    <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Winners</p>
+                    <p className="text-sm text-slate-200">
+                      {groupClosed && team2 ? `${flagForCode(team2.code)} ${team2.name}` : "No pick"}
+                    </p>
+                    <p className="text-sm text-slate-200">
+                      {groupClosed && team3 ? `${flagForCode(team3.code)} ${team3.name}` : "No pick"}
+                    </p>
                   </div>
-                ) : null}
+                  <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
+                    <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Additional Knockout Stage Qualifiers</p>
+                    <p className="text-sm text-slate-200">
+                      {groupClosed && team4 ? `${flagForCode(team4.code)} ${team4.name}` : "No pick"}
+                    </p>
+                    <p className="text-sm text-slate-200">
+                      {groupClosed && team5 ? `${flagForCode(team5.code)} ${team5.name}` : "No pick"}
+                    </p>
+                  </div>
+                </div>
               </div>
             );
           })()}
