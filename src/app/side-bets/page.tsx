@@ -664,10 +664,10 @@ export default function SideBetsPage() {
                       <p className="mt-1 text-xs text-slate-400">Stake: {formatStake(bet.stake_amount)}</p>
                       <p className="mt-1 text-xs text-slate-500">Status: {bet.status}</p>
                       <p className="mt-1 text-xs text-slate-400">
-                        {renderUserName(bet.creator)} picked: {renderSelectedWinner(bet, bet.creator_selected_winner_id)}
+                        {renderUserName(bet.creator)} confirmed winner as {renderSelectedWinner(bet, bet.creator_selected_winner_id)}
                       </p>
                       <p className="mt-1 text-xs text-slate-400">
-                        {renderUserName(bet.taker)} picked: {renderSelectedWinner(bet, bet.taker_selected_winner_id)}
+                        {renderUserName(bet.taker)} confirmed winner as {renderSelectedWinner(bet, bet.taker_selected_winner_id)}
                       </p>
                       {bet.status === "closed" ? (
                         <p className="mt-1 text-xs text-slate-400">Winner: {renderWinner(bet)}</p>
