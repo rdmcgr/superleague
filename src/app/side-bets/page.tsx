@@ -35,6 +35,7 @@ export default function SideBetsPage() {
   useAuthResync();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [showIntro, setShowIntro] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -127,6 +128,14 @@ export default function SideBetsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (betType === "spread") {
+      setSpreadTeam(teamA);
+      return;
+    }
+    setSpreadTeam("");
+  }, [betType, teamA]);
 
   const openBets = bets.filter((bet) => bet.status === "open");
   const myBets = bets.filter((bet) => bet.creator_id === user?.id || bet.taker_id === user?.id);
@@ -350,130 +359,138 @@ export default function SideBetsPage() {
         </div>
       ) : null}
 
-      <section className="glass mb-6 rounded-2xl p-5">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h1 className="text-2xl font-bold">Side Bets</h1>
-            <p className="text-sm text-slate-300">Real money. Make sure you trust the person on the other side.</p>
-          </div>
-          <span className="chip">V1</span>
-        </div>
-
-        <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">Post a side bet</h2>
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="text-sm text-slate-200">
-              I&apos;m Backing
-              <select
-                className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                value={teamA}
-                onChange={(e) => setTeamA(e.target.value)}
-              >
-                <option value="">Select team</option>
-                {teams.map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}{team.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-sm text-slate-200">
-              Opponent
-              <select
-                className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                value={teamB}
-                onChange={(e) => setTeamB(e.target.value)}
-              >
-                <option value="">Select team</option>
-                {teams.map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}{team.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+      {showIntro ? (
+        <section className="glass mb-6 rounded-2xl p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h1 className="text-2xl font-bold">Side Bets</h1>
+              <p className="text-sm text-slate-300">Make real money side bets with other users!</p>
+            </div>
+            <button
+              className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+              onClick={() => setShowIntro(false)}
+              type="button"
+            >
+              Hide
+            </button>
           </div>
 
-          <div className="mt-3 grid gap-3 md:grid-cols-3">
-            <label className="text-sm text-slate-200">
-              Bet Type
-              <select
-                className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                value={betType}
-                onChange={(e) => setBetType(e.target.value as "moneyline" | "spread")}
-              >
-                <option value="moneyline">Moneyline</option>
-                <option value="spread">Spread</option>
-              </select>
-            </label>
-            <label className="text-sm text-slate-200">
-              Stake (required)
-              <input
-                className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                inputMode="decimal"
-                placeholder="$"
-                value={stake}
-                onChange={(e) => setStake(e.target.value)}
-              />
-            </label>
-            <label className="text-sm text-slate-200">
-              Comment (optional)
-              <input
-                className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                placeholder="e.g., final score or vibe"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </label>
-          </div>
-
-          {betType === "spread" ? (
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">Post a side bet</h2>
+            <div className="grid gap-3 md:grid-cols-2">
               <label className="text-sm text-slate-200">
-                Spread Team
+                I&apos;m Backing
                 <select
                   className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                  value={spreadTeam}
-                  onChange={(e) => setSpreadTeam(e.target.value)}
+                  value={teamA}
+                  onChange={(e) => setTeamA(e.target.value)}
                 >
                   <option value="">Select team</option>
-                  {[teamA, teamB].filter(Boolean).map((id) => {
-                    const team = teamMap.get(id);
-                    if (!team) return null;
-                    return (
-                      <option key={id} value={id}>
-                        {flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}{team.name}
-                      </option>
-                    );
-                  })}
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}{team.name}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label className="text-sm text-slate-200">
-                Spread Value
+                Opponent
                 <select
                   className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                  value={spreadValue}
-                  onChange={(e) => setSpreadValue(e.target.value)}
+                  value={teamB}
+                  onChange={(e) => setTeamB(e.target.value)}
                 >
-                  <option value="">Select spread</option>
-                  {SPREAD_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
+                  <option value="">Select team</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}{team.name}
                     </option>
                   ))}
                 </select>
               </label>
             </div>
-          ) : null}
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button className="btn btn-primary" type="button" onClick={createBet} disabled={submitting}>
-              {submitting ? "Posting..." : "Post Side Bet"}
-            </button>
-            <p className="text-xs text-slate-400">Stake is required. All bets are real money.</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <label className="text-sm text-slate-200">
+                Bet Type
+                <select
+                  className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                  value={betType}
+                  onChange={(e) => setBetType(e.target.value as "moneyline" | "spread")}
+                >
+                  <option value="moneyline">Moneyline</option>
+                  <option value="spread">Spread</option>
+                </select>
+              </label>
+              <label className="text-sm text-slate-200">
+                Stake (required)
+                <input
+                  className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                  inputMode="decimal"
+                  placeholder="$"
+                  value={stake}
+                  onChange={(e) => setStake(e.target.value)}
+                />
+              </label>
+              <label className="text-sm text-slate-200">
+                Comment (optional)
+                <input
+                  className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                  placeholder="e.g., final score or vibe"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </label>
+            </div>
+
+            {betType === "spread" ? (
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <label className="text-sm text-slate-200">
+                  Spread Team
+                  <select
+                    className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                    value={spreadTeam}
+                    onChange={(e) => setSpreadTeam(e.target.value)}
+                  >
+                    <option value="">Select team</option>
+                    {[teamA, teamB].filter(Boolean).map((id) => {
+                      const team = teamMap.get(id);
+                      if (!team) return null;
+                      return (
+                        <option key={id} value={id}>
+                          {flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}{team.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </label>
+                <label className="text-sm text-slate-200">
+                  Spread Value
+                  <select
+                    className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                    value={spreadValue}
+                    onChange={(e) => setSpreadValue(e.target.value)}
+                  >
+                    <option value="">Select spread</option>
+                    {SPREAD_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            ) : null}
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <button className="btn btn-primary" type="button" onClick={createBet} disabled={submitting}>
+                {submitting ? "Posting..." : "Post Side Bet"}
+              </button>
+              <p className="text-xs text-slate-400">Stake is required. All bets are real money.</p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <section className="glass mb-6 rounded-2xl p-5">
         <h2 className="mb-1 text-lg font-semibold">Unmatched Bets</h2>
