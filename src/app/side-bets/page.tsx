@@ -25,6 +25,12 @@ const STAKE_MAX = 5000;
 const SPREAD_MIN = -9.5;
 const SPREAD_MAX = 9.5;
 
+const SPREAD_OPTIONS = Array.from({ length: 20 }, (_, index) => {
+  const value = SPREAD_MIN + index;
+  const label = value > 0 ? `+${value.toFixed(1)}` : value.toFixed(1);
+  return { value: value.toFixed(1), label };
+});
+
 export default function SideBetsPage() {
   useAuthResync();
   const router = useRouter();
@@ -437,14 +443,19 @@ export default function SideBetsPage() {
                 </select>
               </label>
               <label className="text-sm text-slate-200">
-                Spread Value (e.g., -1.5)
-                <input
+                Spread Value
+                <select
                   className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                  inputMode="decimal"
-                  placeholder="-1.5"
                   value={spreadValue}
                   onChange={(e) => setSpreadValue(e.target.value)}
-                />
+                >
+                  <option value="">Select spread</option>
+                  {SPREAD_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
           ) : null}
