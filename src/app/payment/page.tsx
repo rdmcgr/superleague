@@ -46,18 +46,6 @@ export default function PaymentPage() {
 
         <div className="space-y-3">
           <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-            <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-300">Venmo Profile Link</p>
-            <a
-              className="text-sm font-semibold text-cyan-200 hover:text-cyan-100"
-              href="https://venmo.com/u/rory-mcgrath"
-              target="_blank"
-              rel="noreferrer"
-            >
-              https://venmo.com/u/rory-mcgrath
-            </a>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-300">Prefilled Payment Link</p>
             <a
               className="text-sm font-semibold text-cyan-200 hover:text-cyan-100"
@@ -68,8 +56,20 @@ export default function PaymentPage() {
               Pay $40 via Venmo
             </a>
             <p className="mt-2 text-xs text-slate-400">
-              This prefilled link may open the Venmo app on mobile.
+              The prefilled link will open the Venmo app on mobile.
             </p>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-300">Venmo Profile Link</p>
+            <a
+              className="text-sm font-semibold text-cyan-200 hover:text-cyan-100"
+              href="https://venmo.com/u/rory-mcgrath"
+              target="_blank"
+              rel="noreferrer"
+            >
+              https://venmo.com/u/rory-mcgrath
+            </a>
           </div>
         </div>
 
