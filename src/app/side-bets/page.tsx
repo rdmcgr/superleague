@@ -104,7 +104,12 @@ export default function SideBetsPage() {
     }
 
     setTeams(teamsRes.data ?? []);
-    setBets((betsRes.data ?? []) as BetRow[]);
+    const normalizedBets = (betsRes.data ?? []).map((row) => {
+      const creatorValue = Array.isArray(row.creator) ? row.creator[0] : row.creator;
+      const takerValue = Array.isArray(row.taker) ? row.taker[0] : row.taker;
+      return { ...row, creator: creatorValue, taker: takerValue } as BetRow;
+    });
+    setBets(normalizedBets);
     const normalizedComments = (commentsRes.data ?? []).map((row) => {
       const profileValue = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
       return { ...row, profiles: profileValue } as CommentRow;
