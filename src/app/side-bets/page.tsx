@@ -351,7 +351,7 @@ export default function SideBetsPage() {
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">Post a side bet</h2>
           <div className="grid gap-3 md:grid-cols-2">
             <label className="text-sm text-slate-200">
-              I'm Backing
+              I&apos;m Backing
               <select
                 className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
                 value={teamA}
