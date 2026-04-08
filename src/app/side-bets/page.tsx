@@ -273,7 +273,13 @@ export default function SideBetsPage() {
     if (bet.bet_type === "moneyline") return "Moneyline";
     const spreadTeamInfo = bet.spread_team_id ? teamMap.get(String(bet.spread_team_id)) : null;
     const spreadFlag = spreadTeamInfo ? flagForCode(spreadTeamInfo.code) : null;
-    return `Spread: ${spreadFlag ? spreadFlag + " " : ""}${spreadTeamInfo?.name ?? "Team"} ${bet.spread_value ?? ""}`;
+    const spreadAmount = Number(bet.spread_value);
+    const spreadLabel = Number.isNaN(spreadAmount)
+      ? String(bet.spread_value ?? "")
+      : spreadAmount > 0
+        ? `+${spreadAmount.toFixed(1)}`
+        : spreadAmount.toFixed(1);
+    return `Spread: ${spreadFlag ? spreadFlag + " " : ""}${spreadTeamInfo?.name ?? "Team"} ${spreadLabel}`;
   };
 
   const formatStake = (value: unknown) => {
@@ -470,7 +476,8 @@ export default function SideBetsPage() {
       </section>
 
       <section className="glass mb-6 rounded-2xl p-5">
-        <h2 className="mb-3 text-lg font-semibold">Open Bets</h2>
+        <h2 className="mb-1 text-lg font-semibold">Unmatched Bets</h2>
+        <p className="mb-3 text-sm text-slate-300">Posted by other users. Do you want to take the other side?</p>
         {openBets.length === 0 ? (
           <p className="text-sm text-slate-400">No open bets yet. Post one above.</p>
         ) : (
