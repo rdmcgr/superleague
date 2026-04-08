@@ -77,6 +77,8 @@ export type SideBet = {
   stake_amount: number;
   description: string | null;
   status: SideBetStatus;
+  creator_selected_winner_id: string | null;
+  taker_selected_winner_id: string | null;
   winner_id: string | null;
   settled_at: string | null;
   created_at: string;

@@ -96,7 +96,7 @@ export default function SideBetsPage() {
       supabase
         .from("side_bets")
         .select(
-          "id,creator_id,taker_id,team_a_id,team_b_id,bet_type,spread_team_id,spread_value,stake_amount,description,status,winner_id,settled_at,created_at,creator:creator_id(display_name,email),taker:taker_id(display_name,email)"
+          "id,creator_id,taker_id,team_a_id,team_b_id,bet_type,spread_team_id,spread_value,stake_amount,description,status,creator_selected_winner_id,taker_selected_winner_id,winner_id,settled_at,created_at,creator:creator_id(display_name,email),taker:taker_id(display_name,email)"
         )
         .order("created_at", { ascending: false }),
       supabase
@@ -139,7 +139,7 @@ export default function SideBetsPage() {
   }, [betType, teamA]);
 
   const openBets = bets.filter((bet) => bet.status === "open");
-  const myBets = bets.filter((bet) => bet.creator_id === user?.id || bet.taker_id === user?.id);
+  const myBets = bets.filter((bet) => (bet.creator_id === user?.id || bet.taker_id === user?.id) && Boolean(bet.taker_id));
   const isTakenForSettlement = (bet: BetRow) =>
     Boolean(bet.taker_id) && bet.status !== "closed" && bet.status !== "cancelled";
   const isAdminManageableBet = (bet: BetRow) =>
@@ -267,6 +267,48 @@ export default function SideBetsPage() {
     await load();
   }
 
+  async function submitWinnerSelection(bet: BetRow, winnerId: string) {
+    if (!user) return;
+    setNotice(null);
+
+    const updates: Record<string, string | null> = {};
+    if (user.id === bet.creator_id) {
+      updates.creator_selected_winner_id = winnerId;
+    } else if (user.id === bet.taker_id) {
+      updates.taker_selected_winner_id = winnerId;
+    } else {
+      return;
+    }
+
+    const nextCreatorWinner =
+      user.id === bet.creator_id ? winnerId : bet.creator_selected_winner_id;
+    const nextTakerWinner =
+      user.id === bet.taker_id ? winnerId : bet.taker_selected_winner_id;
+
+    if (nextCreatorWinner && nextCreatorWinner === nextTakerWinner) {
+      updates.status = "closed";
+      updates.winner_id = nextCreatorWinner;
+      updates.settled_at = new Date().toISOString();
+    } else {
+      updates.status = "taken";
+      updates.winner_id = null;
+      updates.settled_at = null;
+    }
+
+    const res = await supabase.from("side_bets").update(updates).eq("id", bet.id);
+    if (res.error) {
+      setNotice(res.error.message);
+      return;
+    }
+
+    setNotice(
+      updates.status === "closed"
+        ? "Winner confirmed by both users. Bet closed."
+        : "Your winner selection was saved. Waiting for the other user."
+    );
+    await load();
+  }
+
   async function adminSettleBet(bet: BetRow, winnerId: string) {
     await settleBet(bet, winnerId);
   }
@@ -279,6 +321,8 @@ export default function SideBetsPage() {
       .update({
         status: "open",
         taker_id: null,
+        creator_selected_winner_id: null,
+        taker_selected_winner_id: null,
         winner_id: null,
         settled_at: null
       })
@@ -292,6 +336,8 @@ export default function SideBetsPage() {
       ...bet,
       status: "open",
       taker_id: null,
+      creator_selected_winner_id: null,
+      taker_selected_winner_id: null,
       winner_id: null,
       settled_at: null
     });
@@ -357,6 +403,13 @@ export default function SideBetsPage() {
     if (bet.winner_id === bet.creator_id) return renderUserName(bet.creator);
     if (bet.winner_id === bet.taker_id) return renderUserName(bet.taker);
     return "—";
+  };
+
+  const renderSelectedWinner = (bet: BetRow, winnerId: string | null) => {
+    if (!winnerId) return "Pending";
+    if (winnerId === bet.creator_id) return renderUserName(bet.creator);
+    if (winnerId === bet.taker_id) return renderUserName(bet.taker);
+    return "Pending";
   };
 
   const renderComments = (betId: number) => {
@@ -593,15 +646,14 @@ export default function SideBetsPage() {
       </section>
 
       <section className="glass rounded-2xl p-5">
-        <h2 className="mb-3 text-lg font-semibold">Your Bets</h2>
+        <h2 className="mb-3 text-lg font-semibold">Your Matched Bets</h2>
         {myBets.length === 0 ? (
-          <p className="text-sm text-slate-400">You have not posted or taken a bet yet.</p>
+          <p className="text-sm text-slate-400">You do not have any matched bets yet.</p>
         ) : (
           <div className="space-y-3">
             {myBets.map((bet) => {
               const isCreator = bet.creator_id === user?.id;
               const isTaker = bet.taker_id === user?.id;
-              const opponentName = isCreator ? renderUserName(bet.taker) : renderUserName(bet.creator);
               const canSettle = (isCreator || isTaker) && isTakenForSettlement(bet);
               return (
                 <article key={bet.id} className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
@@ -611,6 +663,12 @@ export default function SideBetsPage() {
                       <p className="text-xs text-slate-400">{renderBetLine(bet)}</p>
                       <p className="mt-1 text-xs text-slate-400">Stake: {formatStake(bet.stake_amount)}</p>
                       <p className="mt-1 text-xs text-slate-500">Status: {bet.status}</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {renderUserName(bet.creator)} picked: {renderSelectedWinner(bet, bet.creator_selected_winner_id)}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {renderUserName(bet.taker)} picked: {renderSelectedWinner(bet, bet.taker_selected_winner_id)}
+                      </p>
                       {bet.status === "closed" ? (
                         <p className="mt-1 text-xs text-slate-400">Winner: {renderWinner(bet)}</p>
                       ) : null}
@@ -618,24 +676,24 @@ export default function SideBetsPage() {
                     </div>
                     {canSettle ? (
                       <div className="flex flex-col gap-2 text-xs text-slate-300">
-                        <span className="uppercase tracking-[0.16em] text-slate-400">Settle bet</span>
+                        <span className="uppercase tracking-[0.16em] text-slate-400">Pick winner</span>
                         <div className="flex flex-wrap gap-2">
                           <button
                             className="btn btn-secondary"
                             type="button"
-                            onClick={() => void settleBet(bet, bet.creator_id)}
+                            onClick={() => void submitWinnerSelection(bet, bet.creator_id)}
                           >
-                            Winner: {isCreator ? "Me" : renderUserName(bet.creator)}
+                            Winner: {renderUserName(bet.creator)}
                           </button>
                           <button
                             className="btn btn-secondary"
                             type="button"
-                            onClick={() => bet.taker_id && void settleBet(bet, bet.taker_id)}
+                            onClick={() => bet.taker_id && void submitWinnerSelection(bet, bet.taker_id)}
                           >
-                            Winner: {isCreator ? opponentName : "Me"}
+                            Winner: {renderUserName(bet.taker)}
                           </button>
                         </div>
-                        <p className="text-[11px] text-slate-500">Both sides can settle. Use only when agreed.</p>
+                        <p className="text-[11px] text-slate-500">The bet closes automatically when both users pick the same winner.</p>
                       </div>
                     ) : isCreator && bet.status === "open" ? (
                       <div className="flex flex-wrap gap-2">

@@ -35,6 +35,8 @@ create table if not exists public.side_bets (
   stake_amount numeric(10,2) not null,
   description text,
   status text not null default 'open' check (status in ('open', 'taken', 'closed', 'cancelled')),
+  creator_selected_winner_id uuid references public.profiles(id) on delete set null,
+  taker_selected_winner_id uuid references public.profiles(id) on delete set null,
   winner_id uuid references public.profiles(id) on delete set null,
   settled_at timestamptz,
   created_at timestamptz not null default now()
@@ -50,6 +52,8 @@ create table if not exists public.side_bet_comments (
 
 alter table public.side_bets add column if not exists winner_id uuid references public.profiles(id) on delete set null;
 alter table public.side_bets add column if not exists settled_at timestamptz;
+alter table public.side_bets add column if not exists creator_selected_winner_id uuid references public.profiles(id) on delete set null;
+alter table public.side_bets add column if not exists taker_selected_winner_id uuid references public.profiles(id) on delete set null;
 
 do $$
 begin
