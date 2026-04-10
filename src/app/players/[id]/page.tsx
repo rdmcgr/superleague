@@ -205,7 +205,7 @@ export default function PlayerProfilePage() {
           {standing ? (
             <div className="mb-6 grid gap-3 sm:grid-cols-2">
               <StatCard label="Points" value={standing.total_points} />
-              <StatCard label="Correct" value={standing.correct_picks} />
+              <StatCard label="Correct Picks" value={standing.correct_picks} />
               <StatCard label="Side Bets" value={`${betStats.wins}-${betStats.losses}`} />
             </div>
           ) : null}
