@@ -66,7 +66,18 @@ export default function LoginPage() {
             priority
           />
         </div>
-        <p className="mb-6 text-sm text-slate-300">Join the Super League today! Sign in with your Google account, make your picks for the 2026 World Cup, and they will save. Come back anytime before the tourney to change your picks.</p>
+        <p className="mb-6 text-sm text-slate-300">
+          Join the{" "}
+          <Image
+            alt="Super League wordmark"
+            className="mx-1 inline-block h-auto w-32 align-middle object-contain"
+            src="/superleague-wordmark.png"
+            width={128}
+            height={32}
+          />{" "}
+          today! Sign in with your Google account, make your picks for the 2026 World Cup, and they will save. Come
+          back anytime before the tourney to change your picks.
+        </p>
 
         {error ? (
           <div className="mb-4">
