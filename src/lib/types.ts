@@ -10,6 +10,7 @@ export type Profile = {
   id: string;
   email: string;
   display_name: string | null;
+  public_slug: string | null;
   avatar_url: string | null;
   shit_talk: string | null;
   shit_talk_updated_at: string | null;

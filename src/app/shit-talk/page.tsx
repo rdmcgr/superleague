@@ -53,7 +53,7 @@ export default function ShitTalkPage() {
 
     const updatesRes = await supabase
       .from("profiles")
-      .select("id,display_name,email,avatar_url,shit_talk,shit_talk_updated_at")
+      .select("id,public_slug,display_name,email,avatar_url,shit_talk,shit_talk_updated_at")
       .not("shit_talk", "is", null)
       .neq("shit_talk", "")
       .order("shit_talk_updated_at", { ascending: false });
@@ -124,7 +124,7 @@ export default function ShitTalkPage() {
                       </span>
                     )}
                     <div>
-                      <a className="font-semibold text-slate-100 underline decoration-white/20 hover:decoration-white" href={`/players/${u.id}`}>
+                      <a className="font-semibold text-slate-100 underline decoration-white/20 hover:decoration-white" href={`/players/${u.public_slug || u.id}`}>
                         {name}
                       </a>
                       <p className="text-xs text-slate-400">{when}</p>
@@ -152,6 +152,7 @@ export default function ShitTalkPage() {
 
 type ShitTalkUpdate = {
   id: string;
+  public_slug: string | null;
   display_name: string | null;
   email: string;
   avatar_url: string | null;

@@ -16,7 +16,7 @@ export default function PlayerProfilePage() {
   useAuthResync();
   const router = useRouter();
   const params = useParams();
-  const userId = String(params?.id || "");
+  const profileKey = String(params?.id || "");
 
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
@@ -61,39 +61,61 @@ export default function PlayerProfilePage() {
       return;
     }
 
-    const [profileRes, chaptersRes, questionsRes, teamsRes, standingRes, betsRes] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id,email,display_name,avatar_url,shit_talk")
-        .eq("id", userId)
-        .single(),
-      supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
-      supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
-      supabase.from("teams").select("id,name,code").order("name"),
-      supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").eq("user_id", userId).maybeSingle(),
-      supabase
-        .from("side_bets")
-        .select("id,creator_id,taker_id,winner_id,status")
-        .eq("status", "closed")
-        .or(`creator_id.eq.${userId},taker_id.eq.${userId}`)
-    ]);
+    const profileBySlugRes = await supabase
+      .from("profiles")
+      .select("id,email,display_name,public_slug,avatar_url,shit_talk")
+      .eq("public_slug", profileKey)
+      .maybeSingle();
 
-    if (profileRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || betsRes.error) {
+    const looksLikeUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(profileKey);
+    const profileRes =
+      !profileBySlugRes.error && profileBySlugRes.data
+        ? profileBySlugRes
+        : looksLikeUuid
+          ? await supabase
+              .from("profiles")
+              .select("id,email,display_name,public_slug,avatar_url,shit_talk")
+              .eq("id", profileKey)
+              .maybeSingle()
+          : profileBySlugRes;
+
+    if (profileRes.error || !profileRes.data) {
       setError("Could not load player profile.");
       setLoading(false);
       return;
     }
+
+    const targetUserId = profileRes.data.id;
+
+    const [chaptersRes, questionsRes, teamsRes, standingRes, betsRes] = await Promise.all([
+      supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
+      supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
+      supabase.from("teams").select("id,name,code").order("name"),
+      supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").eq("user_id", targetUserId).maybeSingle(),
+      supabase
+        .from("side_bets")
+        .select("id,creator_id,taker_id,winner_id,status")
+        .eq("status", "closed")
+        .or(`creator_id.eq.${targetUserId},taker_id.eq.${targetUserId}`)
+    ]);
+
+    if (chaptersRes.error || questionsRes.error || teamsRes.error || betsRes.error) {
+      setError("Could not load player profile.");
+      setLoading(false);
+      return;
+    }
+
     setProfile(profileRes.data as PlayerProfile);
     setChapters(chaptersRes.data ?? []);
     setQuestions(questionsRes.data ?? []);
     setTeams(teamsRes.data ?? []);
     setStanding(standingRes.data ?? null);
     const closedBets = (betsRes.data ?? []) as { creator_id: string; taker_id: string | null; winner_id: string | null }[];
-    const wins = closedBets.filter((bet) => bet.winner_id === userId).length;
+    const wins = closedBets.filter((bet) => bet.winner_id === targetUserId).length;
     const losses = closedBets.filter((bet) => {
       if (!bet.winner_id) return false;
-      const involved = bet.creator_id === userId || bet.taker_id === userId;
-      return involved && bet.winner_id !== userId;
+      const involved = bet.creator_id === targetUserId || bet.taker_id === targetUserId;
+      return involved && bet.winner_id !== targetUserId;
     }).length;
     setBetStats({ wins, losses });
 
@@ -105,7 +127,7 @@ export default function PlayerProfilePage() {
       const picksRes = await supabase
         .from("picks")
         .select("id,question_id,chapter_id,team_id")
-        .eq("user_id", userId)
+        .eq("user_id", targetUserId)
         .in("chapter_id", lockedIds);
       if (!picksRes.error) {
         setPicks((picksRes.data ?? []) as PickRow[]);
@@ -115,7 +137,7 @@ export default function PlayerProfilePage() {
     }
 
     setLoading(false);
-  }, [router, userId]);
+  }, [profileKey, router]);
 
   useEffect(() => {
     void load();
@@ -228,6 +250,7 @@ type PlayerProfile = {
   id: string;
   email: string;
   display_name: string | null;
+  public_slug: string | null;
   avatar_url: string | null;
   shit_talk: string | null;
 };

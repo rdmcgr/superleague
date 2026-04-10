@@ -61,7 +61,7 @@ export default function AdminPage() {
 
     const profileRes = await supabase
       .from("profiles")
-      .select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
+      .select("id,email,display_name,public_slug,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
       .eq("id", session.user.id)
       .single();
 
@@ -82,7 +82,7 @@ export default function AdminPage() {
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code").order("name"),
       supabase.from("result_teams").select("question_id,team_id,points"),
-      supabase.from("profiles").select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin").order("created_at"),
+      supabase.from("profiles").select("id,email,display_name,public_slug,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin").order("created_at"),
       supabase.from("picks").select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at")
     ]);
 

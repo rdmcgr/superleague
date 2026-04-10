@@ -20,6 +20,7 @@ export default function StandingsPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [rows, setRows] = useState<StandingRow[]>([]);
   const [profileAvatars, setProfileAvatars] = useState<Record<string, string>>({});
+  const [profileSlugs, setProfileSlugs] = useState<Record<string, string>>({});
   const [profileShitTalk, setProfileShitTalk] = useState<Record<string, string>>({});
   const [profileShitTalkUpdatedAt, setProfileShitTalkUpdatedAt] = useState<Record<string, string>>({});
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -48,7 +49,7 @@ export default function StandingsPage() {
 
     const profileRes = await supabase
       .from("profiles")
-      .select("id,email,display_name,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
+      .select("id,email,display_name,public_slug,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
       .eq("id", session.user.id)
       .single();
 
@@ -69,7 +70,7 @@ export default function StandingsPage() {
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code").order("name"),
-      supabase.from("profiles").select("id,avatar_url,shit_talk,shit_talk_updated_at")
+      supabase.from("profiles").select("id,public_slug,avatar_url,shit_talk,shit_talk_updated_at")
     ]);
 
     if (standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error) {
@@ -82,9 +83,13 @@ export default function StandingsPage() {
     setQuestions(questionsRes.data ?? []);
     setTeams(teamsRes.data ?? []);
     const avatarMap: Record<string, string> = {};
+    const slugMap: Record<string, string> = {};
     const talkMap: Record<string, string> = {};
     const talkUpdatedMap: Record<string, string> = {};
     for (const p of avatarsRes.data ?? []) {
+      if (p.public_slug) {
+        slugMap[p.id] = p.public_slug;
+      }
       if (p.avatar_url) {
         avatarMap[p.id] = p.avatar_url;
       }
@@ -96,6 +101,7 @@ export default function StandingsPage() {
       }
     }
     setProfileAvatars(avatarMap);
+    setProfileSlugs(slugMap);
     setProfileShitTalk(talkMap);
     setProfileShitTalkUpdatedAt(talkUpdatedMap);
 
@@ -231,7 +237,7 @@ export default function StandingsPage() {
                         })()}
                         <a
                           className="text-left text-slate-100 underline decoration-white/20 hover:decoration-white"
-                          href={`/players/${row.user_id}`}
+                          href={`/players/${profileSlugs[row.user_id] || row.user_id}`}
                         >
                           {row.display_name || "Player"}
                         </a>

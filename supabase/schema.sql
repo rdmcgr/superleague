@@ -6,6 +6,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text not null,
   display_name text,
+  public_slug text,
   avatar_url text,
   shit_talk text,
   shit_talk_updated_at timestamptz,
@@ -22,6 +23,59 @@ create table if not exists public.invite_codes (
 );
 
 alter table public.invite_codes enable row level security;
+alter table public.profiles add column if not exists public_slug text;
+
+create or replace function public.slugify_display_name(input_name text)
+returns text
+language plpgsql
+as $$
+declare
+  cleaned text;
+  first_word text;
+  last_initial text;
+begin
+  cleaned := lower(coalesce(input_name, ''));
+  cleaned := regexp_replace(cleaned, '[^a-z0-9]+', ' ', 'g');
+  cleaned := btrim(regexp_replace(cleaned, '\s+', ' ', 'g'));
+
+  if cleaned = '' then
+    return 'player';
+  end if;
+
+  first_word := split_part(cleaned, ' ', 1);
+  last_initial := left(split_part(cleaned, ' ', array_length(regexp_split_to_array(cleaned, '\s+'), 1)), 1);
+
+  if last_initial = '' or cleaned = first_word then
+    return first_word;
+  end if;
+
+  return first_word || '-' || last_initial;
+end;
+$$;
+
+create or replace function public.ensure_unique_public_slug(base_slug text, profile_id uuid)
+returns text
+language plpgsql
+as $$
+declare
+  candidate text;
+  suffix_num int := 1;
+begin
+  candidate := coalesce(nullif(base_slug, ''), 'player');
+
+  while exists (
+    select 1
+    from public.profiles p
+    where p.public_slug = candidate
+      and p.id <> profile_id
+  ) loop
+    suffix_num := suffix_num + 1;
+    candidate := base_slug || '-' || suffix_num::text;
+  end loop;
+
+  return candidate;
+end;
+$$;
 
 create table if not exists public.side_bets (
   id bigint generated always as identity primary key,
@@ -153,10 +207,22 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  generated_slug text;
 begin
-  insert into public.profiles (id, email, display_name, avatar_url)
-  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)))
-        , coalesce(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture')
+  generated_slug := public.ensure_unique_public_slug(
+    public.slugify_display_name(coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1))),
+    new.id
+  );
+
+  insert into public.profiles (id, email, display_name, public_slug, avatar_url)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    generated_slug,
+    coalesce(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture')
+  )
   on conflict (id) do nothing;
 
   return new;
@@ -168,6 +234,15 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row
 execute function public.handle_new_user_profile();
+
+update public.profiles p
+set public_slug = public.ensure_unique_public_slug(
+  public.slugify_display_name(coalesce(p.display_name, split_part(p.email, '@', 1))),
+  p.id
+)
+where p.public_slug is null;
+
+create unique index if not exists profiles_public_slug_idx on public.profiles (public_slug);
 
 alter table public.profiles enable row level security;
 alter table public.chapters enable row level security;
