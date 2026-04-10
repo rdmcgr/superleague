@@ -170,7 +170,16 @@ export default function StandingsPage() {
               })}
             </div>
           ) : null}
-          <h2 className="section-title mb-4">League Standings</h2>
+          <h2 className="section-title mb-4 flex items-center gap-2">
+            <Image
+              alt="Super League wordmark"
+              className="h-auto w-28 max-w-full object-contain"
+              src="/superleague-wordmark.png"
+              width={112}
+              height={28}
+            />
+            <span>Standings</span>
+          </h2>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
