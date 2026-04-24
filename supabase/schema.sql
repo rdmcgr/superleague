@@ -104,6 +104,15 @@ create table if not exists public.side_bet_comments (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.shit_talk_replies (
+  id bigint generated always as identity primary key,
+  target_user_id uuid not null references public.profiles(id) on delete cascade,
+  target_shit_talk_updated_at timestamptz not null,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  message text not null check (char_length(message) <= 200),
+  created_at timestamptz not null default now()
+);
+
 alter table public.side_bets add column if not exists winner_id uuid references public.profiles(id) on delete set null;
 alter table public.side_bets add column if not exists settled_at timestamptz;
 alter table public.side_bets add column if not exists creator_selected_winner_id uuid references public.profiles(id) on delete set null;
@@ -253,6 +262,7 @@ alter table public.results enable row level security;
 alter table public.result_teams enable row level security;
 alter table public.side_bets enable row level security;
 alter table public.side_bet_comments enable row level security;
+alter table public.shit_talk_replies enable row level security;
 
 -- Profiles
 create policy "Profiles readable by authenticated users"
@@ -489,6 +499,17 @@ using (
   )
 );
 
+create policy "Shit talk replies readable"
+on public.shit_talk_replies
+for select
+using (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
+
 -- Admin write policies
 create policy "Admin can manage chapters"
 on public.chapters
@@ -699,6 +720,18 @@ with check (
 
 create policy "Users can create bet comments"
 on public.side_bet_comments
+for insert
+with check (
+  user_id = auth.uid()
+  and exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
+
+create policy "Users can create shit talk replies"
+on public.shit_talk_replies
 for insert
 with check (
   user_id = auth.uid()

@@ -19,11 +19,15 @@ export default function ShitTalkPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [updates, setUpdates] = useState<ShitTalkUpdate[]>([]);
+  const [replies, setReplies] = useState<ShitTalkReply[]>([]);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [hiddenReplies, setHiddenReplies] = useState<Record<string, boolean>>({});
   const [shitTalk, setShitTalk] = useState("");
   const [saving, setSaving] = useState(false);
+  const [replyingKey, setReplyingKey] = useState<string | null>(null);
   const [now, setNow] = useState<Date>(new Date());
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ text: string; tone: "success" | "danger" } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -58,20 +62,31 @@ export default function ShitTalkPage() {
     }
     setShitTalk(profileRes.data?.shit_talk ?? "");
 
-    const updatesRes = await supabase
-      .from("profiles")
-      .select("id,public_slug,display_name,email,avatar_url,shit_talk,shit_talk_updated_at")
-      .not("shit_talk", "is", null)
-      .neq("shit_talk", "")
-      .order("shit_talk_updated_at", { ascending: false });
+    const [updatesRes, repliesRes] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id,public_slug,display_name,email,avatar_url,shit_talk,shit_talk_updated_at")
+        .not("shit_talk", "is", null)
+        .neq("shit_talk", "")
+        .order("shit_talk_updated_at", { ascending: false }),
+      supabase
+        .from("shit_talk_replies")
+        .select("id,target_user_id,target_shit_talk_updated_at,user_id,message,created_at,profiles(display_name,email,public_slug,avatar_url)")
+        .order("created_at", { ascending: true })
+    ]);
 
-    if (updatesRes.error) {
+    if (updatesRes.error || repliesRes.error) {
       setError("Could not load shit talk updates.");
       setLoading(false);
       return;
     }
     const list = (updatesRes.data ?? []) as ShitTalkUpdate[];
     setUpdates(list);
+    const replyList = (repliesRes.data ?? []).map((reply) => {
+      const replyProfile = Array.isArray(reply.profiles) ? reply.profiles[0] : reply.profiles;
+      return { ...reply, profiles: replyProfile } as ShitTalkReply;
+    });
+    setReplies(replyList);
     if (list.length && list[0].shit_talk_updated_at) {
       localStorage.setItem("shit_talk_last_seen_page_at", String(new Date(list[0].shit_talk_updated_at).getTime()));
     }
@@ -107,7 +122,7 @@ export default function ShitTalkPage() {
     if (cooldown.locked) {
       await load();
       if (cooldown.locked) {
-        setNotice("Shit talk can only be changed once every 24 hours.");
+        setNotice({ text: "Shit talk can only be changed once every 24 hours.", tone: "danger" });
         return;
       }
     }
@@ -121,12 +136,12 @@ export default function ShitTalkPage() {
       .eq("id", profile.id);
 
     if (res.error) {
-      setNotice(res.error.message);
+      setNotice({ text: res.error.message, tone: "danger" });
       setSaving(false);
       return;
     }
 
-    setNotice("Shit Talk saved.");
+    setNotice({ text: "Shit Talk posted.", tone: "success" });
     await load();
     setSaving(false);
   }
@@ -136,12 +151,56 @@ export default function ShitTalkPage() {
     setNotice(null);
     const res = await supabase.rpc("clear_shit_talk_by_admin", { target_user_id: userId });
     if (res.error) {
-      setNotice(res.error.message);
+      setNotice({ text: res.error.message, tone: "danger" });
       return;
     }
-    setNotice("Shit Talk removed.");
+    setNotice({ text: "Shit Talk removed.", tone: "success" });
     setUpdates((prev) => prev.filter((u) => u.id !== userId));
     await load();
+  }
+
+  function replyKeyFor(update: ShitTalkUpdate) {
+    return `${update.id}:${update.shit_talk_updated_at || ""}`;
+  }
+
+  function repliesFor(update: ShitTalkUpdate) {
+    return replies.filter(
+      (reply) =>
+        reply.target_user_id === update.id &&
+        reply.target_shit_talk_updated_at === update.shit_talk_updated_at
+    );
+  }
+
+  async function postReply(update: ShitTalkUpdate) {
+    if (!user || !update.shit_talk_updated_at) return;
+    const replyKey = replyKeyFor(update);
+    const draft = (replyDrafts[replyKey] || "").trim();
+    if (!draft) {
+      setNotice({ text: "Reply cannot be empty.", tone: "danger" });
+      return;
+    }
+
+    setReplyingKey(replyKey);
+    setNotice(null);
+
+    const res = await supabase.from("shit_talk_replies").insert({
+      target_user_id: update.id,
+      target_shit_talk_updated_at: update.shit_talk_updated_at,
+      user_id: user.id,
+      message: draft
+    });
+
+    if (res.error) {
+      setNotice({ text: res.error.message, tone: "danger" });
+      setReplyingKey(null);
+      return;
+    }
+
+    setReplyDrafts((prev) => ({ ...prev, [replyKey]: "" }));
+    setHiddenReplies((prev) => ({ ...prev, [replyKey]: false }));
+    setNotice({ text: "Reply posted.", tone: "success" });
+    await load();
+    setReplyingKey(null);
   }
 
   if (loading) return <Loading label="Loading shit talk..." />;
@@ -150,7 +209,7 @@ export default function ShitTalkPage() {
     <>
       <AppHeader user={user} isAdmin={isAdmin} />
       {error ? <Notice text={error} tone="danger" /> : null}
-      {notice ? <div className="mb-3"><Notice text={notice} tone="success" /></div> : null}
+      {notice ? <div className="mb-3"><Notice text={notice.text} tone={notice.tone} /></div> : null}
 
       <section className="glass rounded-2xl p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -172,7 +231,7 @@ export default function ShitTalkPage() {
             />
           </label>
           <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-            <span>Visible to other players. 200 character max.</span>
+            <span>Visible to other players. 200 character max. You may only post once in a 24-hour period.</span>
             <span>{remainingChars} characters remaining</span>
           </div>
           {cooldown.locked ? (
@@ -182,15 +241,24 @@ export default function ShitTalkPage() {
           ) : null}
           <div className="mt-4">
             <button className="btn btn-primary" onClick={() => void saveShitTalk()} disabled={saving || cooldown.locked} type="button">
-              {saving ? "Saving..." : "Save Shit Talk"}
+              {saving ? "Posting..." : "Post Shit Talk"}
             </button>
           </div>
         </div>
+
+        {updates.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-white/15 bg-slate-950/35 p-5 text-sm text-slate-300">
+            Be the first to talk that shit...
+          </div>
+        ) : null}
 
         <div className="space-y-3">
           {updates.map((u) => {
             const name = u.display_name || u.email || "Player";
             const when = u.shit_talk_updated_at ? new Date(u.shit_talk_updated_at).toLocaleString() : "";
+            const replyKey = replyKeyFor(u);
+            const threadReplies = repliesFor(u);
+            const repliesHidden = hiddenReplies[replyKey] ?? false;
             return (
               <article key={u.id} className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
                 <div className="mb-3 flex items-center justify-between gap-2">
@@ -226,6 +294,83 @@ export default function ShitTalkPage() {
                   ) : null}
                 </div>
                 <p className="text-sm text-slate-200">{u.shit_talk}</p>
+                <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-3">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Replies</p>
+                    {threadReplies.length ? (
+                      <button
+                        className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+                        onClick={() =>
+                          setHiddenReplies((prev) => ({ ...prev, [replyKey]: !repliesHidden }))
+                        }
+                        type="button"
+                      >
+                        {repliesHidden ? "Unhide Replies" : "Hide Replies"}
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {!repliesHidden ? (
+                    <div className="space-y-2">
+                      {threadReplies.map((reply) => {
+                        const replyName = reply.profiles?.display_name || reply.profiles?.email || "Player";
+                        return (
+                          <div key={reply.id} className="ml-3 rounded-lg border border-white/10 bg-slate-950/50 p-3">
+                            <div className="mb-1 flex items-center gap-2">
+                              {reply.profiles?.avatar_url ? (
+                                <Image
+                                  alt="Reply avatar"
+                                  className="h-7 w-7 rounded-full object-cover"
+                                  src={reply.profiles.avatar_url}
+                                  width={28}
+                                  height={28}
+                                />
+                              ) : (
+                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[10px] font-semibold">
+                                  {replyName.slice(0, 1).toUpperCase()}
+                                </span>
+                              )}
+                              <div>
+                                <a
+                                  className="text-xs font-semibold text-slate-100 underline decoration-white/20 hover:decoration-white"
+                                  href={`/players/${reply.profiles?.public_slug || reply.user_id}`}
+                                >
+                                  {replyName}
+                                </a>
+                                <p className="text-[11px] text-slate-400">{new Date(reply.created_at).toLocaleString()}</p>
+                              </div>
+                            </div>
+                            <p className="text-sm text-slate-200">{reply.message}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-3 flex flex-col gap-2">
+                    <textarea
+                      className="min-h-20 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                      maxLength={200}
+                      value={replyDrafts[replyKey] || ""}
+                      onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [replyKey]: e.target.value }))}
+                      placeholder={`Reply to ${name}...`}
+                      disabled={replyingKey === replyKey}
+                    />
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs text-slate-400">
+                        {(replyDrafts[replyKey] || "").length}/200
+                      </span>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => void postReply(u)}
+                        disabled={replyingKey === replyKey}
+                        type="button"
+                      >
+                        {replyingKey === replyKey ? "Posting..." : "Post Reply"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </article>
             );
           })}
@@ -243,4 +388,19 @@ type ShitTalkUpdate = {
   avatar_url: string | null;
   shit_talk: string | null;
   shit_talk_updated_at: string | null;
+};
+
+type ShitTalkReply = {
+  id: number;
+  target_user_id: string;
+  target_shit_talk_updated_at: string;
+  user_id: string;
+  message: string;
+  created_at: string;
+  profiles: {
+    display_name: string | null;
+    email: string;
+    public_slug: string | null;
+    avatar_url: string | null;
+  } | null;
 };
