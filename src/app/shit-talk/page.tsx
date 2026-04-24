@@ -107,7 +107,7 @@ export default function ShitTalkPage() {
   }, []);
 
   const cooldown = useMemo(() => {
-    if (!profile?.shit_talk_updated_at) return { locked: false, remaining: "" };
+    if (!profile?.shit_talk || !profile?.shit_talk_updated_at) return { locked: false, remaining: "" };
     const last = new Date(profile.shit_talk_updated_at);
     const unlockAt = new Date(last.getTime() + 24 * 60 * 60 * 1000);
     if (now >= unlockAt) return { locked: false, remaining: "" };
@@ -117,7 +117,7 @@ export default function ShitTalkPage() {
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
     const pad = (n: number) => n.toString().padStart(2, "0");
     return { locked: true, remaining: `${pad(hours)}:${pad(minutes)}:${pad(seconds)}` };
-  }, [now, profile?.shit_talk_updated_at]);
+  }, [now, profile?.shit_talk, profile?.shit_talk_updated_at]);
 
   const remainingChars = useMemo(() => 200 - shitTalk.length, [shitTalk.length]);
 
