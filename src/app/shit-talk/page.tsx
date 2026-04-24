@@ -62,31 +62,35 @@ export default function ShitTalkPage() {
     }
     setShitTalk(profileRes.data?.shit_talk ?? "");
 
-    const [updatesRes, repliesRes] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id,public_slug,display_name,email,avatar_url,shit_talk,shit_talk_updated_at")
-        .not("shit_talk", "is", null)
-        .neq("shit_talk", "")
-        .order("shit_talk_updated_at", { ascending: false }),
-      supabase
-        .from("shit_talk_replies")
-        .select("id,target_user_id,target_shit_talk_updated_at,user_id,message,created_at,profiles(display_name,email,public_slug,avatar_url)")
-        .order("created_at", { ascending: true })
-    ]);
+    const updatesRes = await supabase
+      .from("profiles")
+      .select("id,public_slug,display_name,email,avatar_url,shit_talk,shit_talk_updated_at")
+      .not("shit_talk", "is", null)
+      .neq("shit_talk", "")
+      .order("shit_talk_updated_at", { ascending: false });
 
-    if (updatesRes.error || repliesRes.error) {
+    if (updatesRes.error) {
       setError("Could not load shit talk updates.");
       setLoading(false);
       return;
     }
+
+    const repliesRes = await supabase
+      .from("shit_talk_replies")
+      .select("id,target_user_id,target_shit_talk_updated_at,user_id,message,created_at,profiles(display_name,email,public_slug,avatar_url)")
+      .order("created_at", { ascending: true });
+
     const list = (updatesRes.data ?? []) as ShitTalkUpdate[];
     setUpdates(list);
-    const replyList = (repliesRes.data ?? []).map((reply) => {
-      const replyProfile = Array.isArray(reply.profiles) ? reply.profiles[0] : reply.profiles;
-      return { ...reply, profiles: replyProfile } as ShitTalkReply;
-    });
-    setReplies(replyList);
+    if (!repliesRes.error) {
+      const replyList = (repliesRes.data ?? []).map((reply) => {
+        const replyProfile = Array.isArray(reply.profiles) ? reply.profiles[0] : reply.profiles;
+        return { ...reply, profiles: replyProfile } as ShitTalkReply;
+      });
+      setReplies(replyList);
+    } else {
+      setReplies([]);
+    }
     if (list.length && list[0].shit_talk_updated_at) {
       localStorage.setItem("shit_talk_last_seen_page_at", String(new Date(list[0].shit_talk_updated_at).getTime()));
     }
