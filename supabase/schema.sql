@@ -423,6 +423,28 @@ begin
 end;
 $$;
 
+create or replace function public.delete_shit_talk_reply_by_admin(target_reply_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  actor_is_admin boolean;
+begin
+  select p.is_admin into actor_is_admin
+  from public.profiles p
+  where p.id = auth.uid();
+
+  if coalesce(actor_is_admin, false) = false then
+    raise exception 'Only admins can delete shit talk replies';
+  end if;
+
+  delete from public.shit_talk_replies
+  where id = target_reply_id;
+end;
+$$;
+
 -- Chapters, questions, teams, results readable to all authenticated users
 create policy "Chapters readable"
 on public.chapters

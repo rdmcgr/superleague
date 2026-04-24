@@ -185,6 +185,18 @@ export default function ShitTalkPage() {
     await load();
   }
 
+  async function clearReply(replyId: number) {
+    if (!isAdmin) return;
+    setNotice(null);
+    const res = await supabase.rpc("delete_shit_talk_reply_by_admin", { target_reply_id: replyId });
+    if (res.error) {
+      setNotice({ text: res.error.message, tone: "danger" });
+      return;
+    }
+    setNotice({ text: "Reply removed.", tone: "success" });
+    setReplies((prev) => prev.filter((reply) => reply.id !== replyId));
+  }
+
   function normalizedTimestamp(value: string | null) {
     if (!value) return "";
     const time = new Date(value).getTime();
@@ -347,29 +359,40 @@ export default function ShitTalkPage() {
                         const replyName = reply.profiles?.display_name || reply.profiles?.email || "Player";
                         return (
                           <div key={reply.id} className="ml-3 rounded-lg border border-white/10 bg-slate-950/50 p-3">
-                            <div className="mb-1 flex items-center gap-2">
-                              {reply.profiles?.avatar_url ? (
-                                <Image
-                                  alt="Reply avatar"
-                                  className="h-7 w-7 rounded-full object-cover"
-                                  src={reply.profiles.avatar_url}
-                                  width={28}
-                                  height={28}
-                                />
-                              ) : (
-                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[10px] font-semibold">
-                                  {replyName.slice(0, 1).toUpperCase()}
-                                </span>
-                              )}
-                              <div>
-                                <a
-                                  className="text-xs font-semibold text-slate-100 underline decoration-white/20 hover:decoration-white"
-                                  href={`/players/${reply.profiles?.public_slug || reply.user_id}`}
-                                >
-                                  {replyName}
-                                </a>
-                                <p className="text-[11px] text-slate-400">{new Date(reply.created_at).toLocaleString()}</p>
+                            <div className="mb-1 flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                {reply.profiles?.avatar_url ? (
+                                  <Image
+                                    alt="Reply avatar"
+                                    className="h-7 w-7 rounded-full object-cover"
+                                    src={reply.profiles.avatar_url}
+                                    width={28}
+                                    height={28}
+                                  />
+                                ) : (
+                                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[10px] font-semibold">
+                                    {replyName.slice(0, 1).toUpperCase()}
+                                  </span>
+                                )}
+                                <div>
+                                  <a
+                                    className="text-xs font-semibold text-slate-100 underline decoration-white/20 hover:decoration-white"
+                                    href={`/players/${reply.profiles?.public_slug || reply.user_id}`}
+                                  >
+                                    {replyName}
+                                  </a>
+                                  <p className="text-[11px] text-slate-400">{new Date(reply.created_at).toLocaleString()}</p>
+                                </div>
                               </div>
+                              {isAdmin ? (
+                                <button
+                                  className="rounded-md border border-red-400/40 bg-red-400/10 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-red-100"
+                                  onClick={() => void clearReply(reply.id)}
+                                  type="button"
+                                >
+                                  Remove
+                                </button>
+                              ) : null}
                             </div>
                             <p className="text-sm text-slate-200">{reply.message}</p>
                           </div>
