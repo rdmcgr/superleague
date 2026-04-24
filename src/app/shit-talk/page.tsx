@@ -163,15 +163,21 @@ export default function ShitTalkPage() {
     await load();
   }
 
+  function normalizedTimestamp(value: string | null) {
+    if (!value) return "";
+    const time = new Date(value).getTime();
+    return Number.isNaN(time) ? value : String(time);
+  }
+
   function replyKeyFor(update: ShitTalkUpdate) {
-    return `${update.id}:${update.shit_talk_updated_at || ""}`;
+    return `${update.id}:${normalizedTimestamp(update.shit_talk_updated_at)}`;
   }
 
   function repliesFor(update: ShitTalkUpdate) {
     return replies.filter(
       (reply) =>
         reply.target_user_id === update.id &&
-        reply.target_shit_talk_updated_at === update.shit_talk_updated_at
+        normalizedTimestamp(reply.target_shit_talk_updated_at) === normalizedTimestamp(update.shit_talk_updated_at)
     );
   }
 
