@@ -334,7 +334,9 @@ begin
   end if;
 
   if new.shit_talk is distinct from old.shit_talk then
-    if old.shit_talk_updated_at is not null and now() < old.shit_talk_updated_at + interval '24 hours' then
+    if coalesce(nullif(btrim(old.shit_talk), ''), null) is not null
+      and old.shit_talk_updated_at is not null
+      and now() < old.shit_talk_updated_at + interval '24 hours' then
       raise exception 'Shit talk can only be changed once every 24 hours';
     end if;
     new.shit_talk_updated_at = now();

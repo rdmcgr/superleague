@@ -137,10 +137,19 @@ export default function ShitTalkPage() {
   async function saveShitTalk() {
     if (!profile) return;
     if (cooldown.locked) {
-      await load();
-      if (cooldown.locked) {
-        setNotice({ text: "Shit talk can only be changed once every 24 hours.", tone: "danger" });
-        return;
+      const {
+        data: refreshedProfile
+      } = await supabase
+        .from("profiles")
+        .select("shit_talk,shit_talk_updated_at")
+        .eq("id", profile.id)
+        .single();
+      if (refreshedProfile?.shit_talk && refreshedProfile?.shit_talk_updated_at) {
+        const unlockAt = new Date(refreshedProfile.shit_talk_updated_at).getTime() + 24 * 60 * 60 * 1000;
+        if (Date.now() < unlockAt) {
+          setNotice({ text: "Shit talk can only be changed once every 24 hours.", tone: "danger" });
+          return;
+        }
       }
     }
 
@@ -241,7 +250,6 @@ export default function ShitTalkPage() {
         </div>
 
         <div className="mb-5 rounded-xl border border-white/10 bg-slate-950/40 p-4">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">Post Shit Talk</h2>
           <label className="text-sm text-slate-300">
             Your Message
             <textarea
@@ -254,7 +262,7 @@ export default function ShitTalkPage() {
             />
           </label>
           <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-            <span>Visible to other players. 200 character max. You may only post once in a 24-hour period.</span>
+            <span>You may only post once in a 24-hour period. Choose wisely!</span>
             <span>{remainingChars} characters remaining</span>
           </div>
           {cooldown.locked ? (

@@ -93,10 +93,19 @@ export default function ProfilePage() {
   async function save() {
     if (!profile) return;
     if (cooldown.locked) {
-      await loadProfile();
-      if (cooldown.locked) {
-        setNotice({ text: "Shit talk can only be changed once every 24 hours.", tone: "danger" });
-        return;
+      const {
+        data: refreshedProfile
+      } = await supabase
+        .from("profiles")
+        .select("shit_talk,shit_talk_updated_at")
+        .eq("id", profile.id)
+        .single();
+      if (refreshedProfile?.shit_talk && refreshedProfile?.shit_talk_updated_at) {
+        const unlockAt = new Date(refreshedProfile.shit_talk_updated_at).getTime() + 24 * 60 * 60 * 1000;
+        if (Date.now() < unlockAt) {
+          setNotice({ text: "Shit talk can only be changed once every 24 hours.", tone: "danger" });
+          return;
+        }
       }
     }
     setSaving(true);
