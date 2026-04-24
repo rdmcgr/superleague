@@ -352,8 +352,7 @@ export default function ShitTalkPage() {
                 </div>
                 <p className="text-sm text-slate-200">{u.shit_talk}</p>
                 <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-3">
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Replies</p>
+                  <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
