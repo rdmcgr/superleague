@@ -392,7 +392,7 @@ export default function ShitTalkPage() {
                                   >
                                     {replyName}
                                   </a>
-                                  <p className="text-[10px] text-slate-400">{formatTimestamp(reply.created_at)}</p>
+                                  <p className="text-[9px] text-slate-400">{formatTimestamp(reply.created_at)}</p>
                                 </div>
                               </div>
                               {isAdmin ? (
