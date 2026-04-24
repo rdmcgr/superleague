@@ -22,6 +22,7 @@ export default function ShitTalkPage() {
   const [replies, setReplies] = useState<ShitTalkReply[]>([]);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [hiddenReplies, setHiddenReplies] = useState<Record<string, boolean>>({});
+  const [openReplyComposers, setOpenReplyComposers] = useState<Record<string, boolean>>({});
   const [shitTalk, setShitTalk] = useState("");
   const [saving, setSaving] = useState(false);
   const [replyingKey, setReplyingKey] = useState<string | null>(null);
@@ -253,6 +254,7 @@ export default function ShitTalkPage() {
 
     setReplyDrafts((prev) => ({ ...prev, [replyKey]: "" }));
     setHiddenReplies((prev) => ({ ...prev, [replyKey]: false }));
+    setOpenReplyComposers((prev) => ({ ...prev, [replyKey]: false }));
     setNotice({ text: "Reply posted.", tone: "success" });
     await load();
     setReplyingKey(null);
@@ -313,6 +315,7 @@ export default function ShitTalkPage() {
             const replyKey = replyKeyFor(u);
             const threadReplies = repliesFor(u);
             const repliesHidden = hiddenReplies[replyKey] ?? false;
+            const composerOpen = openReplyComposers[replyKey] ?? false;
             return (
               <article key={u.id} className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
                 <div className="mb-3 flex items-center justify-between gap-2">
@@ -351,17 +354,28 @@ export default function ShitTalkPage() {
                 <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-3">
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Replies</p>
-                    {threadReplies.length ? (
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
                         onClick={() =>
-                          setHiddenReplies((prev) => ({ ...prev, [replyKey]: !repliesHidden }))
+                          setOpenReplyComposers((prev) => ({ ...prev, [replyKey]: !composerOpen }))
                         }
                         type="button"
                       >
-                        {repliesHidden ? "Unhide Replies" : "Hide Replies"}
+                        {composerOpen ? "Hide Reply Box" : "Reply"}
                       </button>
-                    ) : null}
+                      {threadReplies.length ? (
+                        <button
+                          className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+                          onClick={() =>
+                            setHiddenReplies((prev) => ({ ...prev, [replyKey]: !repliesHidden }))
+                          }
+                          type="button"
+                        >
+                          {repliesHidden ? "Unhide Replies" : "Hide Replies"}
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
 
                   {!repliesHidden ? (
@@ -412,29 +426,31 @@ export default function ShitTalkPage() {
                     </div>
                   ) : null}
 
-                  <div className="mt-3 flex flex-col gap-2">
-                    <textarea
-                      className="min-h-20 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                      maxLength={200}
-                      value={replyDrafts[replyKey] || ""}
-                      onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [replyKey]: e.target.value }))}
-                      placeholder={`Reply to ${name}...`}
-                      disabled={replyingKey === replyKey}
-                    />
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-xs text-slate-400">
-                        {(replyDrafts[replyKey] || "").length}/200
-                      </span>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => void postReply(u)}
+                  {composerOpen ? (
+                    <div className="mt-3 flex flex-col gap-2">
+                      <textarea
+                        className="min-h-20 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                        maxLength={200}
+                        value={replyDrafts[replyKey] || ""}
+                        onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [replyKey]: e.target.value }))}
+                        placeholder={`Reply to ${name}...`}
                         disabled={replyingKey === replyKey}
-                        type="button"
-                      >
-                        {replyingKey === replyKey ? "Posting..." : "Post Reply"}
-                      </button>
+                      />
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-xs text-slate-400">
+                          {(replyDrafts[replyKey] || "").length}/200
+                        </span>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => void postReply(u)}
+                          disabled={replyingKey === replyKey}
+                          type="button"
+                        >
+                          {replyingKey === replyKey ? "Posting..." : "Post Reply"}
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
                 </div>
               </article>
             );
