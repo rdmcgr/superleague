@@ -236,7 +236,7 @@ export default function ShitTalkPage() {
           </div>
           {cooldown.locked ? (
             <p className="mt-2 text-xs text-amber-200">
-              Shit Talk locked. You can edit again in {cooldown.remaining}.
+              Locked. You can shit talk again in {cooldown.remaining}. You can reply to posts in the meantime.
             </p>
           ) : null}
           <div className="mt-4">
