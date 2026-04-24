@@ -77,16 +77,29 @@ export default function ShitTalkPage() {
 
     const repliesRes = await supabase
       .from("shit_talk_replies")
-      .select("id,target_user_id,target_shit_talk_updated_at,user_id,message,created_at,profiles(display_name,email,public_slug,avatar_url)")
+      .select("id,target_user_id,target_shit_talk_updated_at,user_id,message,created_at")
       .order("created_at", { ascending: true });
 
     const list = (updatesRes.data ?? []) as ShitTalkUpdate[];
     setUpdates(list);
     if (!repliesRes.error) {
-      const replyList = (repliesRes.data ?? []).map((reply) => {
-        const replyProfile = Array.isArray(reply.profiles) ? reply.profiles[0] : reply.profiles;
-        return { ...reply, profiles: replyProfile } as ShitTalkReply;
-      });
+      const rawReplies = (repliesRes.data ?? []) as ShitTalkReplyRow[];
+      const replyUserIds = Array.from(new Set(rawReplies.map((reply) => reply.user_id)));
+      const replyProfilesRes =
+        replyUserIds.length > 0
+          ? await supabase
+              .from("profiles")
+              .select("id,display_name,email,public_slug,avatar_url")
+              .in("id", replyUserIds)
+          : { data: [], error: null };
+
+      const replyProfileMap = new Map(
+        (replyProfilesRes.data ?? []).map((replyProfile) => [replyProfile.id, replyProfile])
+      );
+      const replyList = rawReplies.map((reply) => ({
+        ...reply,
+        profiles: replyProfileMap.get(reply.user_id) ?? null
+      })) as ShitTalkReply[];
       setReplies(replyList);
     } else {
       setReplies([]);
@@ -398,6 +411,15 @@ type ShitTalkUpdate = {
   avatar_url: string | null;
   shit_talk: string | null;
   shit_talk_updated_at: string | null;
+};
+
+type ShitTalkReplyRow = {
+  id: number;
+  target_user_id: string;
+  target_shit_talk_updated_at: string;
+  user_id: string;
+  message: string;
+  created_at: string;
 };
 
 type ShitTalkReply = {
