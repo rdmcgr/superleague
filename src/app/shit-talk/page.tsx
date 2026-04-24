@@ -340,29 +340,31 @@ export default function ShitTalkPage() {
                       <p className="text-xs text-slate-400">{when}</p>
                     </div>
                   </div>
-                  {isAdmin ? (
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
-                      className="rounded-md border border-red-400/40 bg-red-400/10 px-2 py-1 text-xs uppercase tracking-[0.14em] text-red-100"
-                      onClick={() => void clearShitTalk(u.id)}
+                      className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+                      onClick={() =>
+                        setOpenReplyComposers((prev) => ({ ...prev, [replyKey]: !composerOpen }))
+                      }
                       type="button"
                     >
-                      Remove
+                      {composerOpen ? "Hide Reply Box" : "Reply"}
                     </button>
-                  ) : null}
-                </div>
-                <p className="text-sm text-slate-200">{u.shit_talk}</p>
-                <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-3">
-                  <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                    {isAdmin ? (
                       <button
-                        className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
-                        onClick={() =>
-                          setOpenReplyComposers((prev) => ({ ...prev, [replyKey]: !composerOpen }))
-                        }
+                        className="rounded-md border border-red-400/40 bg-red-400/10 px-2 py-1 text-xs uppercase tracking-[0.14em] text-red-100"
+                        onClick={() => void clearShitTalk(u.id)}
                         type="button"
                       >
-                        {composerOpen ? "Hide Reply Box" : "Reply"}
+                        Remove
                       </button>
+                    ) : null}
+                  </div>
+                </div>
+                <p className="text-sm text-slate-200">{u.shit_talk}</p>
+                {threadReplies.length || composerOpen ? (
+                  <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-3">
+                    <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
                       {threadReplies.length ? (
                         <button
                           className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
@@ -375,82 +377,82 @@ export default function ShitTalkPage() {
                         </button>
                       ) : null}
                     </div>
-                  </div>
 
-                  {!repliesHidden ? (
-                    <div className="space-y-2">
-                      {threadReplies.map((reply) => {
-                        const replyName = reply.profiles?.display_name || reply.profiles?.email || "Player";
-                        return (
-                          <div key={reply.id} className="ml-3 rounded-lg border border-white/10 bg-slate-950/50 p-3">
-                            <div className="mb-1 flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                {reply.profiles?.avatar_url ? (
-                                  <Image
-                                    alt="Reply avatar"
-                                    className="h-7 w-7 rounded-full object-cover"
-                                    src={reply.profiles.avatar_url}
-                                    width={28}
-                                    height={28}
-                                  />
-                                ) : (
-                                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[10px] font-semibold">
-                                    {replyName.slice(0, 1).toUpperCase()}
-                                  </span>
-                                )}
-                                <div>
-                                  <a
-                                    className="text-xs font-semibold text-slate-100 underline decoration-white/20 hover:decoration-white"
-                                    href={`/players/${reply.profiles?.public_slug || reply.user_id}`}
-                                  >
-                                    {replyName}
-                                  </a>
-                                  <p className="text-[9px] text-slate-400">{formatTimestamp(reply.created_at)}</p>
+                    {!repliesHidden ? (
+                      <div className="space-y-2">
+                        {threadReplies.map((reply) => {
+                          const replyName = reply.profiles?.display_name || reply.profiles?.email || "Player";
+                          return (
+                            <div key={reply.id} className="ml-3 rounded-lg border border-white/10 bg-slate-950/50 p-3">
+                              <div className="mb-1 flex items-start justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  {reply.profiles?.avatar_url ? (
+                                    <Image
+                                      alt="Reply avatar"
+                                      className="h-7 w-7 rounded-full object-cover"
+                                      src={reply.profiles.avatar_url}
+                                      width={28}
+                                      height={28}
+                                    />
+                                  ) : (
+                                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[10px] font-semibold">
+                                      {replyName.slice(0, 1).toUpperCase()}
+                                    </span>
+                                  )}
+                                  <div>
+                                    <a
+                                      className="text-xs font-semibold text-slate-100 underline decoration-white/20 hover:decoration-white"
+                                      href={`/players/${reply.profiles?.public_slug || reply.user_id}`}
+                                    >
+                                      {replyName}
+                                    </a>
+                                    <p className="text-[9px] text-slate-400">{formatTimestamp(reply.created_at)}</p>
+                                  </div>
                                 </div>
+                                {isAdmin ? (
+                                  <button
+                                    className="rounded-md border border-red-400/40 bg-red-400/10 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-red-100"
+                                    onClick={() => void clearReply(reply.id)}
+                                    type="button"
+                                  >
+                                    Remove
+                                  </button>
+                                ) : null}
                               </div>
-                              {isAdmin ? (
-                                <button
-                                  className="rounded-md border border-red-400/40 bg-red-400/10 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-red-100"
-                                  onClick={() => void clearReply(reply.id)}
-                                  type="button"
-                                >
-                                  Remove
-                                </button>
-                              ) : null}
+                              <p className="text-sm text-slate-200">{reply.message}</p>
                             </div>
-                            <p className="text-sm text-slate-200">{reply.message}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-
-                  {composerOpen ? (
-                    <div className="mt-3 flex flex-col gap-2">
-                      <textarea
-                        className="min-h-20 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                        maxLength={200}
-                        value={replyDrafts[replyKey] || ""}
-                        onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [replyKey]: e.target.value }))}
-                        placeholder={`Reply to ${name}...`}
-                        disabled={replyingKey === replyKey}
-                      />
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-xs text-slate-400">
-                          {(replyDrafts[replyKey] || "").length}/200
-                        </span>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => void postReply(u)}
-                          disabled={replyingKey === replyKey}
-                          type="button"
-                        >
-                          {replyingKey === replyKey ? "Posting..." : "Post Reply"}
-                        </button>
+                          );
+                        })}
                       </div>
-                    </div>
-                  ) : null}
-                </div>
+                    ) : null}
+
+                    {composerOpen ? (
+                      <div className="mt-3 flex flex-col gap-2">
+                        <textarea
+                          className="min-h-20 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                          maxLength={200}
+                          value={replyDrafts[replyKey] || ""}
+                          onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [replyKey]: e.target.value }))}
+                          placeholder={`Reply to ${name}...`}
+                          disabled={replyingKey === replyKey}
+                        />
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-xs text-slate-400">
+                            {(replyDrafts[replyKey] || "").length}/200
+                          </span>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => void postReply(u)}
+                            disabled={replyingKey === replyKey}
+                            type="button"
+                          >
+                            {replyingKey === replyKey ? "Posting..." : "Post Reply"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
               </article>
             );
           })}
