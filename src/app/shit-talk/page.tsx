@@ -203,6 +203,17 @@ export default function ShitTalkPage() {
     return Number.isNaN(time) ? value : String(time);
   }
 
+  function formatTimestamp(value: string | null) {
+    if (!value) return "";
+    return new Date(value).toLocaleString([], {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  }
+
   function replyKeyFor(update: ShitTalkUpdate) {
     return `${update.id}:${normalizedTimestamp(update.shit_talk_updated_at)}`;
   }
@@ -279,7 +290,7 @@ export default function ShitTalkPage() {
           </div>
           {cooldown.locked ? (
             <p className="mt-2 text-xs text-amber-200">
-              Locked. You can shit talk again in {cooldown.remaining}. You can reply to posts in the meantime.
+              Locked. You can shit talk again in <span className="text-[10px] text-amber-100/90">{cooldown.remaining}</span>. You can reply to posts in the meantime.
             </p>
           ) : null}
           <div className="mt-4">
@@ -298,7 +309,7 @@ export default function ShitTalkPage() {
         <div className="space-y-3">
           {updates.map((u) => {
             const name = u.display_name || u.email || "Player";
-            const when = u.shit_talk_updated_at ? new Date(u.shit_talk_updated_at).toLocaleString() : "";
+            const when = formatTimestamp(u.shit_talk_updated_at);
             const replyKey = replyKeyFor(u);
             const threadReplies = repliesFor(u);
             const repliesHidden = hiddenReplies[replyKey] ?? false;
@@ -381,7 +392,7 @@ export default function ShitTalkPage() {
                                   >
                                     {replyName}
                                   </a>
-                                  <p className="text-[11px] text-slate-400">{new Date(reply.created_at).toLocaleString()}</p>
+                                  <p className="text-[10px] text-slate-400">{formatTimestamp(reply.created_at)}</p>
                                 </div>
                               </div>
                               {isAdmin ? (
