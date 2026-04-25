@@ -133,6 +133,12 @@ export default function ShitTalkPage() {
     return { locked: true, remaining: `${pad(hours)}:${pad(minutes)}:${pad(seconds)}` };
   }, [now, profile?.shit_talk, profile?.shit_talk_updated_at]);
 
+  useEffect(() => {
+    if (!cooldown.locked && profile?.shit_talk && shitTalk === profile.shit_talk) {
+      setShitTalk("");
+    }
+  }, [cooldown.locked, profile?.shit_talk, shitTalk]);
+
   const remainingChars = useMemo(() => 200 - shitTalk.length, [shitTalk.length]);
 
   async function saveShitTalk() {
