@@ -16,6 +16,7 @@ type PickWithUser = Pick & {
   profiles: {
     display_name: string | null;
     email: string;
+    is_admin: boolean;
   } | null;
 };
 
@@ -116,7 +117,7 @@ export default function HomePage() {
         const userIds = Array.from(new Set(rawPicks.map((pick) => pick.user_id)));
         const visibleProfilesRes =
           userIds.length > 0
-            ? await supabase.from("profiles").select("id,display_name,email").in("id", userIds)
+            ? await supabase.from("profiles").select("id,display_name,email,is_admin").in("id", userIds)
             : { data: [], error: null };
 
         const profileMap = new Map(
@@ -124,10 +125,12 @@ export default function HomePage() {
         );
 
         setAllVisiblePicks(
-          rawPicks.map((pick) => ({
-            ...pick,
-            profiles: profileMap.get(pick.user_id) ?? null
-          }))
+          rawPicks
+            .map((pick) => ({
+              ...pick,
+              profiles: profileMap.get(pick.user_id) ?? null
+            }))
+            .filter((pick) => !pick.profiles?.is_admin)
         );
       }
     }

@@ -127,7 +127,7 @@ export default function StandingsPage() {
         const userIds = Array.from(new Set(rawPicks.map((pick) => pick.user_id)));
         const visibleProfilesRes =
           userIds.length > 0
-            ? await supabase.from("profiles").select("id,display_name,email").in("id", userIds)
+            ? await supabase.from("profiles").select("id,display_name,email,is_admin").in("id", userIds)
             : { data: [], error: null };
 
         const profileMap = new Map(
@@ -135,10 +135,12 @@ export default function StandingsPage() {
         );
 
         setVisiblePicks(
-          rawPicks.map((pick) => ({
-            ...pick,
-            profiles: profileMap.get(pick.user_id) ?? null
-          }))
+          rawPicks
+            .map((pick) => ({
+              ...pick,
+              profiles: profileMap.get(pick.user_id) ?? null
+            }))
+            .filter((pick) => !pick.profiles?.is_admin)
         );
       }
     }
@@ -515,5 +517,6 @@ type PickWithUser = {
   profiles: {
     display_name: string | null;
     email: string;
+    is_admin: boolean;
   } | null;
 };
