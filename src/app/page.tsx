@@ -335,15 +335,11 @@ export default function HomePage() {
                         })}
                       </select>
 
-                      <p className="text-xs text-slate-400">
-                        {pick ? `Your pick: ${teamMap.get(pick.team_id)?.name ?? "Unknown"}` : "No pick yet"}
-                      </p>
-
-                      {pick ? (
+                      {pick && chapter.status === "open" ? (
                         <button
                           className="rounded-md border border-white/15 bg-white/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-200 hover:bg-white/15"
                           type="button"
-                          disabled={chapter.status !== "open" || savingQuestion === q.id}
+                          disabled={savingQuestion === q.id}
                           onClick={() => void clearPick(chapter, q)}
                         >
                           Clear Pick

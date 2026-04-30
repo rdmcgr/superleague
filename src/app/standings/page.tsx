@@ -176,16 +176,14 @@ export default function StandingsPage() {
   const openTalkDetail = (event: MouseEvent<HTMLButtonElement>, userId: string) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const preferredTop = rect.bottom + 12;
-    const maxTop = Math.max(window.innerHeight - 280, 16);
-    const top = Math.min(Math.max(preferredTop, 16), maxTop);
+    const top = Math.max(preferredTop, 16);
     setTalkDetail({ userId, top });
   };
 
   const popupTopForClick = (event: MouseEvent<HTMLButtonElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const preferredTop = rect.bottom + 12;
-    const maxTop = Math.max(window.innerHeight - 320, 16);
-    return Math.min(Math.max(preferredTop, 16), maxTop);
+    return Math.max(preferredTop, 16);
   };
 
   return (
@@ -407,8 +405,12 @@ export default function StandingsPage() {
               onClick={() => setDetail(null)}
             >
               <div
-                className="glass mx-auto w-full max-w-md rounded-2xl p-5"
-                style={{ marginTop: `${detail.top}px`, marginBottom: "16px" }}
+                className="glass mx-auto w-full max-w-md overflow-y-auto rounded-2xl p-5"
+                style={{
+                  marginTop: `${detail.top}px`,
+                  marginBottom: "16px",
+                  maxHeight: `calc(100vh - ${detail.top + 16}px)`
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {(() => {
@@ -451,8 +453,12 @@ export default function StandingsPage() {
               onClick={() => setTalkDetail(null)}
             >
               <div
-                className="glass mx-auto w-full max-w-md rounded-2xl p-5"
-                style={{ marginTop: `${talkDetail.top}px`, marginBottom: "16px" }}
+                className="glass mx-auto w-full max-w-md overflow-y-auto rounded-2xl p-5"
+                style={{
+                  marginTop: `${talkDetail.top}px`,
+                  marginBottom: "16px",
+                  maxHeight: `calc(100vh - ${talkDetail.top + 16}px)`
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {(() => {
