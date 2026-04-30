@@ -12,6 +12,17 @@ import Image from "next/image";
 import type { Chapter, Profile, Question, StandingRow, Team } from "@/lib/types";
 import { useAuthResync } from "@/lib/useAuthResync";
 
+function shortPlayerName(displayName: string | null, email: string | null) {
+  const source = displayName?.trim() || email?.split("@")[0]?.trim() || "";
+  if (!source) return "Player";
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "Player";
+  if (parts.length === 1) return parts[0];
+  const firstName = parts[0];
+  const lastInitial = parts[parts.length - 1][0]?.toUpperCase();
+  return lastInitial ? `${firstName} ${lastInitial}.` : firstName;
+}
+
 export default function StandingsPage() {
   useAuthResync();
   const router = useRouter();
@@ -109,10 +120,26 @@ export default function StandingsPage() {
     if (lockedIds.length) {
       const picksRes = await supabase
         .from("picks")
-        .select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at,profiles(display_name,email)")
+        .select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at")
         .in("chapter_id", lockedIds);
       if (!picksRes.error) {
-        setVisiblePicks((picksRes.data ?? []) as PickWithUser[]);
+        const rawPicks = (picksRes.data ?? []) as PickWithUser[];
+        const userIds = Array.from(new Set(rawPicks.map((pick) => pick.user_id)));
+        const visibleProfilesRes =
+          userIds.length > 0
+            ? await supabase.from("profiles").select("id,display_name,email").in("id", userIds)
+            : { data: [], error: null };
+
+        const profileMap = new Map(
+          (visibleProfilesRes.data ?? []).map((visibleProfile) => [visibleProfile.id, visibleProfile])
+        );
+
+        setVisiblePicks(
+          rawPicks.map((pick) => ({
+            ...pick,
+            profiles: profileMap.get(pick.user_id) ?? null
+          }))
+        );
       }
     }
     setLoading(false);
@@ -386,10 +413,7 @@ export default function StandingsPage() {
                           const label = q?.short_label || q?.prompt || "Question";
                           return (
                           <li key={p.id}>
-                            {(() => {
-                              const profile = Array.isArray(p.profiles) ? p.profiles[0] : null;
-                              return (profile?.display_name || profile?.email || "Player") + ` (${label})`;
-                            })()}
+                            {`${shortPlayerName(p.profiles?.display_name ?? null, p.profiles?.email ?? null)} (${label})`}
                           </li>
                           );
                         })}
@@ -472,5 +496,5 @@ type PickWithUser = {
   profiles: {
     display_name: string | null;
     email: string;
-  }[] | null;
+  } | null;
 };
