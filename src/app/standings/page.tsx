@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import AppHeader from "@/components/AppHeader";
@@ -39,7 +39,7 @@ export default function StandingsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [visiblePicks, setVisiblePicks] = useState<PickWithUser[]>([]);
   const [detail, setDetail] = useState<{ chapterId: number; teamId: number } | null>(null);
-  const [talkDetail, setTalkDetail] = useState<{ userId: string } | null>(null);
+  const [talkDetail, setTalkDetail] = useState<{ userId: string; top: number } | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [showPointsAvailable, setShowPointsAvailable] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,6 +171,14 @@ export default function StandingsPage() {
     localStorage.setItem(seenKey, JSON.stringify(next));
   };
 
+  const openTalkDetail = (event: MouseEvent<HTMLButtonElement>, userId: string) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const preferredTop = rect.bottom + 12;
+    const maxTop = Math.max(window.innerHeight - 280, 16);
+    const top = Math.min(Math.max(preferredTop, 16), maxTop);
+    setTalkDetail({ userId, top });
+  };
+
   return (
     <>
       <AppHeader user={user} isAdmin={Boolean(profile?.is_admin)} />
@@ -239,9 +247,9 @@ export default function StandingsPage() {
                           return (
                             <button
                               type="button"
-                              onClick={() => {
+                              onClick={(event) => {
                                 if (!hasTalk) return;
-                                setTalkDetail({ userId: row.user_id });
+                                openTalkDetail(event, row.user_id);
                               }}
                               disabled={!hasTalk}
                               className={`rounded-full ${ring}`}
@@ -427,11 +435,12 @@ export default function StandingsPage() {
 
           {talkDetail ? (
             <div
-              className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-4 sm:items-center"
+              className="fixed inset-0 z-50 bg-slate-950/70 p-4"
               onClick={() => setTalkDetail(null)}
             >
               <div
-                className="glass w-full max-w-md rounded-2xl p-5"
+                className="glass absolute left-1/2 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl p-5"
+                style={{ top: `${talkDetail.top}px` }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {(() => {
