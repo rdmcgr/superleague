@@ -403,12 +403,12 @@ export default function StandingsPage() {
 
           {detail ? (
             <div
-              className="fixed inset-0 z-50 bg-slate-950/70 p-4"
+              className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 p-4"
               onClick={() => setDetail(null)}
             >
               <div
-                className="glass absolute left-1/2 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl p-5"
-                style={{ top: `${detail.top}px` }}
+                className="glass mx-auto w-full max-w-md rounded-2xl p-5"
+                style={{ marginTop: `${detail.top}px`, marginBottom: "16px" }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {(() => {
@@ -447,12 +447,12 @@ export default function StandingsPage() {
 
           {talkDetail ? (
             <div
-              className="fixed inset-0 z-50 bg-slate-950/70 p-4"
+              className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 p-4"
               onClick={() => setTalkDetail(null)}
             >
               <div
-                className="glass absolute left-1/2 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl p-5"
-                style={{ top: `${talkDetail.top}px` }}
+                className="glass mx-auto w-full max-w-md rounded-2xl p-5"
+                style={{ marginTop: `${talkDetail.top}px`, marginBottom: "16px" }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {(() => {
