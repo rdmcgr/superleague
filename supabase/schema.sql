@@ -595,6 +595,17 @@ using (
   )
 );
 
+create policy "Admins can read all picks anytime"
+on public.picks
+for select
+using (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and p.is_admin = true
+  )
+);
+
 create policy "Users can insert picks in open chapter"
 on public.picks
 for insert
