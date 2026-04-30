@@ -15,7 +15,6 @@ const codeToIso2: Record<string, string> = {
   CUW: "CW",
   ECU: "EC",
   EGY: "EG",
-  ENG: "GB", // England uses Union flag for emoji
   ESP: "ES",
   FRA: "FR",
   GER: "DE",
@@ -39,7 +38,6 @@ const codeToIso2: Record<string, string> = {
   POR: "PT",
   QAT: "QA",
   RSA: "ZA",
-  SCO: "GB", // Scotland uses Union flag for emoji
   SEN: "SN",
   SUI: "CH",
   SUR: "SR",
@@ -47,6 +45,11 @@ const codeToIso2: Record<string, string> = {
   URU: "UY",
   USA: "US",
   UZB: "UZ"
+};
+
+const specialFlags: Record<string, string> = {
+  ENG: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}",
+  SCO: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}"
 };
 
 function iso2ToFlag(iso2: string) {
@@ -57,6 +60,8 @@ function iso2ToFlag(iso2: string) {
 }
 
 export function flagForCode(code: string) {
+  const special = specialFlags[code];
+  if (special) return special;
   const iso2 = codeToIso2[code];
   return iso2 ? iso2ToFlag(iso2) : "";
 }
