@@ -48,6 +48,11 @@ export type Pick = {
   updated_at: string;
 };
 
+export type PlayerCompletionRow = {
+  user_id: string;
+  picks_saved: number;
+};
+
 export type ResultTeam = {
   question_id: number;
   team_id: number;

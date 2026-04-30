@@ -8,7 +8,7 @@ import Loading from "@/components/Loading";
 import Notice from "@/components/Notice";
 import { prettyStatus } from "@/lib/format";
 import { supabase } from "@/lib/supabase-browser";
-import type { Chapter, Pick, Profile, Question, ResultTeam, Team } from "@/lib/types";
+import type { Chapter, Pick, PlayerCompletionRow, Profile, Question, ResultTeam, Team } from "@/lib/types";
 import { useAuthResync } from "@/lib/useAuthResync";
 
 function buildGradeState(qs: Question[], rows: ResultTeam[]) {
@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [allPicks, setAllPicks] = useState<Pick[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
+  const [playerCompletion, setPlayerCompletion] = useState<PlayerCompletionRow[]>([]);
   const [gradeState, setGradeState] = useState<Record<number, { teamIds: number[]; points: number }>>({});
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string>("");
@@ -77,13 +78,14 @@ export default function AdminPage() {
       return;
     }
 
-    const [chaptersRes, questionsRes, teamsRes, resultTeamsRes, profilesRes, picksRes] = await Promise.all([
+    const [chaptersRes, questionsRes, teamsRes, resultTeamsRes, profilesRes, picksRes, completionRes] = await Promise.all([
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code").order("name"),
       supabase.from("result_teams").select("question_id,team_id,points"),
       supabase.from("profiles").select("id,email,display_name,public_slug,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin").order("created_at"),
-      supabase.from("picks").select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at")
+      supabase.from("picks").select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at"),
+      supabase.rpc("admin_player_completion")
     ]);
 
     if (
@@ -92,7 +94,8 @@ export default function AdminPage() {
       teamsRes.error ||
       resultTeamsRes.error ||
       profilesRes.error ||
-      picksRes.error
+      picksRes.error ||
+      completionRes.error
     ) {
       setNotice({ text: "Could not load admin data.", tone: "danger" });
       setLoading(false);
@@ -104,6 +107,7 @@ export default function AdminPage() {
     setGradeState(buildGradeState(questionsRes.data ?? [], resultTeamsRes.data ?? []));
     setAllProfiles(profilesRes.data ?? []);
     setAllPicks(picksRes.data ?? []);
+    setPlayerCompletion((completionRes.data ?? []) as PlayerCompletionRow[]);
     setLoading(false);
   }, [router]);
 
@@ -274,6 +278,7 @@ export default function AdminPage() {
   if (loading) return <Loading label="Loading admin dashboard..." />;
 
   const isAdmin = Boolean(profile?.is_admin);
+  const completionMap = new Map(playerCompletion.map((row) => [row.user_id, Number(row.picks_saved) || 0]));
 
   return (
     <>
@@ -407,7 +412,7 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   {allProfiles.map((p) => {
-                    const count = allPicks.filter((pick) => pick.user_id === p.id).length;
+                    const count = completionMap.get(p.id) ?? allPicks.filter((pick) => pick.user_id === p.id).length;
                     const missing = Math.max(questions.length - count, 0);
                     return (
                       <tr className="border-b border-white/10" key={p.id}>

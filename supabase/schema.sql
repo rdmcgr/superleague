@@ -423,6 +423,33 @@ begin
 end;
 $$;
 
+create or replace function public.admin_player_completion()
+returns table (
+  user_id uuid,
+  picks_saved bigint
+)
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  actor_is_admin boolean;
+begin
+  select p.is_admin into actor_is_admin
+  from public.profiles p
+  where p.id = auth.uid();
+
+  if coalesce(actor_is_admin, false) = false then
+    raise exception 'Only admins can read player completion';
+  end if;
+
+  return query
+  select picks.user_id, count(*)::bigint as picks_saved
+  from public.picks
+  group by picks.user_id;
+end;
+$$;
+
 create or replace function public.delete_shit_talk_reply_by_admin(target_reply_id bigint)
 returns void
 language plpgsql
