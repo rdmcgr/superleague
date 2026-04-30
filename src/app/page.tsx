@@ -19,6 +19,17 @@ type PickWithUser = Pick & {
   }[] | null;
 };
 
+function shortPlayerName(displayName: string | null, email: string | null) {
+  const source = displayName?.trim() || email?.split("@")[0]?.trim() || "";
+  if (!source) return "Player";
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "Player";
+  if (parts.length === 1) return parts[0];
+  const firstName = parts[0];
+  const lastInitial = parts[parts.length - 1][0]?.toUpperCase();
+  return lastInitial ? `${firstName} ${lastInitial}.` : firstName;
+}
+
 export default function HomePage() {
   useAuthResync();
   const router = useRouter();
@@ -331,7 +342,7 @@ export default function HomePage() {
                               <li key={p.id}>
                                 {(() => {
                                   const profile = Array.isArray(p.profiles) ? p.profiles[0] : null;
-                                  return (profile?.display_name || profile?.email || "Player") + ": ";
+                                  return `${shortPlayerName(profile?.display_name ?? null, profile?.email ?? null)}: `;
                                 })()}
                                 {(() => {
                                   const team = teamMap.get(p.team_id);
