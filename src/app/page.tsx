@@ -16,7 +16,7 @@ type PickWithUser = Pick & {
   profiles: {
     display_name: string | null;
     email: string;
-  }[] | null;
+  } | null;
 };
 
 function shortPlayerName(displayName: string | null, email: string | null) {
@@ -109,10 +109,26 @@ export default function HomePage() {
     if (lockedIds.length > 0) {
       const visiblePicksRes = await supabase
         .from("picks")
-        .select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at,profiles(display_name,email)")
+        .select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at")
         .in("chapter_id", lockedIds);
       if (!visiblePicksRes.error) {
-        setAllVisiblePicks((visiblePicksRes.data ?? []) as PickWithUser[]);
+        const rawPicks = (visiblePicksRes.data ?? []) as Pick[];
+        const userIds = Array.from(new Set(rawPicks.map((pick) => pick.user_id)));
+        const visibleProfilesRes =
+          userIds.length > 0
+            ? await supabase.from("profiles").select("id,display_name,email").in("id", userIds)
+            : { data: [], error: null };
+
+        const profileMap = new Map(
+          (visibleProfilesRes.data ?? []).map((visibleProfile) => [visibleProfile.id, visibleProfile])
+        );
+
+        setAllVisiblePicks(
+          rawPicks.map((pick) => ({
+            ...pick,
+            profiles: profileMap.get(pick.user_id) ?? null
+          }))
+        );
       }
     }
 
@@ -341,8 +357,7 @@ export default function HomePage() {
                             .map((p) => (
                               <li key={p.id}>
                                 {(() => {
-                                  const profile = Array.isArray(p.profiles) ? p.profiles[0] : null;
-                                  return `${shortPlayerName(profile?.display_name ?? null, profile?.email ?? null)}: `;
+                                  return `${shortPlayerName(p.profiles?.display_name ?? null, p.profiles?.email ?? null)}: `;
                                 })()}
                                 {(() => {
                                   const team = teamMap.get(p.team_id);
