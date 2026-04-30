@@ -38,7 +38,7 @@ export default function StandingsPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [visiblePicks, setVisiblePicks] = useState<PickWithUser[]>([]);
-  const [detail, setDetail] = useState<{ chapterId: number; teamId: number } | null>(null);
+  const [detail, setDetail] = useState<{ chapterId: number; teamId: number; top: number } | null>(null);
   const [talkDetail, setTalkDetail] = useState<{ userId: string; top: number } | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [showPointsAvailable, setShowPointsAvailable] = useState(true);
@@ -177,6 +177,13 @@ export default function StandingsPage() {
     const maxTop = Math.max(window.innerHeight - 280, 16);
     const top = Math.min(Math.max(preferredTop, 16), maxTop);
     setTalkDetail({ userId, top });
+  };
+
+  const popupTopForClick = (event: MouseEvent<HTMLButtonElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const preferredTop = rect.bottom + 12;
+    const maxTop = Math.max(window.innerHeight - 320, 16);
+    return Math.min(Math.max(preferredTop, 16), maxTop);
   };
 
   return (
@@ -375,7 +382,9 @@ export default function StandingsPage() {
                             <button
                               className="text-left text-slate-100 underline decoration-white/20 hover:decoration-white"
                               type="button"
-                              onClick={() => setDetail({ chapterId: chapter.id, teamId: team.id })}
+                              onClick={(event) =>
+                                setDetail({ chapterId: chapter.id, teamId: team.id, top: popupTopForClick(event) })
+                              }
                             >
                               {team.name}
                             </button>
@@ -392,11 +401,12 @@ export default function StandingsPage() {
 
           {detail ? (
             <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4"
+              className="fixed inset-0 z-50 bg-slate-950/70 p-4"
               onClick={() => setDetail(null)}
             >
               <div
-                className="glass w-full max-w-md rounded-2xl p-5"
+                className="glass absolute left-1/2 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl p-5"
+                style={{ top: `${detail.top}px` }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {(() => {
