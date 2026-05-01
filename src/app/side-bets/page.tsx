@@ -745,27 +745,27 @@ export default function SideBetsPage() {
                       <p className="mt-1 text-xs text-slate-400">Stake: {formatStake(bet.stake_amount)}</p>
                       {bet.description ? <p className="mt-2 text-sm text-slate-200">{bet.description}</p> : null}
                     </div>
-                    <div className="flex flex-wrap items-start justify-end gap-2">
-                      {renderCommentControls(bet.id)}
-                      {isCreator ? (
-                        <>
-                          <button className="btn btn-secondary" type="button" onClick={() => loadBetIntoForm(bet)}>
-                            Edit
-                          </button>
-                          <button className="btn btn-secondary" type="button" onClick={() => void cancelBet(bet.id)}>
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          className="rounded-md border border-cyan-300/30 bg-cyan-300/15 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-100 hover:bg-cyan-300/25"
-                          type="button"
-                          onClick={() => void takeBet(bet.id)}
-                        >
-                          {renderTakeButtonLabel(bet)}
+                    <div className="flex flex-wrap items-start justify-end gap-2">{renderCommentControls(bet.id)}</div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {isCreator ? (
+                      <>
+                        <button className="btn btn-secondary" type="button" onClick={() => loadBetIntoForm(bet)}>
+                          Edit
                         </button>
-                      )}
-                    </div>
+                        <button className="btn btn-secondary" type="button" onClick={() => void cancelBet(bet.id)}>
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="rounded-md border border-cyan-300/30 bg-cyan-300/15 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-100 hover:bg-cyan-300/25"
+                        type="button"
+                        onClick={() => void takeBet(bet.id)}
+                      >
+                        {renderTakeButtonLabel(bet)}
+                      </button>
+                    )}
                   </div>
                   {renderComments(bet.id)}
                 </article>
