@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import "./globals.css";
 import ShitTalkToast from "@/components/ShitTalkToast";
+import SideBetToast from "@/components/SideBetToast";
 
 export const metadata: Metadata = {
   title: "Super League",
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <main className="app-shell">
           {children}
           <ShitTalkToast />
+          <SideBetToast />
           <footer className="mt-10 text-center text-xs text-slate-300/80">
             <p className="flex items-center justify-center gap-1">
               <span>© {year} SUPERLEAGUE.PARTY. AN</span>

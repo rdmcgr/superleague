@@ -44,7 +44,6 @@ export default function SideBetsPage() {
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [newlyTakenBetIds, setNewlyTakenBetIds] = useState<number[]>([]);
 
   const [teamA, setTeamA] = useState<string>("");
   const [teamB, setTeamB] = useState<string>("");
@@ -122,21 +121,6 @@ export default function SideBetsPage() {
       return { ...row, creator: creatorValue, taker: takerValue } as BetRow;
     });
     setBets(normalizedBets);
-    const seenTakenKey = `side_bets_seen_taken_at:${session.user.id}`;
-    const seenTakenAtRaw = localStorage.getItem(seenTakenKey);
-    const seenTakenAt = seenTakenAtRaw ? Number(seenTakenAtRaw) : 0;
-    const unseenTakenBets = normalizedBets.filter((bet) => {
-      const takenAt = bet.taken_at ? new Date(bet.taken_at).getTime() : 0;
-      return bet.creator_id === session.user.id && Boolean(bet.taker_id) && takenAt > seenTakenAt;
-    });
-    setNewlyTakenBetIds(unseenTakenBets.map((bet) => bet.id));
-    const latestTakenAt = normalizedBets.reduce((max, bet) => {
-      if (bet.creator_id !== session.user.id || !bet.taken_at) return max;
-      return Math.max(max, new Date(bet.taken_at).getTime());
-    }, seenTakenAt);
-    if (latestTakenAt > seenTakenAt) {
-      localStorage.setItem(seenTakenKey, String(latestTakenAt));
-    }
     const rawComments = (commentsRes.data ?? []) as SideBetComment[];
     const commentUserIds = Array.from(new Set(rawComments.map((comment) => comment.user_id)));
     const commentProfilesRes =
@@ -509,14 +493,6 @@ export default function SideBetsPage() {
     return "Pending";
   };
 
-  const newlyTakenBets = bets.filter((bet) => newlyTakenBetIds.includes(bet.id));
-  const takenNoticeText =
-    newlyTakenBets.length === 0
-      ? null
-      : newlyTakenBets.length === 1
-        ? `${renderUserName(newlyTakenBets[0].taker)} took your bet: ${renderBetTitle(newlyTakenBets[0])}.`
-        : `${newlyTakenBets.length} of your side bets were taken.`;
-
   const renderCommentControls = (betId: number) => {
     const list = comments.filter((c) => c.bet_id === betId);
     const commentsHidden = hiddenComments[betId] ?? false;
@@ -626,11 +602,6 @@ export default function SideBetsPage() {
       <AppHeader user={user} isAdmin={Boolean(profile?.is_admin)} />
 
       {error ? <Notice text={error} tone="danger" /> : null}
-      {takenNoticeText ? (
-        <div className="mb-3">
-          <Notice text={takenNoticeText} tone="neutral" />
-        </div>
-      ) : null}
       {notice ? (
         <div className="mb-3">
           <Notice text={notice} tone={notice.includes("error") ? "danger" : "success"} />
@@ -849,11 +820,6 @@ export default function SideBetsPage() {
                       {bet.taker_id ? <p className="text-xs text-slate-400">{renderMatchedTakerLine(bet)}</p> : null}
                       <p className="mt-1 text-xs text-slate-400">Stake: {formatStake(bet.stake_amount)}</p>
                       <p className="mt-1 text-xs text-slate-500">Status: {bet.status}</p>
-                      {newlyTakenBetIds.includes(bet.id) ? (
-                        <p className="mt-2 inline-flex items-center rounded-full border border-cyan-300/35 bg-cyan-400/12 px-3 py-1 text-xs font-semibold tracking-[0.06em] text-cyan-100">
-                          New
-                        </p>
-                      ) : null}
                       {bet.status !== "closed" && bet.creator_selected_winner_id ? (
                         <p className="mt-1 text-xs text-slate-400">
                           {renderUserName(bet.creator)} confirmed winner as {renderSelectedWinner(bet, bet.creator_selected_winner_id)}
