@@ -240,13 +240,16 @@ export default function SideBetsPage() {
     setSubmitting(false);
   }
 
-  async function takeBet(betId: number) {
+  async function takeBet(bet: BetRow) {
     if (!user) return;
+    const ok = window.confirm(`Take this bet?\n\n${renderBetTitle(bet)}\n${renderTakeButtonLabel(bet)}`);
+    if (!ok) return;
+
     setNotice(null);
     const res = await supabase
       .from("side_bets")
       .update({ status: "taken", taker_id: user.id })
-      .eq("id", betId)
+      .eq("id", bet.id)
       .eq("status", "open");
     if (res.error) {
       setNotice(res.error.message);
@@ -777,10 +780,10 @@ export default function SideBetsPage() {
                       <button
                         className="rounded-md border border-cyan-300/30 bg-cyan-300/15 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-100 hover:bg-cyan-300/25"
                         type="button"
-                        onClick={() => void takeBet(bet.id)}
-                        >
-                          {renderTakeButtonLabel(bet)}
-                        </button>
+                        onClick={() => void takeBet(bet)}
+                      >
+                        {renderTakeButtonLabel(bet)}
+                      </button>
                       )}
                       {profile?.is_admin ? (
                         <button className="btn btn-danger" type="button" onClick={() => void adminDeleteBet(bet)}>
