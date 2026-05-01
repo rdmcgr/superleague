@@ -441,6 +441,23 @@ export default function SideBetsPage() {
     return `Take ${teamBInfo?.name ?? "Opponent"}`;
   };
 
+  const renderMatchedTakerLine = (bet: BetRow) => {
+    if (!bet.taker_id) return null;
+    if (bet.bet_type === "moneyline") {
+      const teamBInfo = teamMap.get(String(bet.team_b_id));
+      const teamBFlag = teamBInfo ? flagForCode(teamBInfo.code) : null;
+      return `${renderSpreadLabel(bet.taker)} got: ${teamBFlag ? teamBFlag + " " : ""}${teamBInfo?.name ?? "Team"}'s moneyline`;
+    }
+
+    const spreadAmount = Number(bet.spread_value);
+    const creatorTeam = bet.spread_team_id ?? bet.team_a_id;
+    const opposingTeamId = creatorTeam === bet.team_a_id ? bet.team_b_id : bet.team_a_id;
+    const opposingTeamInfo = teamMap.get(String(opposingTeamId));
+    const opposingFlag = opposingTeamInfo ? flagForCode(opposingTeamInfo.code) : null;
+    const invertedSpread = Number.isNaN(spreadAmount) ? String(bet.spread_value ?? "") : formatSpread(-spreadAmount);
+    return `${renderSpreadLabel(bet.taker)} got: ${opposingFlag ? opposingFlag + " " : ""}${opposingTeamInfo?.name ?? "Team"} ${invertedSpread}`;
+  };
+
   const renderWinner = (bet: BetRow) => {
     if (!bet.winner_id) return "—";
     if (bet.winner_id === bet.creator_id) return renderUserName(bet.creator);
@@ -774,6 +791,7 @@ export default function SideBetsPage() {
                     <div>
                       <p className="text-sm font-semibold text-slate-100">{renderBetTitle(bet)}</p>
                       <p className="text-xs text-slate-400">{renderBetLine(bet)}</p>
+                      {bet.taker_id ? <p className="text-xs text-slate-400">{renderMatchedTakerLine(bet)}</p> : null}
                       <p className="mt-1 text-xs text-slate-400">Stake: {formatStake(bet.stake_amount)}</p>
                       <p className="mt-1 text-xs text-slate-500">Status: {bet.status}</p>
                       {bet.status !== "closed" && bet.creator_selected_winner_id ? (
@@ -854,6 +872,7 @@ export default function SideBetsPage() {
                       <div>
                         <p className="text-sm font-semibold text-slate-100">{renderBetTitle(bet)}</p>
                         <p className="text-xs text-slate-400">{renderBetLine(bet)}</p>
+                        {bet.taker_id ? <p className="text-xs text-slate-400">{renderMatchedTakerLine(bet)}</p> : null}
                         <p className="mt-1 text-xs text-slate-400">Stake: {formatStake(bet.stake_amount)}</p>
                         <p className="mt-1 text-xs text-slate-500">
                           Posted by {renderUserName(bet.creator)} vs {opponentName}
