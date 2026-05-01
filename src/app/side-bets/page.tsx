@@ -811,44 +811,41 @@ export default function SideBetsPage() {
                       ) : null}
                       {bet.description ? <p className="mt-2 text-sm text-slate-200">{bet.description}</p> : null}
                     </div>
-                    {canSettle ? (
-                      <div className="flex flex-col items-end gap-2 text-xs text-slate-300">
-                        {renderCommentControls(bet.id)}
-                        <span className="uppercase tracking-[0.16em] text-slate-400">Pick winner</span>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            className="btn btn-secondary"
-                            type="button"
-                            onClick={() => void submitWinnerSelection(bet, bet.creator_id)}
-                          >
-                            Winner: {renderUserName(bet.creator)}
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            type="button"
-                            onClick={() => bet.taker_id && void submitWinnerSelection(bet, bet.taker_id)}
-                          >
-                            Winner: {renderUserName(bet.taker)}
-                          </button>
-                        </div>
-                        <p className="text-[11px] text-slate-500">The bet closes automatically when both users pick the same winner.</p>
-                      </div>
-                    ) : isCreator && bet.status === "open" ? (
-                      <div className="flex flex-wrap items-start justify-end gap-2">
-                        {renderCommentControls(bet.id)}
-                        <button className="btn btn-secondary" type="button" onClick={() => loadBetIntoForm(bet)}>
-                          Edit
-                        </button>
-                        <button className="btn btn-secondary" type="button" onClick={() => void cancelBet(bet.id)}>
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap items-start justify-end gap-2">
-                        {renderCommentControls(bet.id)}
-                      </div>
-                    )}
+                    <div className="flex flex-wrap items-start justify-end gap-2">
+                      {renderCommentControls(bet.id)}
+                    </div>
                   </div>
+                  {canSettle ? (
+                    <div className="mt-3 flex flex-col items-start gap-2 text-xs text-slate-300">
+                      <span className="uppercase tracking-[0.16em] text-slate-400">Pick winner</span>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          className="btn btn-secondary"
+                          type="button"
+                          onClick={() => void submitWinnerSelection(bet, bet.creator_id)}
+                        >
+                          Winner: {renderUserName(bet.creator)}
+                        </button>
+                        <button
+                          className="btn btn-secondary"
+                          type="button"
+                          onClick={() => bet.taker_id && void submitWinnerSelection(bet, bet.taker_id)}
+                        >
+                          Winner: {renderUserName(bet.taker)}
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-slate-500">The bet closes automatically when both users pick the same winner.</p>
+                    </div>
+                  ) : isCreator && bet.status === "open" ? (
+                    <div className="mt-3 flex flex-wrap items-start gap-2">
+                      <button className="btn btn-secondary" type="button" onClick={() => loadBetIntoForm(bet)}>
+                        Edit
+                      </button>
+                      <button className="btn btn-secondary" type="button" onClick={() => void cancelBet(bet.id)}>
+                        Cancel
+                      </button>
+                    </div>
+                  ) : null}
                   {renderComments(bet.id)}
                 </article>
               );
