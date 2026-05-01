@@ -353,6 +353,13 @@ export default function HomePage() {
                         <ul className="grid gap-1 text-sm text-slate-200">
                           {allVisiblePicks
                             .filter((p) => p.question_id === q.id)
+                            .sort((a, b) =>
+                              shortPlayerName(a.profiles?.display_name ?? null, a.profiles?.email ?? null).localeCompare(
+                                shortPlayerName(b.profiles?.display_name ?? null, b.profiles?.email ?? null),
+                                undefined,
+                                { sensitivity: "base" }
+                              )
+                            )
                             .map((p) => (
                               <li key={p.id}>
                                 {(() => {
