@@ -375,7 +375,11 @@ export default function SideBetsPage() {
   };
 
   const renderBetLine = (bet: BetRow) => {
-    if (bet.bet_type === "moneyline") return "Moneyline";
+    if (bet.bet_type === "moneyline") {
+      const teamAInfo = teamMap.get(String(bet.team_a_id));
+      const teamAFlag = teamAInfo ? flagForCode(teamAInfo.code) : null;
+      return `${renderSpreadLabel(bet.creator)} got: ${teamAFlag ? teamAFlag + " " : ""}${teamAInfo?.name ?? "Team"}'s moneyline`;
+    }
     const spreadTeamInfo = bet.spread_team_id ? teamMap.get(String(bet.spread_team_id)) : null;
     const spreadFlag = spreadTeamInfo ? flagForCode(spreadTeamInfo.code) : null;
     const spreadAmount = Number(bet.spread_value);
@@ -404,7 +408,19 @@ export default function SideBetsPage() {
     return firstName.endsWith("s") ? `${firstName}'` : `${firstName}'s`;
   };
 
+  const formatSpread = (value: number) => (value > 0 ? `+${value.toFixed(1)}` : value.toFixed(1));
+
   const renderTakeButtonLabel = (bet: BetRow) => {
+    if (bet.bet_type === "spread") {
+      const spreadAmount = Number(bet.spread_value);
+      const creatorTeam = bet.spread_team_id ?? bet.team_a_id;
+      const opposingTeamId = creatorTeam === bet.team_a_id ? bet.team_b_id : bet.team_a_id;
+      const opposingTeamInfo = teamMap.get(String(opposingTeamId));
+      if (!Number.isNaN(spreadAmount) && opposingTeamInfo) {
+        return `Take ${opposingTeamInfo.name} ${formatSpread(-spreadAmount)}`;
+      }
+      return `Take ${opposingTeamInfo?.name ?? "Opponent"}`;
+    }
     const teamBInfo = teamMap.get(String(bet.team_b_id));
     return `Take ${teamBInfo?.name ?? "Opponent"}`;
   };
