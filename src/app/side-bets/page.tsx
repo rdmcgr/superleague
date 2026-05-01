@@ -384,7 +384,7 @@ export default function SideBetsPage() {
       : spreadAmount > 0
         ? `+${spreadAmount.toFixed(1)}`
         : spreadAmount.toFixed(1);
-    return `Spread: ${spreadFlag ? spreadFlag + " " : ""}${spreadTeamInfo?.name ?? "Team"} ${spreadLabel}`;
+    return `${renderSpreadLabel(bet.creator)} got: ${spreadFlag ? spreadFlag + " " : ""}${spreadTeamInfo?.name ?? "Team"} ${spreadLabel}`;
   };
 
   const formatStake = (value: unknown) => {
@@ -396,6 +396,17 @@ export default function SideBetsPage() {
   const renderUserName = (value?: { display_name: string | null; email: string } | null) => {
     if (!value) return "Player";
     return value.display_name || value.email || "Player";
+  };
+
+  const renderSpreadLabel = (value?: { display_name: string | null; email: string } | null) => {
+    const fullName = renderUserName(value).trim();
+    const firstName = fullName.split(/\s+/)[0] || "Player";
+    return firstName.endsWith("s") ? `${firstName}'` : `${firstName}'s`;
+  };
+
+  const renderTakeButtonLabel = (bet: BetRow) => {
+    const teamBInfo = teamMap.get(String(bet.team_b_id));
+    return `Take ${teamBInfo?.name ?? "Opponent"}`;
   };
 
   const renderWinner = (bet: BetRow) => {
@@ -615,10 +626,10 @@ export default function SideBetsPage() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold text-slate-100">{renderBetTitle(bet)}</p>
+                      <p className="mt-1 text-xs text-slate-500">Posted by {renderUserName(bet.creator)}</p>
                       <p className="text-xs text-slate-400">{renderBetLine(bet)}</p>
                       <p className="mt-1 text-xs text-slate-400">Stake: {formatStake(bet.stake_amount)}</p>
                       {bet.description ? <p className="mt-2 text-sm text-slate-200">{bet.description}</p> : null}
-                      <p className="mt-2 text-xs text-slate-500">Posted by {renderUserName(bet.creator)}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {isCreator ? (
@@ -632,7 +643,7 @@ export default function SideBetsPage() {
                         </>
                       ) : (
                         <button className="btn btn-primary" type="button" onClick={() => void takeBet(bet.id)}>
-                          Take Bet
+                          {renderTakeButtonLabel(bet)}
                         </button>
                       )}
                     </div>
