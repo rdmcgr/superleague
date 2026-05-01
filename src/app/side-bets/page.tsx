@@ -524,13 +524,14 @@ export default function SideBetsPage() {
               <div className="mt-3 flex flex-col gap-2">
                 <textarea
                   className="min-h-20 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                  maxLength={200}
                   value={commentDrafts[betId] || ""}
                   onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [betId]: e.target.value }))}
                   placeholder="Reply to this bet..."
                   disabled={commentSubmitting === betId}
                 />
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs text-slate-400">{(commentDrafts[betId] || "").length}</span>
+                  <span className="text-xs text-slate-400">{(commentDrafts[betId] || "").length}/200</span>
                   <button
                     className="btn btn-secondary"
                     type="button"
@@ -730,7 +731,11 @@ export default function SideBetsPage() {
                           </button>
                         </>
                       ) : (
-                        <button className="btn btn-primary" type="button" onClick={() => void takeBet(bet.id)}>
+                        <button
+                          className="rounded-md border border-cyan-300/30 bg-cyan-300/15 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-100 hover:bg-cyan-300/25"
+                          type="button"
+                          onClick={() => void takeBet(bet.id)}
+                        >
                           {renderTakeButtonLabel(bet)}
                         </button>
                       )}
