@@ -455,30 +455,38 @@ export default function SideBetsPage() {
     return "Pending";
   };
 
+  const renderCommentControls = (betId: number) => {
+    const list = comments.filter((c) => c.bet_id === betId);
+    const commentsHidden = hiddenComments[betId] ?? false;
+    const composerOpen = openCommentComposers[betId] ?? false;
+    return (
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {list.length > 0 ? (
+          <button
+            className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+            type="button"
+            onClick={() => setHiddenComments((prev) => ({ ...prev, [betId]: !commentsHidden }))}
+          >
+            {commentsHidden ? "Unhide Comments" : "Hide Comments"}
+          </button>
+        ) : null}
+        <button
+          className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+          type="button"
+          onClick={() => setOpenCommentComposers((prev) => ({ ...prev, [betId]: !composerOpen }))}
+        >
+          {composerOpen ? "Hide Reply Box" : "Reply"}
+        </button>
+      </div>
+    );
+  };
+
   const renderComments = (betId: number) => {
     const list = comments.filter((c) => c.bet_id === betId);
     const commentsHidden = hiddenComments[betId] ?? false;
     const composerOpen = openCommentComposers[betId] ?? false;
     return (
       <div className="mt-3">
-        <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
-          {list.length > 0 ? (
-            <button
-              className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
-              type="button"
-              onClick={() => setHiddenComments((prev) => ({ ...prev, [betId]: !commentsHidden }))}
-            >
-              {commentsHidden ? "Unhide Comments" : "Hide Comments"}
-            </button>
-          ) : null}
-          <button
-            className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
-            type="button"
-            onClick={() => setOpenCommentComposers((prev) => ({ ...prev, [betId]: !composerOpen }))}
-          >
-            {composerOpen ? "Hide Reply Box" : "Reply"}
-          </button>
-        </div>
 
         {list.length || composerOpen ? (
           <div className="rounded-lg border border-white/10 bg-white/5 p-3">
@@ -712,7 +720,7 @@ export default function SideBetsPage() {
               const isCreator = bet.creator_id === user?.id;
               return (
                 <article key={bet.id} className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold text-slate-100">{renderBetTitle(bet)}</p>
                       <p className="mt-1 text-xs text-slate-500">Posted by {renderUserName(bet.creator)}</p>
@@ -720,7 +728,8 @@ export default function SideBetsPage() {
                       <p className="mt-1 text-xs text-slate-400">Stake: {formatStake(bet.stake_amount)}</p>
                       {bet.description ? <p className="mt-2 text-sm text-slate-200">{bet.description}</p> : null}
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-start justify-end gap-2">
+                      {renderCommentControls(bet.id)}
                       {isCreator ? (
                         <>
                           <button className="btn btn-secondary" type="button" onClick={() => loadBetIntoForm(bet)}>
@@ -761,7 +770,7 @@ export default function SideBetsPage() {
               const canSettle = (isCreator || isTaker) && isTakenForSettlement(bet);
               return (
                 <article key={bet.id} className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold text-slate-100">{renderBetTitle(bet)}</p>
                       <p className="text-xs text-slate-400">{renderBetLine(bet)}</p>
@@ -785,7 +794,8 @@ export default function SideBetsPage() {
                       {bet.description ? <p className="mt-2 text-sm text-slate-200">{bet.description}</p> : null}
                     </div>
                     {canSettle ? (
-                      <div className="flex flex-col gap-2 text-xs text-slate-300">
+                      <div className="flex flex-col items-end gap-2 text-xs text-slate-300">
+                        {renderCommentControls(bet.id)}
                         <span className="uppercase tracking-[0.16em] text-slate-400">Pick winner</span>
                         <div className="flex flex-wrap gap-2">
                           <button
@@ -806,7 +816,8 @@ export default function SideBetsPage() {
                         <p className="text-[11px] text-slate-500">The bet closes automatically when both users pick the same winner.</p>
                       </div>
                     ) : isCreator && bet.status === "open" ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap items-start justify-end gap-2">
+                        {renderCommentControls(bet.id)}
                         <button className="btn btn-secondary" type="button" onClick={() => loadBetIntoForm(bet)}>
                           Edit
                         </button>
@@ -814,7 +825,11 @@ export default function SideBetsPage() {
                           Cancel
                         </button>
                       </div>
-                    ) : null}
+                    ) : (
+                      <div className="flex flex-wrap items-start justify-end gap-2">
+                        {renderCommentControls(bet.id)}
+                      </div>
+                    )}
                   </div>
                   {renderComments(bet.id)}
                 </article>
@@ -835,7 +850,7 @@ export default function SideBetsPage() {
                 const opponentName = renderUserName(bet.taker);
                 return (
                   <article key={bet.id} className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <p className="text-sm font-semibold text-slate-100">{renderBetTitle(bet)}</p>
                         <p className="text-xs text-slate-400">{renderBetLine(bet)}</p>
@@ -850,7 +865,8 @@ export default function SideBetsPage() {
                           </p>
                         ) : null}
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap items-start justify-end gap-2">
+                        {renderCommentControls(bet.id)}
                         <button
                           className="btn btn-secondary"
                           type="button"
