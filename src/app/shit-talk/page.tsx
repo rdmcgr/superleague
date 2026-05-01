@@ -23,6 +23,7 @@ export default function ShitTalkPage() {
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [hiddenReplies, setHiddenReplies] = useState<Record<string, boolean>>({});
   const [openReplyComposers, setOpenReplyComposers] = useState<Record<string, boolean>>({});
+  const [showComposer, setShowComposer] = useState(true);
   const [shitTalk, setShitTalk] = useState("");
   const [saving, setSaving] = useState(false);
   const [replyingKey, setReplyingKey] = useState<string | null>(null);
@@ -280,33 +281,42 @@ export default function ShitTalkPage() {
           <span className="chip">All updates</span>
         </div>
 
-        <div className="mb-5 rounded-xl border border-white/10 bg-slate-950/40 p-4">
-          <label className="text-sm text-slate-300">
-            Your Message
+        {showComposer ? (
+          <div className="mb-5 rounded-xl border border-white/10 bg-slate-950/40 p-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-sm text-slate-300">Your Message</p>
+              <button
+                className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+                onClick={() => setShowComposer(false)}
+                type="button"
+              >
+                Hide
+              </button>
+            </div>
             <textarea
-              className="mt-1 min-h-24 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+              className="min-h-24 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
               maxLength={200}
               value={shitTalk}
               onChange={(e) => setShitTalk(e.target.value)}
               placeholder="Say something memorable. Keep it fun."
               disabled={cooldown.locked || saving}
             />
-          </label>
-          <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-            <span>You may only post once in a 24-hour period. Choose wisely!</span>
-            <span>{remainingChars} characters remaining</span>
+            <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+              <span>You may only post once in a 24-hour period. Choose wisely!</span>
+              <span>{remainingChars} characters remaining</span>
+            </div>
+            {cooldown.locked ? (
+              <p className="mt-2 text-xs text-amber-200">
+                Locked. You can shit talk again in <span className="text-[10px] text-amber-100/90">{cooldown.remaining}</span>. You can reply to posts in the meantime.
+              </p>
+            ) : null}
+            <div className="mt-4">
+              <button className="btn btn-primary" onClick={() => void saveShitTalk()} disabled={saving || cooldown.locked} type="button">
+                {saving ? "Posting..." : "Post Shit Talk"}
+              </button>
+            </div>
           </div>
-          {cooldown.locked ? (
-            <p className="mt-2 text-xs text-amber-200">
-              Locked. You can shit talk again in <span className="text-[10px] text-amber-100/90">{cooldown.remaining}</span>. You can reply to posts in the meantime.
-            </p>
-          ) : null}
-          <div className="mt-4">
-            <button className="btn btn-primary" onClick={() => void saveShitTalk()} disabled={saving || cooldown.locked} type="button">
-              {saving ? "Posting..." : "Post Shit Talk"}
-            </button>
-          </div>
-        </div>
+        ) : null}
 
         {updates.length === 0 ? (
           <div className="rounded-xl border border-dashed border-white/15 bg-slate-950/35 p-5 text-sm text-slate-300">
