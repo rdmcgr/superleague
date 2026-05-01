@@ -342,7 +342,7 @@ export default function StandingsPage() {
                 ))}
                 <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3 md:col-span-2">
                   <p className="mb-2 text-sm font-semibold text-slate-200">Shit Talk</p>
-                  <p className="text-sm text-slate-300">{profileShitTalk[selectedPlayerId] || "—"}</p>
+                  <p className="text-sm text-slate-300">{profileShitTalk[selectedPlayerId] || "No shit has been talked yet."}</p>
                 </div>
               </div>
             ) : (
