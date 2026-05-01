@@ -905,21 +905,21 @@ export default function SideBetsPage() {
                       <div className="flex flex-wrap items-start justify-end gap-2">
                         {renderCommentControls(bet.id)}
                         <button
-                          className="btn btn-secondary"
+                          className="btn btn-danger"
                           type="button"
                           onClick={() => void adminReopenBet(bet)}
                         >
                           Reopen & Edit
                         </button>
                         <button
-                          className="btn btn-secondary"
+                          className="btn btn-danger"
                           type="button"
                           onClick={() => void adminSettleBet(bet, bet.creator_id)}
                         >
                           Winner: {renderUserName(bet.creator)}
                         </button>
                         <button
-                          className="btn btn-secondary"
+                          className="btn btn-danger"
                           type="button"
                           onClick={() => bet.taker_id && void adminSettleBet(bet, bet.taker_id)}
                         >
