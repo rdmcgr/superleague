@@ -267,6 +267,22 @@ export default function SideBetsPage() {
     await load();
   }
 
+  async function adminDeleteBet(bet: BetRow) {
+    if (!profile?.is_admin) return;
+    const ok = window.confirm(`Remove this unmatched bet?\n\n${renderBetTitle(bet)}`);
+    if (!ok) return;
+
+    setNotice(null);
+    const res = await supabase.rpc("delete_side_bet_by_admin", { target_bet_id: bet.id });
+    if (res.error) {
+      setNotice(res.error.message);
+      return;
+    }
+
+    setNotice("Bet removed.");
+    await load();
+  }
+
   async function settleBet(bet: BetRow, winnerId: string) {
     setNotice(null);
     const res = await supabase
@@ -762,10 +778,15 @@ export default function SideBetsPage() {
                         className="rounded-md border border-cyan-300/30 bg-cyan-300/15 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-100 hover:bg-cyan-300/25"
                         type="button"
                         onClick={() => void takeBet(bet.id)}
-                      >
-                        {renderTakeButtonLabel(bet)}
-                      </button>
-                    )}
+                        >
+                          {renderTakeButtonLabel(bet)}
+                        </button>
+                      )}
+                      {profile?.is_admin ? (
+                        <button className="btn btn-danger" type="button" onClick={() => void adminDeleteBet(bet)}>
+                          Remove
+                        </button>
+                      ) : null}
                   </div>
                   {renderComments(bet.id)}
                 </article>

@@ -423,6 +423,28 @@ begin
 end;
 $$;
 
+create or replace function public.delete_side_bet_by_admin(target_bet_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  actor_is_admin boolean;
+begin
+  select p.is_admin into actor_is_admin
+  from public.profiles p
+  where p.id = auth.uid();
+
+  if coalesce(actor_is_admin, false) = false then
+    raise exception 'Only admins can delete side bets';
+  end if;
+
+  delete from public.side_bets
+  where id = target_bet_id;
+end;
+$$;
+
 create or replace function public.admin_player_completion()
 returns table (
   user_id uuid,
