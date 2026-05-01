@@ -443,19 +443,19 @@ export default function SideBetsPage() {
     const list = comments.filter((c) => c.bet_id === betId);
     return (
       <div className="mt-3">
-        <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Comments</p>
-        <div className="mt-2 space-y-2">
-          {list.length === 0 ? (
-            <p className="text-xs text-slate-500">No comments yet.</p>
-          ) : (
-            list.map((c) => (
-              <div key={c.id} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm">
-                <span className="font-semibold text-slate-200">{renderUserName(c.profiles)}:</span>{" "}
-                <span className="text-slate-200">{c.message}</span>
-              </div>
-            ))
-          )}
-        </div>
+        {list.length > 0 ? (
+          <>
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Comments</p>
+            <div className="mt-2 space-y-2">
+              {list.map((c) => (
+                <div key={c.id} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm">
+                  <span className="font-semibold text-slate-200">{renderUserName(c.profiles)}:</span>{" "}
+                  <span className="text-slate-200">{c.message}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : null}
         <div className="mt-3 flex flex-wrap gap-2">
           <input
             className="min-w-[240px] flex-1 rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
