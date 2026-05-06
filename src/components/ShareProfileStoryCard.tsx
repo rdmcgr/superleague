@@ -37,14 +37,6 @@ export default function ShareProfileStoryCard({
 
       <div className="relative flex flex-1 flex-col px-18 pb-16 pt-18">
         <div className="mb-16 flex flex-col items-center text-center">
-          <img
-            alt="Super League"
-            className="mb-6 h-56 w-56 object-contain"
-            decoding="sync"
-            fetchPriority="high"
-            loading="eager"
-            src="/super-league-shield-logo.png"
-          />
           <p className="text-[26px] font-semibold uppercase tracking-[0.45em] text-cyan-100/80">World Cup 2026</p>
           <img
             alt="Super League wordmark"
@@ -70,6 +62,9 @@ export default function ShareProfileStoryCard({
             </div>
           )}
           <h2 className="max-w-[880px] text-[76px] font-black leading-[0.95] text-white">{displayName}</h2>
+          <p className="mt-6 text-[28px] font-semibold uppercase tracking-[0.3em] text-cyan-100/78">
+            Check out my picks for the tourney:
+          </p>
         </div>
 
         {shitTalk ? (
@@ -97,11 +92,22 @@ export default function ShareProfileStoryCard({
           ))}
         </div>
 
+        <div className="mt-12 flex justify-center">
+          <img
+            alt="Super League"
+            className="h-72 w-72 object-contain"
+            decoding="sync"
+            fetchPriority="high"
+            loading="eager"
+            src="/super-league-shield-logo.png"
+          />
+        </div>
+
         <div className="mt-10 flex items-center justify-center gap-3 text-[24px] font-semibold uppercase tracking-[0.18em] text-slate-200/85">
           <span>© 2026 Superleague.party. An</span>
           <img
             alt="OWS"
-            className="h-10 w-10 rounded-sm object-contain"
+            className="h-14 w-14 rounded-sm object-contain"
             decoding="sync"
             loading="eager"
             src="/ows-nwo-logo.png"

@@ -148,7 +148,7 @@ export default function ProfilePage() {
     const tourneyWinner = teamLabelForQuestion(questionByOrder(1)?.id);
     if (tourneyWinner) {
       sections.push({
-        title: "Group Stage Pick For Tourney Winner",
+        title: "Champion",
         items: [tourneyWinner]
       });
     }
@@ -281,7 +281,19 @@ export default function ProfilePage() {
               Copy Profile Link
             </button>
             <button className="btn btn-primary" onClick={() => void saveStoryCard()} disabled={savingStoryCard} type="button">
-              {savingStoryCard ? "Saving Story Card..." : "Save Story Card"}
+              <span className="inline-flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-[6px] bg-[linear-gradient(135deg,#feda75_0%,#fa7e1e_28%,#d62976_58%,#962fbf_80%,#4f5bd5_100%)]"
+                >
+                  <svg className="h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="4" y="4" width="16" height="16" rx="4" />
+                    <circle cx="12" cy="12" r="4" />
+                    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+                  </svg>
+                </span>
+                <span>{savingStoryCard ? "Downloading Story Card..." : "Download Story Card"}</span>
+              </span>
             </button>
           </div>
         ) : null}
