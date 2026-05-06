@@ -354,7 +354,6 @@ export default function ProfilePage() {
             <ShareProfileStoryCard
               avatarUrl={profile.avatar_url}
               displayName={profile.display_name || profile.email}
-              shitTalk={profile.shit_talk}
               sections={shareSections}
             />
           </div>

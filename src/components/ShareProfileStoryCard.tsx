@@ -3,7 +3,6 @@
 type ShareProfileStoryCardProps = {
   avatarUrl: string | null;
   displayName: string;
-  shitTalk: string | null;
   sections: ShareSection[];
 };
 
@@ -15,7 +14,6 @@ export type ShareSection = {
 export default function ShareProfileStoryCard({
   avatarUrl,
   displayName,
-  shitTalk,
   sections
 }: ShareProfileStoryCardProps) {
   return (
@@ -49,30 +47,25 @@ export default function ShareProfileStoryCard({
         </div>
 
         <div className="mb-12 flex flex-col items-center text-center">
-          {avatarUrl ? (
-            <img
-              alt={`${displayName} avatar`}
-              className="mb-6 h-42 w-42 rounded-full border-4 border-cyan-200/70 object-cover shadow-[0_24px_80px_rgba(0,0,0,0.35)]"
-              crossOrigin="anonymous"
-              src={avatarUrl}
-            />
-          ) : (
-            <div className="mb-6 flex h-42 w-42 items-center justify-center rounded-full border-4 border-cyan-200/70 bg-white/10 text-7xl font-black uppercase">
-              {displayName.slice(0, 1)}
-            </div>
-          )}
-          <h2 className="max-w-[880px] text-[76px] font-black leading-[0.95] text-white">{displayName}</h2>
-          <p className="mt-6 text-[28px] font-semibold uppercase tracking-[0.3em] text-cyan-100/78">
+          <div className="flex max-w-[920px] items-center gap-8">
+            {avatarUrl ? (
+              <img
+                alt={`${displayName} avatar`}
+                className="h-36 w-36 shrink-0 rounded-full border-4 border-cyan-200/70 object-cover shadow-[0_24px_80px_rgba(0,0,0,0.35)]"
+                crossOrigin="anonymous"
+                src={avatarUrl}
+              />
+            ) : (
+              <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-full border-4 border-cyan-200/70 bg-white/10 text-6xl font-black uppercase">
+                {displayName.slice(0, 1)}
+              </div>
+            )}
+            <h2 className="text-left text-[76px] font-black leading-[0.95] text-white">{displayName}</h2>
+          </div>
+          <p className="mt-8 text-[28px] font-semibold uppercase tracking-[0.3em] text-cyan-100/78">
             Check out my picks for the tourney:
           </p>
         </div>
-
-        {shitTalk ? (
-          <div className="mb-12 rounded-[36px] border border-white/14 bg-white/8 px-10 py-9 shadow-[0_16px_50px_rgba(0,0,0,0.2)] backdrop-blur-sm">
-            <p className="mb-4 text-[22px] font-semibold uppercase tracking-[0.34em] text-cyan-100/75">Shit Talk</p>
-            <p className="text-[44px] font-semibold leading-[1.18] text-white">“{shitTalk}”</p>
-          </div>
-        ) : null}
 
         <div className="flex flex-1 flex-col gap-7">
           {sections.map((section) => (

@@ -144,6 +144,10 @@ export default function HomePage() {
 
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
   const activeTeams = useMemo(() => teams.filter((t) => t.is_active), [teams]);
+  const groupStageChapter = useMemo(() => chapters.find((chapter) => chapter.slug === "group-stage"), [chapters]);
+  const showStoryCardCallout = Boolean(
+    groupStageChapter && (groupStageChapter.status === "locked" || groupStageChapter.status === "graded")
+  );
 
   function chapterQuestions(chapterId: number) {
     return questions.filter((q) => q.chapter_id === chapterId);
@@ -275,6 +279,36 @@ export default function HomePage() {
               </a>
             </li>
           </ul>
+        </section>
+      ) : null}
+
+      {showStoryCardCallout ? (
+        <section className="glass mb-6 rounded-2xl p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="section-title">Share Your Picks</h2>
+              <p className="mt-1 text-sm text-slate-200/85">
+                Your Group Stage picks are live. Download a Story card from your profile and post it.
+              </p>
+            </div>
+            <button
+              className="inline-flex items-center gap-2 rounded-md border border-cyan-200/40 bg-cyan-200/10 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100 hover:bg-cyan-200/20"
+              onClick={() => router.push("/profile")}
+              type="button"
+            >
+              <span
+                aria-hidden="true"
+                className="inline-flex h-4 w-4 items-center justify-center rounded-[5px] bg-[linear-gradient(135deg,#feda75_0%,#fa7e1e_28%,#d62976_58%,#962fbf_80%,#4f5bd5_100%)]"
+              >
+                <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="4" y="4" width="16" height="16" rx="4" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+                </svg>
+              </span>
+              <span>Story Card</span>
+            </button>
+          </div>
         </section>
       ) : null}
 
