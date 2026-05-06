@@ -73,10 +73,10 @@ export default function ShareProfileStoryCard({
               key={section.title}
               className="rounded-[32px] border border-white/12 bg-slate-950/45 px-10 py-8 shadow-[0_18px_55px_rgba(0,0,0,0.22)] backdrop-blur-sm"
             >
-              <p className="mb-4 text-[24px] font-semibold uppercase tracking-[0.28em] text-cyan-100/80">{section.title}</p>
+              <p className="mb-4 text-[30px] font-semibold uppercase tracking-[0.24em] text-cyan-100/80">{section.title}</p>
               <div className="flex flex-col gap-3">
                 {section.items.map((item) => (
-                  <p key={item} className="text-[42px] font-semibold leading-[1.16] text-white">
+                  <p key={item} className="text-[50px] font-semibold leading-[1.14] text-white">
                     {item}
                   </p>
                 ))}

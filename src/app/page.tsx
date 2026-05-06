@@ -46,6 +46,7 @@ export default function HomePage() {
   const [gradedTeams, setGradedTeams] = useState<Map<number, Set<number>>>(new Map());
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
   const [showHowItWorks, setShowHowItWorks] = useState(true);
+  const [showShareYourPicks, setShowShareYourPicks] = useState(true);
 
   const loadPage = useCallback(async () => {
     setLoading(true);
@@ -282,13 +283,22 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      {showStoryCardCallout ? (
+      {showStoryCardCallout && showShareYourPicks ? (
         <section className="glass mb-6 rounded-2xl p-4">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h2 className="section-title">Share Your Picks</h2>
+            <button
+              className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+              onClick={() => setShowShareYourPicks(false)}
+              type="button"
+            >
+              Hide
+            </button>
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="section-title">Share Your Picks</h2>
               <p className="mt-1 text-sm text-slate-200/85">
-                Your Group Stage picks are live. Download a Story card from your profile and post it.
+                Download a Story card from your profile and post it on socials!
               </p>
             </div>
             <button
