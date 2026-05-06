@@ -1,23 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
+import { toPng } from "html-to-image";
 import AppHeader from "@/components/AppHeader";
 import Loading from "@/components/Loading";
 import Notice from "@/components/Notice";
+import ShareProfileStoryCard, { type ShareSection } from "@/components/ShareProfileStoryCard";
+import { flagForCode } from "@/lib/flags";
 import { supabase } from "@/lib/supabase-browser";
 import { useAuthResync } from "@/lib/useAuthResync";
-import type { Profile } from "@/lib/types";
+import type { Chapter, Profile, Question, Team } from "@/lib/types";
 
 export default function ProfilePage() {
   useAuthResync();
   const router = useRouter();
+  const storyCardRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingStoryCard, setSavingStoryCard] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [picks, setPicks] = useState<PickRow[]>([]);
   const [shitTalk, setShitTalk] = useState("");
   const [now, setNow] = useState<Date>(new Date());
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
@@ -35,13 +44,18 @@ export default function ProfilePage() {
 
     setUser(session.user);
 
-    const profileRes = await supabase
-      .from("profiles")
-      .select("id,email,display_name,public_slug,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
-      .eq("id", session.user.id)
-      .single();
+    const [profileRes, chaptersRes, questionsRes, teamsRes] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id,email,display_name,public_slug,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
+        .eq("id", session.user.id)
+        .single(),
+      supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
+      supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
+      supabase.from("teams").select("id,name,code,is_active").order("name")
+    ]);
 
-    if (profileRes.error) {
+    if (profileRes.error || chaptersRes.error || questionsRes.error || teamsRes.error) {
       setNotice({ text: "Could not load profile.", tone: "danger" });
       setLoading(false);
       return;
@@ -52,6 +66,29 @@ export default function ProfilePage() {
       router.replace("/invite");
       return;
     }
+    setChapters(chaptersRes.data ?? []);
+    setQuestions(questionsRes.data ?? []);
+    setTeams(teamsRes.data ?? []);
+
+    const lockedIds = (chaptersRes.data ?? [])
+      .filter((chapter) => chapter.status === "locked" || chapter.status === "graded")
+      .map((chapter) => chapter.id);
+
+    if (lockedIds.length) {
+      const picksRes = await supabase
+        .from("picks")
+        .select("id,question_id,chapter_id,team_id")
+        .eq("user_id", session.user.id)
+        .in("chapter_id", lockedIds);
+      if (!picksRes.error) {
+        setPicks((picksRes.data ?? []) as PickRow[]);
+      } else {
+        setPicks([]);
+      }
+    } else {
+      setPicks([]);
+    }
+
     setShitTalk(profileRes.data.shit_talk ?? "");
     setLoading(false);
   }, [router]);
@@ -89,6 +126,57 @@ export default function ProfilePage() {
   }, [now, profile?.shit_talk, profile?.shit_talk_updated_at]);
 
   const remainingChars = useMemo(() => 200 - shitTalk.length, [shitTalk.length]);
+  const teamMap = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
+
+  const shareSections = useMemo(() => {
+    const groupStage = chapters.find((chapter) => chapter.slug === "group-stage");
+    if (!groupStage || (groupStage.status !== "locked" && groupStage.status !== "graded")) return [] as ShareSection[];
+
+    const questionByOrder = (orderIndex: number) =>
+      questions.find((question) => question.chapter_id === groupStage.id && question.order_index === orderIndex);
+    const teamLabelForQuestion = (questionId: number | undefined) => {
+      if (!questionId) return null;
+      const pick = picks.find((entry) => entry.question_id === questionId);
+      if (!pick) return null;
+      const team = teamMap.get(pick.team_id);
+      if (!team) return null;
+      const flag = flagForCode(team.code);
+      return `${flag ? `${flag} ` : ""}${team.name}`;
+    };
+
+    const sections: ShareSection[] = [];
+    const tourneyWinner = teamLabelForQuestion(questionByOrder(1)?.id);
+    if (tourneyWinner) {
+      sections.push({
+        title: "Group Stage Pick For Tourney Winner",
+        items: [tourneyWinner]
+      });
+    }
+
+    const groupWinners = [teamLabelForQuestion(questionByOrder(2)?.id), teamLabelForQuestion(questionByOrder(3)?.id)].filter(
+      (value): value is string => Boolean(value)
+    );
+    if (groupWinners.length) {
+      sections.push({
+        title: "Group Winners",
+        items: groupWinners
+      });
+    }
+
+    const qualifiers = [teamLabelForQuestion(questionByOrder(4)?.id), teamLabelForQuestion(questionByOrder(5)?.id)].filter(
+      (value): value is string => Boolean(value)
+    );
+    if (qualifiers.length) {
+      sections.push({
+        title: "Additional Knockout Stage Qualifiers",
+        items: qualifiers
+      });
+    }
+
+    return sections;
+  }, [chapters, picks, questions, teamMap]);
+
+  const canShareProfile = Boolean(profile?.public_slug) && shareSections.length > 0;
 
   async function save() {
     if (!profile) return;
@@ -127,6 +215,39 @@ export default function ProfilePage() {
     setSaving(false);
   }
 
+  async function copyProfileLink() {
+    if (!profile?.public_slug) return;
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/players/${profile.public_slug}`);
+      setNotice({ text: "Profile link copied.", tone: "success" });
+    } catch {
+      setNotice({ text: "Could not copy profile link.", tone: "danger" });
+    }
+  }
+
+  async function saveStoryCard() {
+    if (!storyCardRef.current || !profile) return;
+    setSavingStoryCard(true);
+    setNotice(null);
+    try {
+      const dataUrl = await toPng(storyCardRef.current, {
+        cacheBust: true,
+        pixelRatio: 1,
+        canvasWidth: 1080,
+        canvasHeight: 1920
+      });
+      const link = document.createElement("a");
+      link.download = `superleague-${profile.public_slug ?? profile.id}-story.png`;
+      link.href = dataUrl;
+      link.click();
+      setNotice({ text: "Story card saved.", tone: "success" });
+    } catch {
+      setNotice({ text: "Could not create story card.", tone: "danger" });
+    } finally {
+      setSavingStoryCard(false);
+    }
+  }
+
   if (loading) return <Loading label="Loading profile..." />;
 
   return (
@@ -153,6 +274,17 @@ export default function ProfilePage() {
             <h1 className="text-2xl font-bold">Your Profile</h1>
           </div>
         </div>
+
+        {canShareProfile ? (
+          <div className="mb-6 flex flex-wrap gap-3">
+            <button className="btn btn-secondary" onClick={() => void copyProfileLink()} type="button">
+              Copy Profile Link
+            </button>
+            <button className="btn btn-primary" onClick={() => void saveStoryCard()} disabled={savingStoryCard} type="button">
+              {savingStoryCard ? "Saving Story Card..." : "Save Story Card"}
+            </button>
+          </div>
+        ) : null}
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="text-sm text-slate-300">
@@ -203,6 +335,26 @@ export default function ProfilePage() {
           </button>
         </div>
       </section>
+
+      {canShareProfile && profile ? (
+        <div aria-hidden="true" className="pointer-events-none fixed left-[-99999px] top-0 opacity-0">
+          <div ref={storyCardRef}>
+            <ShareProfileStoryCard
+              avatarUrl={profile.avatar_url}
+              displayName={profile.display_name || profile.email}
+              shitTalk={profile.shit_talk}
+              sections={shareSections}
+            />
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
+
+type PickRow = {
+  id: number;
+  question_id: number;
+  chapter_id: number;
+  team_id: number;
+};
