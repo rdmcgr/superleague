@@ -82,7 +82,7 @@ export default function HomePage() {
     const [chaptersRes, questionsRes, teamsRes, myPicksRes, resultTeamsRes] = await Promise.all([
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").eq("is_active", true).order("chapter_id").order("order_index"),
-      supabase.from("teams").select("id,name,code").order("name"),
+      supabase.from("teams").select("id,name,code,is_active").order("name"),
       supabase.from("picks").select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at").eq("user_id", session.user.id),
       supabase.from("result_teams").select("question_id,team_id")
     ]);
@@ -143,6 +143,7 @@ export default function HomePage() {
   }, [loadPage]);
 
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
+  const activeTeams = useMemo(() => teams.filter((t) => t.is_active), [teams]);
 
   function chapterQuestions(chapterId: number) {
     return questions.filter((q) => q.chapter_id === chapterId);
@@ -324,7 +325,7 @@ export default function HomePage() {
                         <option value="" disabled>
                           Select team
                         </option>
-                        {teams.map((team) => {
+                        {activeTeams.map((team) => {
                           const blocked = used.has(team.id);
                           const flag = flagForCode(team.code);
                           return (

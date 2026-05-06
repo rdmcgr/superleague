@@ -90,7 +90,7 @@ export default function PlayerProfilePage() {
     const [chaptersRes, questionsRes, teamsRes, standingRes, betsRes] = await Promise.all([
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
-      supabase.from("teams").select("id,name,code").order("name"),
+      supabase.from("teams").select("id,name,code,is_active").order("name"),
       supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").eq("user_id", targetUserId).maybeSingle(),
       supabase
         .from("side_bets")

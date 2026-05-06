@@ -81,7 +81,7 @@ export default function AdminPage() {
     const [chaptersRes, questionsRes, teamsRes, resultTeamsRes, profilesRes, picksRes, completionRes] = await Promise.all([
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
-      supabase.from("teams").select("id,name,code").order("name"),
+      supabase.from("teams").select("id,name,code,is_active").order("name"),
       supabase.from("result_teams").select("question_id,team_id,points"),
       supabase.from("profiles").select("id,email,display_name,public_slug,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin").order("created_at"),
       supabase.from("picks").select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at"),
@@ -355,7 +355,7 @@ export default function AdminPage() {
                           <p className="mb-2 text-sm text-slate-200">Q{q.order_index}: {q.prompt}</p>
                           <div className="flex flex-wrap items-center gap-3">
                             <WinnerPicker
-                              teams={teams}
+                              teams={teams.filter((team) => team.is_active)}
                               selectedIds={state.teamIds}
                               onChange={(next) => updateGradeTeams(q.id, next)}
                             />

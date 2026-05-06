@@ -60,6 +60,7 @@ export default function SideBetsPage() {
   const [openCommentComposers, setOpenCommentComposers] = useState<Record<number, boolean>>({});
 
   const teamMap = useMemo(() => new Map(teams.map((t) => [String(t.id), t])), [teams]);
+  const activeTeams = useMemo(() => teams.filter((t) => t.is_active), [teams]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -95,7 +96,7 @@ export default function SideBetsPage() {
     }
 
     const [teamsRes, betsRes, commentsRes] = await Promise.all([
-      supabase.from("teams").select("id,name,code").order("name"),
+      supabase.from("teams").select("id,name,code,is_active").order("name"),
       supabase
         .from("side_bets")
         .select(
@@ -635,7 +636,7 @@ export default function SideBetsPage() {
                   onChange={(e) => setTeamA(e.target.value)}
                 >
                   <option value="">Select team</option>
-                  {teams.map((team) => (
+                  {activeTeams.map((team) => (
                     <option key={team.id} value={team.id}>
                       {flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}{team.name}
                     </option>
@@ -650,7 +651,7 @@ export default function SideBetsPage() {
                   onChange={(e) => setTeamB(e.target.value)}
                 >
                   <option value="">Select team</option>
-                  {teams.map((team) => (
+                  {activeTeams.map((team) => (
                     <option key={team.id} value={team.id}>
                       {flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}{team.name}
                     </option>

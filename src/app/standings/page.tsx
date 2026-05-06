@@ -80,7 +80,7 @@ export default function StandingsPage() {
       supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").order("total_points", { ascending: false }),
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
-      supabase.from("teams").select("id,name,code").order("name"),
+      supabase.from("teams").select("id,name,code,is_active").order("name"),
       supabase.from("profiles").select("id,public_slug,avatar_url,shit_talk,shit_talk_updated_at")
     ]);
 

@@ -119,6 +119,7 @@ alter table public.side_bets add column if not exists settled_at timestamptz;
 alter table public.side_bets add column if not exists taken_at timestamptz;
 alter table public.side_bets add column if not exists creator_selected_winner_id uuid references public.profiles(id) on delete set null;
 alter table public.side_bets add column if not exists taker_selected_winner_id uuid references public.profiles(id) on delete set null;
+alter table public.teams add column if not exists is_active boolean not null default true;
 
 do $$
 begin
@@ -164,6 +165,7 @@ create table if not exists public.teams (
   id bigint generated always as identity primary key,
   name text not null unique,
   code text not null unique,
+  is_active boolean not null default true,
   created_at timestamptz not null default now()
 );
 
@@ -922,65 +924,61 @@ where not exists (
   select 1 from public.questions q where q.chapter_id = c.id and q.order_index = x.order_index
 );
 
-insert into public.teams (name, code)
+update public.teams set is_active = false;
+
+insert into public.teams (name, code, is_active)
 values
-  -- Hosts
-  ('Canada', 'CAN'),
-  ('Mexico', 'MEX'),
-  ('United States', 'USA'),
-  -- AFC (qualified)
-  ('Japan', 'JPN'),
-  ('IR Iran', 'IRN'),
-  ('Uzbekistan', 'UZB'),
-  ('Korea Republic', 'KOR'),
-  ('Jordan', 'JOR'),
-  ('Australia', 'AUS'),
-  ('Qatar', 'QAT'),
-  ('Saudi Arabia', 'KSA'),
-  -- CAF (qualified)
-  ('Morocco', 'MAR'),
-  ('Tunisia', 'TUN'),
-  ('Egypt', 'EGY'),
-  ('Algeria', 'ALG'),
-  ('Ghana', 'GHA'),
-  ('Cape Verde', 'CPV'),
-  ('South Africa', 'RSA'),
-  ('Cote d''Ivoire', 'CIV'),
-  ('Senegal', 'SEN'),
-  -- CONCACAF (qualified)
-  ('Panama', 'PAN'),
-  ('Haiti', 'HAI'),
-  ('Curacao', 'CUW'),
-  -- CONMEBOL (qualified)
-  ('Argentina', 'ARG'),
-  ('Brazil', 'BRA'),
-  ('Ecuador', 'ECU'),
-  ('Uruguay', 'URU'),
-  ('Colombia', 'COL'),
-  ('Paraguay', 'PAR'),
-  -- OFC (qualified)
-  ('New Zealand', 'NZL'),
-  -- UEFA (qualified)
-  ('England', 'ENG'),
-  ('France', 'FRA'),
-  ('Croatia', 'CRO'),
-  ('Portugal', 'POR'),
-  ('Norway', 'NOR'),
-  ('Germany', 'GER'),
-  ('Netherlands', 'NED'),
-  ('Belgium', 'BEL'),
-  ('Austria', 'AUT'),
-  ('Switzerland', 'SUI'),
-  ('Spain', 'ESP'),
-  ('Scotland', 'SCO'),
-  -- Play-off tournament teams (March 2026)
-  ('Bolivia', 'BOL'),
-  ('Congo DR', 'COD'),
-  ('Iraq', 'IRQ'),
-  ('Jamaica', 'JAM'),
-  ('New Caledonia', 'NCL'),
-  ('Suriname', 'SUR')
-on conflict (code) do nothing;
+  ('Algeria', 'ALG', true),
+  ('Argentina', 'ARG', true),
+  ('Australia', 'AUS', true),
+  ('Austria', 'AUT', true),
+  ('Belgium', 'BEL', true),
+  ('Bosnia and Herzegovina', 'BIH', true),
+  ('Brazil', 'BRA', true),
+  ('Cabo Verde', 'CPV', true),
+  ('Canada', 'CAN', true),
+  ('Colombia', 'COL', true),
+  ('Congo DR', 'COD', true),
+  ('Croatia', 'CRO', true),
+  ('Curaçao', 'CUW', true),
+  ('Czechia', 'CZE', true),
+  ('Côte d''Ivoire', 'CIV', true),
+  ('Ecuador', 'ECU', true),
+  ('Egypt', 'EGY', true),
+  ('England', 'ENG', true),
+  ('France', 'FRA', true),
+  ('Germany', 'GER', true),
+  ('Ghana', 'GHA', true),
+  ('Haiti', 'HAI', true),
+  ('IR Iran', 'IRN', true),
+  ('Iraq', 'IRQ', true),
+  ('Japan', 'JPN', true),
+  ('Jordan', 'JOR', true),
+  ('Korea Republic', 'KOR', true),
+  ('Mexico', 'MEX', true),
+  ('Morocco', 'MAR', true),
+  ('Netherlands', 'NED', true),
+  ('New Zealand', 'NZL', true),
+  ('Norway', 'NOR', true),
+  ('Panama', 'PAN', true),
+  ('Paraguay', 'PAR', true),
+  ('Portugal', 'POR', true),
+  ('Qatar', 'QAT', true),
+  ('Saudi Arabia', 'KSA', true),
+  ('Scotland', 'SCO', true),
+  ('Senegal', 'SEN', true),
+  ('South Africa', 'RSA', true),
+  ('Spain', 'ESP', true),
+  ('Sweden', 'SWE', true),
+  ('Switzerland', 'SUI', true),
+  ('Tunisia', 'TUN', true),
+  ('Türkiye', 'TUR', true),
+  ('USA', 'USA', true),
+  ('Uruguay', 'URU', true),
+  ('Uzbekistan', 'UZB', true)
+on conflict (code) do update
+set name = excluded.name,
+    is_active = excluded.is_active;
 
 -- After your first user signs in, mark yourself as admin:
 -- update public.profiles set is_admin = true where email = 'your-email@example.com';
