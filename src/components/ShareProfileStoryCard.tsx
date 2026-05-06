@@ -37,9 +37,23 @@ export default function ShareProfileStoryCard({
 
       <div className="relative flex flex-1 flex-col px-18 pb-16 pt-18">
         <div className="mb-16 flex flex-col items-center text-center">
-          <img alt="Super League" className="mb-6 h-44 w-44 object-contain" src="/super-league-shield-logo.png" />
+          <img
+            alt="Super League"
+            className="mb-6 h-56 w-56 object-contain"
+            decoding="sync"
+            fetchPriority="high"
+            loading="eager"
+            src="/super-league-shield-logo.png"
+          />
           <p className="text-[26px] font-semibold uppercase tracking-[0.45em] text-cyan-100/80">World Cup 2026</p>
-          <h1 className="mt-4 text-[86px] font-black uppercase tracking-[0.1em] text-white">Super League</h1>
+          <img
+            alt="Super League wordmark"
+            className="mt-6 h-28 w-[760px] object-contain"
+            decoding="sync"
+            fetchPriority="high"
+            loading="eager"
+            src="/superleague-wordmark.png"
+          />
         </div>
 
         <div className="mb-12 flex flex-col items-center text-center">
@@ -85,7 +99,13 @@ export default function ShareProfileStoryCard({
 
         <div className="mt-10 flex items-center justify-center gap-3 text-[24px] font-semibold uppercase tracking-[0.18em] text-slate-200/85">
           <span>© 2026 Superleague.party. An</span>
-          <img alt="OWS" className="h-7 w-7 rounded-sm object-contain" src="/ows-nwo-logo.png" />
+          <img
+            alt="OWS"
+            className="h-10 w-10 rounded-sm object-contain"
+            decoding="sync"
+            loading="eager"
+            src="/ows-nwo-logo.png"
+          />
           <span>Joint.</span>
         </div>
       </div>
