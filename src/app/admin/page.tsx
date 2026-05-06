@@ -379,6 +379,9 @@ export default function AdminPage() {
                               />
                             </label>
                           </div>
+                          <p className="mt-3 text-xs text-slate-400">
+                            Correct answers selected: {state.teamIds.length}
+                          </p>
                         </div>
                       );
                     })}
