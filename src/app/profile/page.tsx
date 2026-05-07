@@ -234,32 +234,9 @@ export default function ProfilePage() {
     const isIOS =
       /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     const shouldOpenPreviewTab = isIOS;
-    const previewTab = shouldOpenPreviewTab ? window.open("", "_blank") : null;
-
-    if (previewTab) {
-      previewTab.document.write(`
-        <html>
-          <head>
-            <title>Story Card</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <style>
-              body {
-                margin: 0;
-                min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: #07111d;
-                color: #f8fbff;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-              }
-            </style>
-          </head>
-          <body>Preparing your story card...</body>
-        </html>
-      `);
-      previewTab.document.close();
-    }
+    const previewKey = shouldOpenPreviewTab ? crypto.randomUUID() : null;
+    const previewTab =
+      shouldOpenPreviewTab && previewKey ? window.open(`/story-card-preview?key=${previewKey}`, "_blank") : null;
 
     try {
       const dataUrl = await toPng(storyCardRef.current, {
@@ -269,36 +246,8 @@ export default function ProfilePage() {
         canvasHeight: 1920
       });
 
-      if (previewTab) {
-        previewTab.document.open();
-        previewTab.document.write(`
-          <html>
-            <head>
-              <title>Story Card</title>
-              <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <style>
-                body {
-                  margin: 0;
-                  min-height: 100vh;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  background: #07111d;
-                }
-                img {
-                  display: block;
-                  width: 100%;
-                  height: auto;
-                  max-width: 100vw;
-                }
-              </style>
-            </head>
-            <body>
-              <img alt="Story card" src="${dataUrl}" />
-            </body>
-          </html>
-        `);
-        previewTab.document.close();
+      if (previewTab && previewKey) {
+        window.localStorage.setItem(`story-card-preview:${previewKey}`, dataUrl);
         setNotice({ text: "Story card opened in a new tab.", tone: "success" });
       } else {
         const blob = await (await fetch(dataUrl)).blob();
