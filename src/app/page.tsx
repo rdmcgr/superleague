@@ -295,10 +295,10 @@ export default function HomePage() {
               Hide
             </button>
           </div>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-200/85">
-            <span>Download a Story card from your profile and post it on socials!</span>
+          <div className="mt-1 flex items-start gap-2 text-sm text-slate-200/85">
+            <span className="min-w-0 flex-1">Download a story card with your picks from your profile to share it on the socials!</span>
             <button
-              className="inline-flex items-center gap-1.5 rounded-md border border-cyan-200/40 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100 hover:bg-cyan-200/20"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-cyan-200/40 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100 hover:bg-cyan-200/20"
               onClick={() => router.push("/profile")}
               type="button"
             >
@@ -314,7 +314,7 @@ export default function HomePage() {
               </span>
               <span>Story Card</span>
             </button>
-          </p>
+          </div>
         </section>
       ) : null}
 
