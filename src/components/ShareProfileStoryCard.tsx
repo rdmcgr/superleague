@@ -1,14 +1,11 @@
 "use client";
 
+import type { StoryCardSection } from "@/lib/story-card";
+
 type ShareProfileStoryCardProps = {
   avatarUrl: string | null;
   displayName: string;
-  sections: ShareSection[];
-};
-
-export type ShareSection = {
-  title: string;
-  items: string[];
+  sections: StoryCardSection[];
 };
 
 export default function ShareProfileStoryCard({

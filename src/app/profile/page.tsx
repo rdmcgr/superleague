@@ -8,9 +8,9 @@ import { toPng } from "html-to-image";
 import AppHeader from "@/components/AppHeader";
 import Loading from "@/components/Loading";
 import Notice from "@/components/Notice";
-import ShareProfileStoryCard, { type ShareSection } from "@/components/ShareProfileStoryCard";
-import { flagForCode } from "@/lib/flags";
+import ShareProfileStoryCard from "@/components/ShareProfileStoryCard";
 import { supabase } from "@/lib/supabase-browser";
+import { buildStoryCardSections } from "@/lib/story-card";
 import { useAuthResync } from "@/lib/useAuthResync";
 import type { Chapter, Profile, Question, Team } from "@/lib/types";
 
@@ -126,55 +126,7 @@ export default function ProfilePage() {
   }, [now, profile?.shit_talk, profile?.shit_talk_updated_at]);
 
   const remainingChars = useMemo(() => 200 - shitTalk.length, [shitTalk.length]);
-  const teamMap = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
-
-  const shareSections = useMemo(() => {
-    const groupStage = chapters.find((chapter) => chapter.slug === "group-stage");
-    if (!groupStage || (groupStage.status !== "locked" && groupStage.status !== "graded")) return [] as ShareSection[];
-
-    const questionByOrder = (orderIndex: number) =>
-      questions.find((question) => question.chapter_id === groupStage.id && question.order_index === orderIndex);
-    const teamLabelForQuestion = (questionId: number | undefined) => {
-      if (!questionId) return null;
-      const pick = picks.find((entry) => entry.question_id === questionId);
-      if (!pick) return null;
-      const team = teamMap.get(pick.team_id);
-      if (!team) return null;
-      const flag = flagForCode(team.code);
-      return `${flag ? `${flag} ` : ""}${team.name}`;
-    };
-
-    const sections: ShareSection[] = [];
-    const tourneyWinner = teamLabelForQuestion(questionByOrder(1)?.id);
-    if (tourneyWinner) {
-      sections.push({
-        title: "Champion",
-        items: [tourneyWinner]
-      });
-    }
-
-    const groupWinners = [teamLabelForQuestion(questionByOrder(2)?.id), teamLabelForQuestion(questionByOrder(3)?.id)].filter(
-      (value): value is string => Boolean(value)
-    );
-    if (groupWinners.length) {
-      sections.push({
-        title: "Group Winners",
-        items: groupWinners
-      });
-    }
-
-    const qualifiers = [teamLabelForQuestion(questionByOrder(4)?.id), teamLabelForQuestion(questionByOrder(5)?.id)].filter(
-      (value): value is string => Boolean(value)
-    );
-    if (qualifiers.length) {
-      sections.push({
-        title: "Additional Knockout Stage Qualifiers",
-        items: qualifiers
-      });
-    }
-
-    return sections;
-  }, [chapters, picks, questions, teamMap]);
+  const shareSections = useMemo(() => buildStoryCardSections(chapters, questions, picks, teams), [chapters, picks, questions, teams]);
 
   const canShareProfile = Boolean(profile?.public_slug) && shareSections.length > 0;
 
@@ -234,11 +186,14 @@ export default function ProfilePage() {
     const isIOS =
       /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     const shouldOpenPreviewTab = isIOS;
-    const previewKey = shouldOpenPreviewTab ? crypto.randomUUID() : null;
-    const previewTab =
-      shouldOpenPreviewTab && previewKey ? window.open(`/story-card-preview?key=${previewKey}`, "_blank") : null;
+    const previewTab = shouldOpenPreviewTab ? window.open("/story-card-preview", "_blank") : null;
 
     try {
+      if (previewTab) {
+        setNotice({ text: "Story card preview opened in a new tab.", tone: "success" });
+        return;
+      }
+
       const dataUrl = await toPng(storyCardRef.current, {
         cacheBust: true,
         pixelRatio: 1,
@@ -246,21 +201,15 @@ export default function ProfilePage() {
         canvasHeight: 1920
       });
 
-      if (previewTab && previewKey) {
-        window.localStorage.setItem(`story-card-preview:${previewKey}`, dataUrl);
-        setNotice({ text: "Story card opened in a new tab.", tone: "success" });
-      } else {
-        const blob = await (await fetch(dataUrl)).blob();
-        const objectUrl = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.download = `superleague-${profile.public_slug ?? profile.id}-story.png`;
-        link.href = objectUrl;
-        link.click();
-        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
-        setNotice({ text: "Story card saved.", tone: "success" });
-      }
+      const blob = await (await fetch(dataUrl)).blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.download = `superleague-${profile.public_slug ?? profile.id}-story.png`;
+      link.href = objectUrl;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      setNotice({ text: "Story card saved.", tone: "success" });
     } catch {
-      previewTab?.close();
       setNotice({ text: "Could not create story card.", tone: "danger" });
     } finally {
       setSavingStoryCard(false);
