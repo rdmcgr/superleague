@@ -185,7 +185,8 @@ export default function ProfilePage() {
     const userAgent = navigator.userAgent;
     const isIOS =
       /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    const shouldOpenPreviewTab = isIOS;
+    const isAndroid = /Android/i.test(userAgent);
+    const shouldOpenPreviewTab = isIOS || isAndroid;
     const previewTab = shouldOpenPreviewTab ? window.open("/story-card-preview", "_blank") : null;
 
     try {
