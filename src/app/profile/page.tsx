@@ -229,6 +229,38 @@ export default function ProfilePage() {
     if (!storyCardRef.current || !profile) return;
     setSavingStoryCard(true);
     setNotice(null);
+
+    const userAgent = navigator.userAgent;
+    const isIOS =
+      /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const shouldOpenPreviewTab = isIOS;
+    const previewTab = shouldOpenPreviewTab ? window.open("", "_blank") : null;
+
+    if (previewTab) {
+      previewTab.document.write(`
+        <html>
+          <head>
+            <title>Story Card</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <style>
+              body {
+                margin: 0;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #07111d;
+                color: #f8fbff;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+              }
+            </style>
+          </head>
+          <body>Preparing your story card...</body>
+        </html>
+      `);
+      previewTab.document.close();
+    }
+
     try {
       const dataUrl = await toPng(storyCardRef.current, {
         cacheBust: true,
@@ -236,12 +268,23 @@ export default function ProfilePage() {
         canvasWidth: 1080,
         canvasHeight: 1920
       });
-      const link = document.createElement("a");
-      link.download = `superleague-${profile.public_slug ?? profile.id}-story.png`;
-      link.href = dataUrl;
-      link.click();
-      setNotice({ text: "Story card saved.", tone: "success" });
+      const blob = await (await fetch(dataUrl)).blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      if (previewTab) {
+        previewTab.location.href = objectUrl;
+        setNotice({ text: "Story card opened in a new tab.", tone: "success" });
+      } else {
+        const link = document.createElement("a");
+        link.download = `superleague-${profile.public_slug ?? profile.id}-story.png`;
+        link.href = objectUrl;
+        link.click();
+        setNotice({ text: "Story card saved.", tone: "success" });
+      }
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
     } catch {
+      previewTab?.close();
       setNotice({ text: "Could not create story card.", tone: "danger" });
     } finally {
       setSavingStoryCard(false);
