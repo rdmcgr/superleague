@@ -12,6 +12,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [signupsClosed, setSignupsClosed] = useState(false);
 
   const checkSession = useCallback(async () => {
     const {
@@ -25,6 +26,15 @@ export default function LoginPage() {
   useEffect(() => {
     void checkSession();
   }, [checkSession]);
+
+  useEffect(() => {
+    async function loadSignupStatus() {
+      const { data } = await supabase.rpc("new_signups_closed");
+      setSignupsClosed(Boolean(data));
+    }
+
+    void loadSignupStatus();
+  }, []);
 
   async function googleSignIn() {
     setLoading(true);
@@ -72,6 +82,15 @@ export default function LoginPage() {
         {error ? (
           <div className="mb-4">
             <Notice text={error} tone="danger" />
+          </div>
+        ) : null}
+
+        {signupsClosed ? (
+          <div className="mb-4">
+            <Notice
+              text="Sign-up period has ended. Existing players can still sign in, but new entries are closed."
+              tone="neutral"
+            />
           </div>
         ) : null}
 

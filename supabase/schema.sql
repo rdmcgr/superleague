@@ -222,7 +222,20 @@ set search_path = public
 as $$
 declare
   generated_slug text;
+  group_stage_locked boolean;
 begin
+  select exists (
+    select 1
+    from public.chapters c
+    where c.slug = 'group-stage'
+      and c.status in ('locked', 'graded')
+  )
+  into group_stage_locked;
+
+  if group_stage_locked then
+    raise exception 'Sign-up period has ended. Existing players can still sign in, but new entries are closed.';
+  end if;
+
   generated_slug := public.ensure_unique_public_slug(
     public.slugify_display_name(coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1))),
     new.id
@@ -240,6 +253,20 @@ begin
 
   return new;
 end;
+$$;
+
+create or replace function public.new_signups_closed()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.chapters c
+    where c.slug = 'group-stage'
+      and c.status in ('locked', 'graded')
+  );
 $$;
 
 drop trigger if exists on_auth_user_created on auth.users;
