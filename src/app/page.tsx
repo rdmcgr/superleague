@@ -271,7 +271,7 @@ export default function HomePage() {
             <li>Picks lock and become visible to all participants after the due date.</li>
             <li>Correct answer point value varies by quesiton.</li>
             <li>
-              One entry per person -- $40 fee to enter.{" "}
+              One entry per person. $40 fee.{" "}
               <a
                 className="inline-flex items-center rounded-md border border-cyan-200/40 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100 hover:bg-cyan-200/20"
                 href="/payment"
@@ -295,22 +295,18 @@ export default function HomePage() {
               Hide
             </button>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="mt-1 text-sm text-slate-200/85">
-                Download a Story card from your profile and post it on socials!
-              </p>
-            </div>
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-200/85">
+            <span>Download a Story card from your profile and post it on socials!</span>
             <button
-              className="inline-flex items-center gap-2 rounded-md border border-cyan-200/40 bg-cyan-200/10 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100 hover:bg-cyan-200/20"
+              className="inline-flex items-center gap-1.5 rounded-md border border-cyan-200/40 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100 hover:bg-cyan-200/20"
               onClick={() => router.push("/profile")}
               type="button"
             >
               <span
                 aria-hidden="true"
-                className="inline-flex h-4 w-4 items-center justify-center rounded-[5px] bg-[linear-gradient(135deg,#feda75_0%,#fa7e1e_28%,#d62976_58%,#962fbf_80%,#4f5bd5_100%)]"
+                className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-[4px] bg-[linear-gradient(135deg,#feda75_0%,#fa7e1e_28%,#d62976_58%,#962fbf_80%,#4f5bd5_100%)]"
               >
-                <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="4" y="4" width="16" height="16" rx="4" />
                   <circle cx="12" cy="12" r="4" />
                   <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
@@ -318,7 +314,7 @@ export default function HomePage() {
               </span>
               <span>Story Card</span>
             </button>
-          </div>
+          </p>
         </section>
       ) : null}
 
