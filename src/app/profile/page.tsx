@@ -268,21 +268,48 @@ export default function ProfilePage() {
         canvasWidth: 1080,
         canvasHeight: 1920
       });
-      const blob = await (await fetch(dataUrl)).blob();
-      const objectUrl = URL.createObjectURL(blob);
 
       if (previewTab) {
-        previewTab.location.href = objectUrl;
+        previewTab.document.open();
+        previewTab.document.write(`
+          <html>
+            <head>
+              <title>Story Card</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <style>
+                body {
+                  margin: 0;
+                  min-height: 100vh;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: #07111d;
+                }
+                img {
+                  display: block;
+                  width: 100%;
+                  height: auto;
+                  max-width: 100vw;
+                }
+              </style>
+            </head>
+            <body>
+              <img alt="Story card" src="${dataUrl}" />
+            </body>
+          </html>
+        `);
+        previewTab.document.close();
         setNotice({ text: "Story card opened in a new tab.", tone: "success" });
       } else {
+        const blob = await (await fetch(dataUrl)).blob();
+        const objectUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.download = `superleague-${profile.public_slug ?? profile.id}-story.png`;
         link.href = objectUrl;
         link.click();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
         setNotice({ text: "Story card saved.", tone: "success" });
       }
-
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
     } catch {
       previewTab?.close();
       setNotice({ text: "Could not create story card.", tone: "danger" });
