@@ -131,7 +131,14 @@ export default function StoryCardPreviewPage() {
         }}
       >
         {imageUrl ? (
-          <img alt="Story card preview" className="block h-auto max-w-full rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.45)]" src={imageUrl} />
+          <div className="w-full max-w-3xl">
+            <div className="mb-4 rounded-2xl border border-cyan-200/20 bg-white/6 px-5 py-4 text-center shadow-[0_18px_50px_rgba(0,0,0,0.28)]">
+              <p className="text-sm font-semibold tracking-[0.02em] text-slate-50">
+                Long-press the image below to &quot;Save to Photos&quot; then share to the &apos;gram!
+              </p>
+            </div>
+            <img alt="Story card preview" className="block h-auto max-w-full rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.45)]" src={imageUrl} />
+          </div>
         ) : (
           <div className="max-w-sm rounded-2xl border border-white/10 bg-white/6 px-6 py-5 text-center shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
             <p className="text-base font-semibold">{rendering ? "Preparing your story card..." : "Could not load story card."}</p>
