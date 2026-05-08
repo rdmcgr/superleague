@@ -130,25 +130,9 @@ export default function PlayerProfilePage() {
             </div>
           </div>
 
-          {payload.standing ? (
-            <div className="mb-6 grid gap-3 sm:grid-cols-2">
-              <StatCard label="Points" value={payload.standing.total_points} />
-              <StatCard label="Correct Picks" value={payload.standing.correct_picks} />
-              <StatCard label="Side Bets" value={`${payload.standing.side_bets_wins}-${payload.standing.side_bets_losses}`} />
-            </div>
-          ) : null}
         </section>
       ) : null}
     </>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3">
-      <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{label}</p>
-      <p className="text-lg font-semibold text-slate-100">{value}</p>
-    </div>
   );
 }
 
