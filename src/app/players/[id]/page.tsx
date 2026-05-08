@@ -57,13 +57,13 @@ export default function PlayerProfilePage() {
     void load();
   }, [load]);
 
-  const groupWinners = useMemo(() => payload?.revealed.group_winners ?? [], [payload?.revealed.group_winners]);
+  const groupWinners = useMemo(() => payload?.revealed?.group_winners ?? [], [payload?.revealed?.group_winners]);
   const additionalQualifiers = useMemo(
-    () => payload?.revealed.additional_qualifiers ?? [],
-    [payload?.revealed.additional_qualifiers]
+    () => payload?.revealed?.additional_qualifiers ?? [],
+    [payload?.revealed?.additional_qualifiers]
   );
-  const groupStageRevealed = Boolean(payload?.revealed.group_stage_revealed);
-  const viewerIsMember = Boolean(payload?.viewer.is_member);
+  const groupStageRevealed = Boolean(payload?.revealed?.group_stage_revealed);
+  const viewerIsMember = Boolean(payload?.viewer?.is_member);
 
   if (loading) return <Loading label="Loading player profile..." />;
 
@@ -196,7 +196,7 @@ type TeamSummary = {
 };
 
 type PublicProfilePayload = {
-  viewer: {
+  viewer?: {
     is_member: boolean;
   };
   profile: PlayerProfile;
@@ -207,7 +207,7 @@ type PublicProfilePayload = {
     side_bets_losses: number;
   };
   revealed: {
-    group_stage_revealed: boolean;
+    group_stage_revealed?: boolean;
     champion: TeamSummary | null;
     group_winners: TeamSummary[];
     additional_qualifiers: TeamSummary[];
