@@ -5,6 +5,7 @@ import { toPng } from "html-to-image";
 import Loading from "@/components/Loading";
 import Notice from "@/components/Notice";
 import ShareProfileStoryCard from "@/components/ShareProfileStoryCard";
+import { flagForCode } from "@/lib/flags";
 import { supabase } from "@/lib/supabase-browser";
 import { buildStoryCardSections } from "@/lib/story-card";
 import { useAuthResync } from "@/lib/useAuthResync";
@@ -84,6 +85,10 @@ export default function StoryCardPreviewPage() {
   }, [load]);
 
   const shareSections = useMemo(() => buildStoryCardSections(chapters, questions, picks, teams), [chapters, picks, questions, teams]);
+  const allegianceTeam = useMemo(
+    () => (profile?.allegiance_team_id ? teams.find((team) => team.id === profile.allegiance_team_id) ?? null : null),
+    [profile?.allegiance_team_id, teams]
+  );
 
   useEffect(() => {
     async function generate() {
@@ -154,6 +159,7 @@ export default function StoryCardPreviewPage() {
               <ShareProfileStoryCard
                 avatarUrl={profile.avatar_url}
                 displayName={profile.display_name || profile.email}
+                allegiance={allegianceTeam ? `${flagForCode(allegianceTeam.code)} ${allegianceTeam.name}` : null}
                 sections={shareSections}
               />
             </div>

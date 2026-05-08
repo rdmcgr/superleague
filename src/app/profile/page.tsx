@@ -9,11 +9,11 @@ import AppHeader from "@/components/AppHeader";
 import Loading from "@/components/Loading";
 import Notice from "@/components/Notice";
 import ShareProfileStoryCard from "@/components/ShareProfileStoryCard";
+import { flagForCode } from "@/lib/flags";
 import { supabase } from "@/lib/supabase-browser";
 import { buildStoryCardSections } from "@/lib/story-card";
 import { useAuthResync } from "@/lib/useAuthResync";
 import type { Chapter, Profile, Question, Team } from "@/lib/types";
-import { flagForCode } from "@/lib/flags";
 
 export default function ProfilePage() {
   useAuthResync();
@@ -393,12 +393,13 @@ export default function ProfilePage() {
       {canShareProfile && profile ? (
         <div aria-hidden="true" className="pointer-events-none fixed left-[-99999px] top-0 opacity-0">
           <div ref={storyCardRef}>
-            <ShareProfileStoryCard
-              avatarUrl={profile.avatar_url}
-              displayName={profile.display_name || profile.email}
-              sections={shareSections}
-            />
-          </div>
+              <ShareProfileStoryCard
+                avatarUrl={profile.avatar_url}
+                displayName={profile.display_name || profile.email}
+                allegiance={allegianceTeam ? `${flagForCode(allegianceTeam.code)} ${allegianceTeam.name}` : null}
+                sections={shareSections}
+              />
+            </div>
         </div>
       ) : null}
     </>
