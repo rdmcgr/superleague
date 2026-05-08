@@ -62,6 +62,7 @@ export default function PlayerProfilePage() {
     () => payload?.revealed.additional_qualifiers ?? [],
     [payload?.revealed.additional_qualifiers]
   );
+  const groupStageRevealed = Boolean(payload?.revealed.group_stage_revealed);
 
   if (loading) return <Loading label="Loading player profile..." />;
 
@@ -119,42 +120,57 @@ export default function PlayerProfilePage() {
           </div>
 
           {payload.profile.allegiance_team_name && payload.profile.allegiance_team_code ? (
-            <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="mb-4 rounded-xl border border-cyan-200/20 bg-cyan-200/8 p-5">
               <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">My Allegiance</p>
-              <p className="text-sm text-slate-200">
+              <p className="text-xl font-semibold text-slate-100">
                 {flagForCode(payload.profile.allegiance_team_code)} {payload.profile.allegiance_team_name}
               </p>
             </div>
           ) : null}
 
-          <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
-                <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Stage Pick For Tourney Winner</p>
-                <p className="text-sm text-slate-200">
-                  {payload.revealed.champion ? `${flagForCode(payload.revealed.champion.code)} ${payload.revealed.champion.name}` : "No pick"}
-                </p>
-              </div>
-              <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
-                <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Winners</p>
-                <p className="text-sm text-slate-200">
-                  {groupWinners[0] ? `${flagForCode(groupWinners[0].code)} ${groupWinners[0].name}` : "No pick"}
-                </p>
-                <p className="text-sm text-slate-200">
-                  {groupWinners[1] ? `${flagForCode(groupWinners[1].code)} ${groupWinners[1].name}` : "No pick"}
-                </p>
-              </div>
-              <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3 md:col-span-2">
-                <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Additional Knockout Stage Qualifiers</p>
-                <p className="text-sm text-slate-200">
-                  {additionalQualifiers[0] ? `${flagForCode(additionalQualifiers[0].code)} ${additionalQualifiers[0].name}` : "No pick"}
-                </p>
-                <p className="text-sm text-slate-200">
-                  {additionalQualifiers[1] ? `${flagForCode(additionalQualifiers[1].code)} ${additionalQualifiers[1].name}` : "No pick"}
-                </p>
+          {groupStageRevealed ? (
+            <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
+                  <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Stage Pick For Tourney Winner</p>
+                  <p className="text-sm text-slate-200">
+                    {payload.revealed.champion ? `${flagForCode(payload.revealed.champion.code)} ${payload.revealed.champion.name}` : "No pick"}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
+                  <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Winners</p>
+                  <p className="text-sm text-slate-200">
+                    {groupWinners[0] ? `${flagForCode(groupWinners[0].code)} ${groupWinners[0].name}` : "No pick"}
+                  </p>
+                  <p className="text-sm text-slate-200">
+                    {groupWinners[1] ? `${flagForCode(groupWinners[1].code)} ${groupWinners[1].name}` : "No pick"}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3 md:col-span-2">
+                  <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Additional Knockout Stage Qualifiers</p>
+                  <p className="text-sm text-slate-200">
+                    {additionalQualifiers[0] ? `${flagForCode(additionalQualifiers[0].code)} ${additionalQualifiers[0].name}` : "No pick"}
+                  </p>
+                  <p className="text-sm text-slate-200">
+                    {additionalQualifiers[1] ? `${flagForCode(additionalQualifiers[1].code)} ${additionalQualifiers[1].name}` : "No pick"}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-5">
+              <p className="text-base font-semibold text-slate-100">
+                This player&apos;s picks are locked away for now. Check back after Group Stage closes to see their picks.
+              </p>
+              <p className="mt-3 text-sm text-slate-300">
+                Do you want to join the party? Sign up using your invite code at{" "}
+                <a className="text-cyan-200 underline underline-offset-2 hover:text-cyan-100" href="https://superleague.party">
+                  superleague.party
+                </a>
+                .
+              </p>
+            </div>
+          )}
 
         </section>
       ) : null}
@@ -187,6 +203,7 @@ type PublicProfilePayload = {
     side_bets_losses: number;
   };
   revealed: {
+    group_stage_revealed: boolean;
     champion: TeamSummary | null;
     group_winners: TeamSummary[];
     additional_qualifiers: TeamSummary[];

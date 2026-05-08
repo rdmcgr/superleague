@@ -281,10 +281,16 @@ declare
   target_profile public.profiles%rowtype;
   viewer_can_see_shit_talk boolean := false;
   group_stage_id bigint;
+  group_stage_revealed boolean := false;
   total_points_value int := 0;
   correct_picks_value int := 0;
   wins_value int := 0;
   losses_value int := 0;
+  allegiance_team_name text;
+  allegiance_team_code text;
+  champion_value jsonb;
+  group_winners_value jsonb := '[]'::jsonb;
+  additional_qualifiers_value jsonb := '[]'::jsonb;
 begin
   if auth.uid() is not null then
     select exists (
@@ -316,6 +322,14 @@ begin
   where c.slug = 'group-stage'
   limit 1;
 
+  select exists (
+    select 1
+    from public.chapters c
+    where c.id = group_stage_id
+      and c.status in ('locked', 'graded')
+  )
+  into group_stage_revealed;
+
   select coalesce(sl.total_points, 0), coalesce(sl.correct_picks, 0)
   into total_points_value, correct_picks_value
   from public.standings_live sl
@@ -333,6 +347,59 @@ begin
   where sb.status = 'closed'
     and (sb.creator_id = target_profile.id or sb.taker_id = target_profile.id);
 
+  if target_profile.allegiance_team_id is not null then
+    select t.name, t.code
+    into allegiance_team_name, allegiance_team_code
+    from public.teams t
+    where t.id = target_profile.allegiance_team_id;
+  end if;
+
+  if group_stage_revealed then
+    select
+      case
+        when t.id is null then null
+        else jsonb_build_object('name', t.name, 'code', t.code)
+      end
+    into champion_value
+    from public.questions q
+    left join public.picks pk
+      on pk.question_id = q.id
+     and pk.user_id = target_profile.id
+    left join public.teams t
+      on t.id = pk.team_id
+    where q.chapter_id = group_stage_id
+      and q.order_index = 1
+    limit 1;
+
+    select coalesce(
+      jsonb_agg(jsonb_build_object('name', t.name, 'code', t.code) order by q.order_index),
+      '[]'::jsonb
+    )
+    into group_winners_value
+    from public.questions q
+    join public.picks pk
+      on pk.question_id = q.id
+     and pk.user_id = target_profile.id
+    join public.teams t
+      on t.id = pk.team_id
+    where q.chapter_id = group_stage_id
+      and q.order_index in (2, 3);
+
+    select coalesce(
+      jsonb_agg(jsonb_build_object('name', t.name, 'code', t.code) order by q.order_index),
+      '[]'::jsonb
+    )
+    into additional_qualifiers_value
+    from public.questions q
+    join public.picks pk
+      on pk.question_id = q.id
+     and pk.user_id = target_profile.id
+    join public.teams t
+      on t.id = pk.team_id
+    where q.chapter_id = group_stage_id
+      and q.order_index in (4, 5);
+  end if;
+
   return jsonb_build_object(
     'profile',
       jsonb_build_object(
@@ -342,8 +409,8 @@ begin
         'avatar_url', target_profile.avatar_url,
         'shit_talk', case when viewer_can_see_shit_talk then target_profile.shit_talk else null end,
         'allegiance_team_id', target_profile.allegiance_team_id,
-        'allegiance_team_name', allegiance_team.name,
-        'allegiance_team_code', allegiance_team.code
+        'allegiance_team_name', allegiance_team_name,
+        'allegiance_team_code', allegiance_team_code
       ),
     'standing',
       jsonb_build_object(
@@ -354,129 +421,13 @@ begin
       ),
     'revealed',
       jsonb_build_object(
-        'champion',
-          (
-            select
-              case
-                when t.id is null then null
-                else jsonb_build_object('name', t.name, 'code', t.code)
-              end
-            from public.questions q
-            left join public.picks pk
-              on pk.question_id = q.id
-             and pk.user_id = target_profile.id
-            left join public.teams t
-              on t.id = pk.team_id
-            where q.chapter_id = group_stage_id
-              and q.order_index = 1
-            limit 1
-          ),
-        'group_winners',
-          coalesce(
-            (
-              select jsonb_agg(jsonb_build_object('name', t.name, 'code', t.code) order by q.order_index)
-              from public.questions q
-              join public.picks pk
-                on pk.question_id = q.id
-               and pk.user_id = target_profile.id
-              join public.teams t
-                on t.id = pk.team_id
-              where q.chapter_id = group_stage_id
-                and q.order_index in (2, 3)
-            ),
-            '[]'::jsonb
-          ),
-        'additional_qualifiers',
-          coalesce(
-            (
-              select jsonb_agg(jsonb_build_object('name', t.name, 'code', t.code) order by q.order_index)
-              from public.questions q
-              join public.picks pk
-                on pk.question_id = q.id
-               and pk.user_id = target_profile.id
-              join public.teams t
-                on t.id = pk.team_id
-              where q.chapter_id = group_stage_id
-                and q.order_index in (4, 5)
-            ),
-            '[]'::jsonb
-          )
+        'group_stage_revealed', group_stage_revealed,
+        'champion', champion_value,
+        'group_winners', group_winners_value,
+        'additional_qualifiers', additional_qualifiers_value
       )
   )
-  from public.teams allegiance_team
-  where allegiance_team.id = target_profile.allegiance_team_id
-  union all
-  select jsonb_build_object(
-    'profile',
-      jsonb_build_object(
-        'id', target_profile.id,
-        'display_name', coalesce(target_profile.display_name, target_profile.email),
-        'public_slug', target_profile.public_slug,
-        'avatar_url', target_profile.avatar_url,
-        'shit_talk', case when viewer_can_see_shit_talk then target_profile.shit_talk else null end,
-        'allegiance_team_id', target_profile.allegiance_team_id,
-        'allegiance_team_name', null,
-        'allegiance_team_code', null
-      ),
-    'standing',
-      jsonb_build_object(
-        'total_points', total_points_value,
-        'correct_picks', correct_picks_value,
-        'side_bets_wins', wins_value,
-        'side_bets_losses', losses_value
-      ),
-    'revealed',
-      jsonb_build_object(
-        'champion',
-          (
-            select
-              case
-                when t.id is null then null
-                else jsonb_build_object('name', t.name, 'code', t.code)
-              end
-            from public.questions q
-            left join public.picks pk
-              on pk.question_id = q.id
-             and pk.user_id = target_profile.id
-            left join public.teams t
-              on t.id = pk.team_id
-            where q.chapter_id = group_stage_id
-              and q.order_index = 1
-            limit 1
-          ),
-        'group_winners',
-          coalesce(
-            (
-              select jsonb_agg(jsonb_build_object('name', t.name, 'code', t.code) order by q.order_index)
-              from public.questions q
-              join public.picks pk
-                on pk.question_id = q.id
-               and pk.user_id = target_profile.id
-              join public.teams t
-                on t.id = pk.team_id
-              where q.chapter_id = group_stage_id
-                and q.order_index in (2, 3)
-            ),
-            '[]'::jsonb
-          ),
-        'additional_qualifiers',
-          coalesce(
-            (
-              select jsonb_agg(jsonb_build_object('name', t.name, 'code', t.code) order by q.order_index)
-              from public.questions q
-              join public.picks pk
-                on pk.question_id = q.id
-               and pk.user_id = target_profile.id
-              join public.teams t
-                on t.id = pk.team_id
-              where q.chapter_id = group_stage_id
-                and q.order_index in (4, 5)
-            ),
-            '[]'::jsonb
-          )
-      )
-  )
-  where target_profile.allegiance_team_id is null;
+  ;
 end;
 $$;
 
