@@ -101,7 +101,7 @@ export default function AppHeader({ user, isAdmin }: Props) {
             <Link className="chip hover:text-white" href="/profile">
               Profile
             </Link>
-            <button className="btn btn-secondary" onClick={signOut} type="button">
+            <button className="chip hover:text-white" onClick={signOut} type="button">
               Sign Out
             </button>
           </div>
