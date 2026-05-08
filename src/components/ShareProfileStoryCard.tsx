@@ -61,11 +61,6 @@ export default function ShareProfileStoryCard({
             )}
             <h2 className="text-left text-[76px] font-black leading-[0.95] text-white">{displayName}</h2>
           </div>
-          {allegiance ? (
-            <p className="mt-7 text-center text-[38px] font-bold leading-[1.18] text-cyan-100">
-              My allegiance is to {allegiance}! Let&apos;s go!
-            </p>
-          ) : null}
           <p className="mt-8 text-[28px] font-semibold uppercase tracking-[0.3em] text-cyan-100/78">
             Check out my picks for the tourney:
           </p>
@@ -88,6 +83,12 @@ export default function ShareProfileStoryCard({
             </div>
           ))}
         </div>
+
+        {allegiance ? (
+          <p className="mt-10 text-center text-[38px] font-bold leading-[1.18] text-cyan-100">
+            But my allegiance is to {allegiance}! Let&apos;s go!
+          </p>
+        ) : null}
 
         <div className="mt-12 flex justify-center">
           <img
