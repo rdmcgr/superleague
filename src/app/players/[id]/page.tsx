@@ -19,6 +19,7 @@ export default function PlayerProfilePage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isRegisteredViewer, setIsRegisteredViewer] = useState(false);
   const [payload, setPayload] = useState<PublicProfilePayload | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +38,12 @@ export default function PlayerProfilePage() {
         .maybeSingle();
       if (!viewerRes.error) {
         setIsAdmin(Boolean(viewerRes.data?.is_admin));
+        setIsRegisteredViewer(Boolean(viewerRes.data));
       }
+    } else {
+      setUser(null);
+      setIsAdmin(false);
+      setIsRegisteredViewer(false);
     }
 
     const publicProfileRes = await supabase.rpc("public_player_profile", { profile_key: profileKey });
@@ -63,7 +69,7 @@ export default function PlayerProfilePage() {
     [payload?.revealed?.additional_qualifiers]
   );
   const groupStageRevealed = Boolean(payload?.revealed?.group_stage_revealed);
-  const viewerIsMember = Boolean(payload?.viewer?.is_member);
+  const viewerIsMember = Boolean(payload?.viewer?.is_member ?? isRegisteredViewer);
 
   if (loading) return <Loading label="Loading player profile..." />;
 
