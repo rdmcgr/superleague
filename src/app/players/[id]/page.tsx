@@ -63,6 +63,7 @@ export default function PlayerProfilePage() {
     [payload?.revealed.additional_qualifiers]
   );
   const groupStageRevealed = Boolean(payload?.revealed.group_stage_revealed);
+  const viewerIsMember = Boolean(payload?.viewer.is_member);
 
   if (loading) return <Loading label="Loading player profile..." />;
 
@@ -128,7 +129,7 @@ export default function PlayerProfilePage() {
             </div>
           ) : null}
 
-          {groupStageRevealed ? (
+          {groupStageRevealed || viewerIsMember ? (
             <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
@@ -160,7 +161,7 @@ export default function PlayerProfilePage() {
           ) : (
             <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-5">
               <p className="text-base font-semibold text-slate-100">
-                This player&apos;s picks are locked away for now. Check back after Group Stage closes to see their picks.
+                This player&apos;s picks are locked away for now. Check back after the tourney kicks off to see their picks.
               </p>
               <p className="mt-3 text-sm text-slate-300">
                 Do you want to join the party? Sign up using your invite code at{" "}
@@ -195,6 +196,9 @@ type TeamSummary = {
 };
 
 type PublicProfilePayload = {
+  viewer: {
+    is_member: boolean;
+  };
   profile: PlayerProfile;
   standing: {
     total_points: number;

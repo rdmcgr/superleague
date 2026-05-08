@@ -401,6 +401,10 @@ begin
   end if;
 
   return jsonb_build_object(
+    'viewer',
+      jsonb_build_object(
+        'is_member', viewer_can_see_shit_talk
+      ),
     'profile',
       jsonb_build_object(
         'id', target_profile.id,
