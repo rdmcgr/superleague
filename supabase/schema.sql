@@ -8,6 +8,7 @@ create table if not exists public.profiles (
   display_name text,
   public_slug text,
   avatar_url text,
+  allegiance_team_id bigint,
   shit_talk text,
   shit_talk_updated_at timestamptz,
   invite_code_used text,
@@ -120,6 +121,7 @@ alter table public.side_bets add column if not exists taken_at timestamptz;
 alter table public.side_bets add column if not exists creator_selected_winner_id uuid references public.profiles(id) on delete set null;
 alter table public.side_bets add column if not exists taker_selected_winner_id uuid references public.profiles(id) on delete set null;
 alter table public.teams add column if not exists is_active boolean not null default true;
+alter table public.profiles add column if not exists allegiance_team_id bigint references public.teams(id) on delete set null;
 
 do $$
 begin

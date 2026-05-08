@@ -38,7 +38,7 @@ export default function StoryCardPreviewPage() {
     const [profileRes, chaptersRes, questionsRes, teamsRes] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id,email,display_name,public_slug,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
+        .select("id,email,display_name,public_slug,avatar_url,allegiance_team_id,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
         .eq("id", session.user.id)
         .single(),
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),

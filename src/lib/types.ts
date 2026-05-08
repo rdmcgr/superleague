@@ -13,6 +13,7 @@ export type Profile = {
   display_name: string | null;
   public_slug: string | null;
   avatar_url: string | null;
+  allegiance_team_id: number | null;
   shit_talk: string | null;
   shit_talk_updated_at: string | null;
   invite_code_used: string | null;

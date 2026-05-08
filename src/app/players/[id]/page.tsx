@@ -63,7 +63,7 @@ export default function PlayerProfilePage() {
 
     const profileBySlugRes = await supabase
       .from("profiles")
-      .select("id,email,display_name,public_slug,avatar_url,shit_talk")
+      .select("id,email,display_name,public_slug,avatar_url,allegiance_team_id,shit_talk")
       .eq("public_slug", profileKey)
       .maybeSingle();
 
@@ -74,7 +74,7 @@ export default function PlayerProfilePage() {
         : looksLikeUuid
           ? await supabase
               .from("profiles")
-              .select("id,email,display_name,public_slug,avatar_url,shit_talk")
+              .select("id,email,display_name,public_slug,avatar_url,allegiance_team_id,shit_talk")
               .eq("id", profileKey)
               .maybeSingle()
           : profileBySlugRes;
@@ -144,6 +144,10 @@ export default function PlayerProfilePage() {
   }, [load]);
 
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
+  const allegianceTeam = useMemo(
+    () => (profile?.allegiance_team_id ? teamMap.get(profile.allegiance_team_id) ?? null : null),
+    [profile?.allegiance_team_id, teamMap]
+  );
 
   if (loading) return <Loading label="Loading player profile..." />;
 
@@ -173,6 +177,15 @@ export default function PlayerProfilePage() {
               {profile.shit_talk ? <p className="text-sm text-slate-200">{profile.shit_talk}</p> : null}
             </div>
           </div>
+
+          {allegianceTeam ? (
+            <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">My Allegiance</p>
+              <p className="text-sm text-slate-200">
+                {flagForCode(allegianceTeam.code)} {allegianceTeam.name}
+              </p>
+            </div>
+          ) : null}
 
           {(() => {
             const groupStage = chapters.find((c) => c.slug === "group-stage");
@@ -252,6 +265,7 @@ type PlayerProfile = {
   display_name: string | null;
   public_slug: string | null;
   avatar_url: string | null;
+  allegiance_team_id: number | null;
   shit_talk: string | null;
 };
 

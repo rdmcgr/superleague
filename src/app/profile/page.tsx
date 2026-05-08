@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase-browser";
 import { buildStoryCardSections } from "@/lib/story-card";
 import { useAuthResync } from "@/lib/useAuthResync";
 import type { Chapter, Profile, Question, Team } from "@/lib/types";
+import { flagForCode } from "@/lib/flags";
 
 export default function ProfilePage() {
   useAuthResync();
@@ -27,6 +28,7 @@ export default function ProfilePage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [picks, setPicks] = useState<PickRow[]>([]);
+  const [allegianceTeamId, setAllegianceTeamId] = useState("");
   const [shitTalk, setShitTalk] = useState("");
   const [now, setNow] = useState<Date>(new Date());
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
@@ -47,7 +49,7 @@ export default function ProfilePage() {
     const [profileRes, chaptersRes, questionsRes, teamsRes] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id,email,display_name,public_slug,avatar_url,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
+        .select("id,email,display_name,public_slug,avatar_url,allegiance_team_id,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin")
         .eq("id", session.user.id)
         .single(),
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
@@ -90,6 +92,7 @@ export default function ProfilePage() {
     }
 
     setShitTalk(profileRes.data.shit_talk ?? "");
+    setAllegianceTeamId(profileRes.data.allegiance_team_id ? String(profileRes.data.allegiance_team_id) : "");
     setLoading(false);
   }, [router]);
 
@@ -127,6 +130,11 @@ export default function ProfilePage() {
 
   const remainingChars = useMemo(() => 200 - shitTalk.length, [shitTalk.length]);
   const shareSections = useMemo(() => buildStoryCardSections(chapters, questions, picks, teams), [chapters, picks, questions, teams]);
+  const activeTeams = useMemo(() => teams.filter((team) => team.is_active), [teams]);
+  const allegianceTeam = useMemo(
+    () => teams.find((team) => team.id === Number(allegianceTeamId)) ?? null,
+    [allegianceTeamId, teams]
+  );
 
   const canShareProfile = Boolean(profile?.public_slug) && shareSections.length > 0;
 
@@ -153,7 +161,10 @@ export default function ProfilePage() {
 
     const res = await supabase
       .from("profiles")
-      .update({ shit_talk: shitTalk.trim() || null })
+      .update({
+        shit_talk: shitTalk.trim() || null,
+        allegiance_team_id: allegianceTeamId ? Number(allegianceTeamId) : null
+      })
       .eq("id", profile.id);
 
     if (res.error) {
@@ -285,7 +296,32 @@ export default function ProfilePage() {
               disabled
             />
           </label>
+
+          <label className="text-sm text-slate-300">
+            My Allegiance
+            <select
+              className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+              value={allegianceTeamId}
+              onChange={(e) => setAllegianceTeamId(e.target.value)}
+            >
+              <option value="">Select team</option>
+              {activeTeams.map((team) => {
+                const flag = flagForCode(team.code);
+                return (
+                  <option key={team.id} value={team.id}>
+                    {flag ? `${flag} ${team.name}` : team.name}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
         </div>
+
+        {allegianceTeam ? (
+          <p className="mt-3 text-sm text-slate-300">
+            Current allegiance: {flagForCode(allegianceTeam.code)} {allegianceTeam.name}
+          </p>
+        ) : null}
 
         <div className="mt-4">
           <label className="text-sm text-slate-300">
