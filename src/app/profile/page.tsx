@@ -135,12 +135,23 @@ export default function ProfilePage() {
     () => teams.find((team) => team.id === Number(allegianceTeamId)) ?? null,
     [allegianceTeamId, teams]
   );
+  const normalizedShitTalk = shitTalk.trim() || null;
+  const normalizedSavedShitTalk = profile?.shit_talk ?? null;
+  const normalizedAllegianceTeamId = allegianceTeamId ? Number(allegianceTeamId) : null;
+  const savedAllegianceTeamId = profile?.allegiance_team_id ?? null;
+  const shitTalkChanged = normalizedShitTalk !== normalizedSavedShitTalk;
+  const allegianceChanged = normalizedAllegianceTeamId !== savedAllegianceTeamId;
 
   const canShareProfile = Boolean(profile?.public_slug) && shareSections.length > 0;
 
   async function save() {
     if (!profile) return;
-    if (cooldown.locked) {
+    if (!shitTalkChanged && !allegianceChanged) {
+      setNotice({ text: "Nothing changed.", tone: "neutral" });
+      return;
+    }
+
+    if (shitTalkChanged && cooldown.locked) {
       const {
         data: refreshedProfile
       } = await supabase
@@ -162,8 +173,8 @@ export default function ProfilePage() {
     const res = await supabase
       .from("profiles")
       .update({
-        shit_talk: shitTalk.trim() || null,
-        allegiance_team_id: allegianceTeamId ? Number(allegianceTeamId) : null
+        shit_talk: normalizedShitTalk,
+        allegiance_team_id: normalizedAllegianceTeamId
       })
       .eq("id", profile.id);
 
@@ -173,7 +184,10 @@ export default function ProfilePage() {
       return;
     }
 
-    setNotice({ text: "Shit talk saved.", tone: "success" });
+    setNotice({
+      text: shitTalkChanged && allegianceChanged ? "Profile saved." : shitTalkChanged ? "Shit talk saved." : "Allegiance saved.",
+      tone: "success"
+    });
     await loadProfile();
     setSaving(false);
   }
@@ -347,7 +361,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="mt-6">
-          <button className="btn btn-primary" onClick={() => void save()} disabled={saving || cooldown.locked} type="button">
+          <button className="btn btn-primary" onClick={() => void save()} disabled={saving || (!shitTalkChanged && !allegianceChanged)} type="button">
             {saving ? "Saving..." : "Save Shit Talk"}
           </button>
         </div>
