@@ -90,7 +90,8 @@ export default function ShareProfileStoryCard({
           </p>
         ) : null}
 
-        <div className="mt-12 flex justify-center">
+        <div className="mt-12 flex items-center justify-center gap-6">
+          {allegiance ? <span className="text-[220px] leading-none">{allegiance.split(" ")[0]}</span> : null}
           <img
             alt="Super League"
             className="h-72 w-72 object-contain"
