@@ -72,6 +72,32 @@ export default function PlayerProfilePage() {
 
       {payload ? (
         <section className="glass rounded-2xl p-6">
+          <div className="mb-6 rounded-xl border border-white/10 bg-white/5 p-4">
+            <p className="mb-2 text-xs uppercase tracking-[0.16em] text-slate-400">
+              The following announcement has been paid for by{" "}
+              <Image
+                alt="OWS"
+                className="mx-1 inline-block h-5 w-5 rounded-sm object-contain align-middle"
+                src="/ows-nwo-logo.png"
+                width={20}
+                height={20}
+              />
+              :
+            </p>
+            <p className="text-sm leading-7 text-slate-200">
+              Welcome to the{" "}
+              <Image
+                alt="Super League"
+                className="mx-1 inline-block h-auto w-32 align-middle object-contain"
+                src="/superleague-wordmark.png"
+                width={128}
+                height={32}
+              />{" "}
+              {"--"} a place where a group of otherwise ordinary individuals came together to predict the outcomes of
+              the 2026 World Cup.
+            </p>
+          </div>
+
           <div className="mb-6 flex flex-wrap items-center gap-4">
             {payload.profile.avatar_url ? (
               <Image
