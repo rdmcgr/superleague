@@ -292,16 +292,21 @@ export default function ProfilePage() {
 
         {canShareProfile ? (
           <div className="mb-6 flex flex-wrap gap-3">
-            <button className="btn btn-secondary" onClick={() => void copyProfileLink()} type="button">
+            <button className="rounded-lg bg-white/12 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-white/16" onClick={() => void copyProfileLink()} type="button">
               Copy Profile Link
             </button>
-            <button className="btn btn-primary" onClick={() => void saveStoryCard()} disabled={savingStoryCard} type="button">
+            <button
+              className="rounded-lg bg-[linear-gradient(135deg,var(--accent),#2ae6ff)] px-3 py-2 text-xs font-semibold text-[#0e1b2b] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-55"
+              onClick={() => void saveStoryCard()}
+              disabled={savingStoryCard}
+              type="button"
+            >
               <span className="inline-flex items-center gap-2">
                 <span
                   aria-hidden="true"
-                  className="inline-flex h-5 w-5 items-center justify-center rounded-[6px] bg-[linear-gradient(135deg,#feda75_0%,#fa7e1e_28%,#d62976_58%,#962fbf_80%,#4f5bd5_100%)]"
+                  className="inline-flex h-4 w-4 items-center justify-center rounded-[5px] bg-[linear-gradient(135deg,#feda75_0%,#fa7e1e_28%,#d62976_58%,#962fbf_80%,#4f5bd5_100%)]"
                 >
-                  <svg className="h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="4" y="4" width="16" height="16" rx="4" />
                     <circle cx="12" cy="12" r="4" />
                     <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
