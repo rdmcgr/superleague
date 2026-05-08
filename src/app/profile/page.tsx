@@ -21,6 +21,7 @@ export default function ProfilePage() {
   const storyCardRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingAllegiance, setSavingAllegiance] = useState(false);
   const [savingStoryCard, setSavingStoryCard] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -137,16 +138,14 @@ export default function ProfilePage() {
   );
   const normalizedShitTalk = shitTalk.trim() || null;
   const normalizedSavedShitTalk = profile?.shit_talk ?? null;
-  const normalizedAllegianceTeamId = allegianceTeamId ? Number(allegianceTeamId) : null;
   const savedAllegianceTeamId = profile?.allegiance_team_id ?? null;
   const shitTalkChanged = normalizedShitTalk !== normalizedSavedShitTalk;
-  const allegianceChanged = normalizedAllegianceTeamId !== savedAllegianceTeamId;
 
   const canShareProfile = Boolean(profile?.public_slug) && shareSections.length > 0;
 
   async function save() {
     if (!profile) return;
-    if (!shitTalkChanged && !allegianceChanged) {
+    if (!shitTalkChanged) {
       setNotice({ text: "Nothing changed.", tone: "neutral" });
       return;
     }
@@ -173,8 +172,7 @@ export default function ProfilePage() {
     const res = await supabase
       .from("profiles")
       .update({
-        shit_talk: normalizedShitTalk,
-        allegiance_team_id: normalizedAllegianceTeamId
+        shit_talk: normalizedShitTalk
       })
       .eq("id", profile.id);
 
@@ -184,12 +182,35 @@ export default function ProfilePage() {
       return;
     }
 
-    setNotice({
-      text: shitTalkChanged && allegianceChanged ? "Profile saved." : shitTalkChanged ? "Shit talk saved." : "Allegiance saved.",
-      tone: "success"
-    });
+    setNotice({ text: "Shit talk saved.", tone: "success" });
     await loadProfile();
     setSaving(false);
+  }
+
+  async function saveAllegiance(nextValue: string) {
+    if (!profile) return;
+    const nextTeamId = nextValue ? Number(nextValue) : null;
+    if (nextTeamId === savedAllegianceTeamId) return;
+
+    setAllegianceTeamId(nextValue);
+    setSavingAllegiance(true);
+    setNotice(null);
+
+    const res = await supabase
+      .from("profiles")
+      .update({ allegiance_team_id: nextTeamId })
+      .eq("id", profile.id);
+
+    if (res.error) {
+      setNotice({ text: res.error.message, tone: "danger" });
+      setAllegianceTeamId(savedAllegianceTeamId ? String(savedAllegianceTeamId) : "");
+      setSavingAllegiance(false);
+      return;
+    }
+
+    setProfile((current) => (current ? { ...current, allegiance_team_id: nextTeamId } : current));
+    setNotice({ text: "Allegiance saved.", tone: "success" });
+    setSavingAllegiance(false);
   }
 
   async function copyProfileLink() {
@@ -316,7 +337,8 @@ export default function ProfilePage() {
             <select
               className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
               value={allegianceTeamId}
-              onChange={(e) => setAllegianceTeamId(e.target.value)}
+              onChange={(e) => void saveAllegiance(e.target.value)}
+              disabled={savingAllegiance}
             >
               <option value="">Select team</option>
               {activeTeams.map((team) => {
@@ -336,6 +358,7 @@ export default function ProfilePage() {
             Current allegiance: {flagForCode(allegianceTeam.code)} {allegianceTeam.name}
           </p>
         ) : null}
+        {savingAllegiance ? <p className="mt-1 text-xs text-slate-400">Saving allegiance...</p> : null}
 
         <div className="mt-4">
           <label className="text-sm text-slate-300">
@@ -361,7 +384,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="mt-6">
-          <button className="btn btn-primary" onClick={() => void save()} disabled={saving || (!shitTalkChanged && !allegianceChanged)} type="button">
+          <button className="btn btn-primary" onClick={() => void save()} disabled={saving || !shitTalkChanged} type="button">
             {saving ? "Saving..." : "Save Shit Talk"}
           </button>
         </div>
