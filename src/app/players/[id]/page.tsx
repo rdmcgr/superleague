@@ -68,7 +68,10 @@ export default function PlayerProfilePage() {
     () => payload?.revealed?.additional_qualifiers ?? [],
     [payload?.revealed?.additional_qualifiers]
   );
-  const groupStageRevealed = Boolean(payload?.revealed?.group_stage_revealed);
+  const hasRevealedPickData = Boolean(
+    payload?.revealed?.champion || groupWinners.length > 0 || additionalQualifiers.length > 0
+  );
+  const groupStageRevealed = Boolean(payload?.revealed?.group_stage_revealed ?? hasRevealedPickData);
   const viewerIsMember = Boolean(payload?.viewer?.is_member ?? isRegisteredViewer);
 
   if (loading) return <Loading label="Loading player profile..." />;
