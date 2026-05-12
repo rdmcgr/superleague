@@ -204,6 +204,7 @@ export default function HomePage() {
       setMyPicks(refreshed.data ?? []);
     }
 
+    window.dispatchEvent(new Event("superleague:picks-updated"));
     setNotice({ text: "Pick saved.", tone: "success" });
     setSavingQuestion(null);
   }
@@ -237,6 +238,7 @@ export default function HomePage() {
       setMyPicks(refreshed.data ?? []);
     }
 
+    window.dispatchEvent(new Event("superleague:picks-updated"));
     setNotice({ text: "Pick cleared.", tone: "success" });
     setSavingQuestion(null);
   }
