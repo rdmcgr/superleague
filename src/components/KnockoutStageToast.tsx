@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-browser";
 
 type KnockoutPromptState = {
@@ -11,7 +11,9 @@ type KnockoutPromptState = {
 
 export default function KnockoutStageToast() {
   const [prompt, setPrompt] = useState<KnockoutPromptState | null>(null);
+  const [dismissed, setDismissed] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     let cancelled = false;
@@ -70,7 +72,10 @@ export default function KnockoutStageToast() {
         total === 0 ||
         saved >= total
       ) {
-        if (!cancelled) setPrompt(null);
+        if (!cancelled) {
+          setPrompt(null);
+          setDismissed(false);
+        }
         return;
       }
 
@@ -107,7 +112,11 @@ export default function KnockoutStageToast() {
     };
   }, []);
 
-  if (!prompt) return null;
+  useEffect(() => {
+    setDismissed(false);
+  }, [pathname]);
+
+  if (!prompt || dismissed) return null;
 
   const message =
     prompt.remaining === prompt.total
@@ -118,13 +127,22 @@ export default function KnockoutStageToast() {
     <div className="fixed top-5 left-1/2 z-50 w-[92%] max-w-xl -translate-x-1/2 rounded-xl border-2 border-red-400/80 bg-slate-950/95 p-3 text-sm text-slate-100 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
       <div className="flex items-center justify-between gap-3">
         <span>{message}</span>
-        <button
-          className="rounded-md border border-red-400/40 bg-red-400/10 px-2 py-1 text-xs uppercase tracking-[0.14em] text-red-100"
-          onClick={() => router.push("/")}
-          type="button"
-        >
-          Make Picks
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="rounded-md border border-red-400/40 bg-red-400/10 px-2 py-1 text-xs uppercase tracking-[0.14em] text-red-100"
+            onClick={() => setDismissed(true)}
+            type="button"
+          >
+            Close
+          </button>
+          <button
+            className="rounded-md border border-red-400/40 bg-red-400/10 px-2 py-1 text-xs uppercase tracking-[0.14em] text-red-100"
+            onClick={() => router.push("/")}
+            type="button"
+          >
+            Make Picks
+          </button>
+        </div>
       </div>
     </div>
   );
