@@ -11,7 +11,7 @@ export type StoryCardPick = {
   team_id: number;
 };
 
-export function buildStoryCardSections(
+export function buildGroupStageStoryCardSections(
   chapters: Chapter[],
   questions: Question[],
   picks: StoryCardPick[],
@@ -63,4 +63,35 @@ export function buildStoryCardSections(
   }
 
   return sections;
+}
+
+export function buildKnockoutStageStoryCardSections(
+  chapters: Chapter[],
+  questions: Question[],
+  picks: StoryCardPick[],
+  teams: Team[]
+) {
+  const knockoutStage = chapters.find((chapter) => chapter.slug === "knockout-stage");
+  if (!knockoutStage || (knockoutStage.status !== "locked" && knockoutStage.status !== "graded")) {
+    return [] as StoryCardSection[];
+  }
+
+  const teamMap = new Map(teams.map((team) => [team.id, team]));
+
+  return questions
+    .filter((question) => question.chapter_id === knockoutStage.id && question.is_active)
+    .sort((a, b) => a.order_index - b.order_index)
+    .map((question) => {
+      const pick = picks.find((entry) => entry.question_id === question.id);
+      if (!pick) return null;
+      const team = teamMap.get(pick.team_id);
+      if (!team) return null;
+      const flag = flagForCode(team.code);
+
+      return {
+        title: question.short_label?.trim() || question.prompt,
+        items: [`${flag ? `${flag} ` : ""}${team.name}`]
+      } satisfies StoryCardSection;
+    })
+    .filter((section): section is StoryCardSection => Boolean(section));
 }

@@ -6,6 +6,7 @@ type ShareProfileStoryCardProps = {
   avatarUrl: string | null;
   displayName: string;
   allegiance: string | null;
+  introLine: string;
   sections: StoryCardSection[];
 };
 
@@ -13,6 +14,7 @@ export default function ShareProfileStoryCard({
   avatarUrl,
   displayName,
   allegiance,
+  introLine,
   sections
 }: ShareProfileStoryCardProps) {
   return (
@@ -61,9 +63,7 @@ export default function ShareProfileStoryCard({
             )}
             <h2 className="text-left text-[76px] font-black leading-[0.95] text-white">{displayName}</h2>
           </div>
-          <p className="mt-8 text-[28px] font-semibold uppercase tracking-[0.3em] text-cyan-100/78">
-            Check out my picks for the tourney:
-          </p>
+          <p className="mt-8 text-[28px] font-semibold uppercase tracking-[0.3em] text-cyan-100/78">{introLine}</p>
         </div>
 
         <div className="flex flex-1 flex-col gap-7">

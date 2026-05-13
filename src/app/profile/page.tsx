@@ -11,7 +11,7 @@ import Notice from "@/components/Notice";
 import ShareProfileStoryCard from "@/components/ShareProfileStoryCard";
 import { flagForCode } from "@/lib/flags";
 import { supabase } from "@/lib/supabase-browser";
-import { buildStoryCardSections } from "@/lib/story-card";
+import { buildGroupStageStoryCardSections, buildKnockoutStageStoryCardSections } from "@/lib/story-card";
 import { useAuthResync } from "@/lib/useAuthResync";
 import type { Chapter, Profile, Question, Team } from "@/lib/types";
 
@@ -19,10 +19,12 @@ export default function ProfilePage() {
   useAuthResync();
   const router = useRouter();
   const storyCardRef = useRef<HTMLDivElement | null>(null);
+  const knockoutStoryCardRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingAllegiance, setSavingAllegiance] = useState(false);
   const [savingStoryCard, setSavingStoryCard] = useState(false);
+  const [savingKnockoutStoryCard, setSavingKnockoutStoryCard] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -130,7 +132,14 @@ export default function ProfilePage() {
   }, [now, profile?.shit_talk, profile?.shit_talk_updated_at]);
 
   const remainingChars = useMemo(() => 200 - shitTalk.length, [shitTalk.length]);
-  const shareSections = useMemo(() => buildStoryCardSections(chapters, questions, picks, teams), [chapters, picks, questions, teams]);
+  const groupStageShareSections = useMemo(
+    () => buildGroupStageStoryCardSections(chapters, questions, picks, teams),
+    [chapters, picks, questions, teams]
+  );
+  const knockoutStageShareSections = useMemo(
+    () => buildKnockoutStageStoryCardSections(chapters, questions, picks, teams),
+    [chapters, picks, questions, teams]
+  );
   const activeTeams = useMemo(() => teams.filter((team) => team.is_active), [teams]);
   const allegianceTeam = useMemo(
     () => teams.find((team) => team.id === Number(allegianceTeamId)) ?? null,
@@ -141,7 +150,9 @@ export default function ProfilePage() {
   const savedAllegianceTeamId = profile?.allegiance_team_id ?? null;
   const shitTalkChanged = normalizedShitTalk !== normalizedSavedShitTalk;
 
-  const canShareProfile = Boolean(profile?.public_slug) && shareSections.length > 0;
+  const canShareGroupStageStoryCard = Boolean(profile?.public_slug) && groupStageShareSections.length > 0;
+  const canShareKnockoutStoryCard = Boolean(profile?.public_slug) && knockoutStageShareSections.length > 0;
+  const canShareAnything = canShareGroupStageStoryCard || canShareKnockoutStoryCard;
 
   async function save() {
     if (!profile) return;
@@ -223,9 +234,14 @@ export default function ProfilePage() {
     }
   }
 
-  async function saveStoryCard() {
-    if (!storyCardRef.current || !profile) return;
-    setSavingStoryCard(true);
+  async function saveStoryCard(stage: "group" | "knockout") {
+    const targetRef = stage === "knockout" ? knockoutStoryCardRef : storyCardRef;
+    if (!targetRef.current || !profile) return;
+    if (stage === "knockout") {
+      setSavingKnockoutStoryCard(true);
+    } else {
+      setSavingStoryCard(true);
+    }
     setNotice(null);
 
     const userAgent = navigator.userAgent;
@@ -233,15 +249,17 @@ export default function ProfilePage() {
       /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     const isAndroid = /Android/i.test(userAgent);
     const shouldOpenPreviewTab = isIOS || isAndroid;
-    const previewTab = shouldOpenPreviewTab ? window.open("/story-card-preview", "_blank") : null;
+    const stageLabel = stage === "knockout" ? "Knockout Stage story card" : "Group Stage story card";
+    const fileSlug = stage === "knockout" ? "knockout-stage-story" : "group-stage-story";
+    const previewTab = shouldOpenPreviewTab ? window.open(`/story-card-preview?stage=${stage}`, "_blank") : null;
 
     try {
       if (previewTab) {
-        setNotice({ text: "Story card preview opened in a new tab.", tone: "success" });
+        setNotice({ text: `${stageLabel} preview opened in a new tab.`, tone: "success" });
         return;
       }
 
-      const dataUrl = await toPng(storyCardRef.current, {
+      const dataUrl = await toPng(targetRef.current, {
         cacheBust: true,
         pixelRatio: 1,
         canvasWidth: 1080,
@@ -251,15 +269,19 @@ export default function ProfilePage() {
       const blob = await (await fetch(dataUrl)).blob();
       const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.download = `superleague-${profile.public_slug ?? profile.id}-story.png`;
+      link.download = `superleague-${profile.public_slug ?? profile.id}-${fileSlug}.png`;
       link.href = objectUrl;
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
-      setNotice({ text: "Story card saved.", tone: "success" });
+      setNotice({ text: `${stageLabel} saved.`, tone: "success" });
     } catch {
-      setNotice({ text: "Could not create story card.", tone: "danger" });
+      setNotice({ text: `Could not create ${stageLabel.toLowerCase()}.`, tone: "danger" });
     } finally {
-      setSavingStoryCard(false);
+      if (stage === "knockout") {
+        setSavingKnockoutStoryCard(false);
+      } else {
+        setSavingStoryCard(false);
+      }
     }
   }
 
@@ -290,31 +312,43 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {canShareProfile ? (
+        {canShareAnything ? (
           <div className="mb-6 flex flex-wrap gap-3">
-            <button className="rounded-lg bg-white/12 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-white/16" onClick={() => void copyProfileLink()} type="button">
-              Copy Profile Link
-            </button>
             <button
-              className="rounded-lg bg-[linear-gradient(135deg,var(--accent),#2ae6ff)] px-3 py-2 text-xs font-semibold text-[#0e1b2b] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-55"
-              onClick={() => void saveStoryCard()}
-              disabled={savingStoryCard}
+              className="rounded-lg bg-white/12 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-white/16"
+              onClick={() => void copyProfileLink()}
               type="button"
             >
-              <span className="inline-flex items-center gap-2">
-                <span
-                  aria-hidden="true"
-                  className="inline-flex h-4 w-4 items-center justify-center rounded-[5px] bg-[linear-gradient(135deg,#feda75_0%,#fa7e1e_28%,#d62976_58%,#962fbf_80%,#4f5bd5_100%)]"
-                >
-                  <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="4" y="4" width="16" height="16" rx="4" />
-                    <circle cx="12" cy="12" r="4" />
-                    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-                  </svg>
-                </span>
-                <span>{savingStoryCard ? "Downloading Story Card..." : "Download Story Card"}</span>
-              </span>
+              Copy Profile Link
             </button>
+            {canShareGroupStageStoryCard ? (
+              <button
+                className="rounded-lg bg-[linear-gradient(135deg,var(--accent),#2ae6ff)] px-3 py-2 text-xs font-semibold text-[#0e1b2b] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-55"
+                onClick={() => void saveStoryCard("group")}
+                disabled={savingStoryCard}
+                type="button"
+              >
+                <StoryCardButtonLabel
+                  text={savingStoryCard ? "Downloading Group Stage Story Card..." : "Download Group Stage Story Card"}
+                />
+              </button>
+            ) : null}
+            {canShareKnockoutStoryCard ? (
+              <button
+                className="rounded-lg bg-[linear-gradient(135deg,var(--accent),#2ae6ff)] px-3 py-2 text-xs font-semibold text-[#0e1b2b] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-55"
+                onClick={() => void saveStoryCard("knockout")}
+                disabled={savingKnockoutStoryCard}
+                type="button"
+              >
+                <StoryCardButtonLabel
+                  text={
+                    savingKnockoutStoryCard
+                      ? "Downloading Knockout Stage Story Card..."
+                      : "Download Knockout Stage Story Card"
+                  }
+                />
+              </button>
+            ) : null}
           </div>
         ) : null}
 
@@ -395,16 +429,30 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {canShareProfile && profile ? (
+      {profile ? (
         <div aria-hidden="true" className="pointer-events-none fixed left-[-99999px] top-0 opacity-0">
-          <div ref={storyCardRef}>
+          {canShareGroupStageStoryCard ? (
+            <div ref={storyCardRef}>
               <ShareProfileStoryCard
                 avatarUrl={profile.avatar_url}
                 displayName={profile.display_name || profile.email}
                 allegiance={allegianceTeam ? `${flagForCode(allegianceTeam.code)} ${allegianceTeam.name}` : null}
-                sections={shareSections}
+                introLine="Check out my picks for the tourney:"
+                sections={groupStageShareSections}
               />
             </div>
+          ) : null}
+          {canShareKnockoutStoryCard ? (
+            <div ref={knockoutStoryCardRef}>
+              <ShareProfileStoryCard
+                avatarUrl={profile.avatar_url}
+                displayName={profile.display_name || profile.email}
+                allegiance={allegianceTeam ? `${flagForCode(allegianceTeam.code)} ${allegianceTeam.name}` : null}
+                introLine="Check out my picks for the knockout stage:"
+                sections={knockoutStageShareSections}
+              />
+            </div>
+          ) : null}
         </div>
       ) : null}
     </>
@@ -417,3 +465,21 @@ type PickRow = {
   chapter_id: number;
   team_id: number;
 };
+
+function StoryCardButtonLabel({ text }: { text: string }) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span
+        aria-hidden="true"
+        className="inline-flex h-4 w-4 items-center justify-center rounded-[5px] bg-[linear-gradient(135deg,#feda75_0%,#fa7e1e_28%,#d62976_58%,#962fbf_80%,#4f5bd5_100%)]"
+      >
+        <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="4" y="4" width="16" height="16" rx="4" />
+          <circle cx="12" cy="12" r="4" />
+          <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+        </svg>
+      </span>
+      <span>{text}</span>
+    </span>
+  );
+}

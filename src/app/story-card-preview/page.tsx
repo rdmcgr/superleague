@@ -7,7 +7,7 @@ import Notice from "@/components/Notice";
 import ShareProfileStoryCard from "@/components/ShareProfileStoryCard";
 import { flagForCode } from "@/lib/flags";
 import { supabase } from "@/lib/supabase-browser";
-import { buildStoryCardSections } from "@/lib/story-card";
+import { buildGroupStageStoryCardSections, buildKnockoutStageStoryCardSections } from "@/lib/story-card";
 import { useAuthResync } from "@/lib/useAuthResync";
 import type { Chapter, Profile, Question, Team } from "@/lib/types";
 
@@ -23,6 +23,13 @@ export default function StoryCardPreviewPage() {
   const [picks, setPicks] = useState<PickRow[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
+  const [stage, setStage] = useState<"group" | "knockout">("group");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setStage(params.get("stage") === "knockout" ? "knockout" : "group");
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -84,17 +91,26 @@ export default function StoryCardPreviewPage() {
     void load();
   }, [load]);
 
-  const shareSections = useMemo(() => buildStoryCardSections(chapters, questions, picks, teams), [chapters, picks, questions, teams]);
+  const shareSections = useMemo(
+    () =>
+      stage === "knockout"
+        ? buildKnockoutStageStoryCardSections(chapters, questions, picks, teams)
+        : buildGroupStageStoryCardSections(chapters, questions, picks, teams),
+    [chapters, picks, questions, stage, teams]
+  );
   const allegianceTeam = useMemo(
     () => (profile?.allegiance_team_id ? teams.find((team) => team.id === profile.allegiance_team_id) ?? null : null),
     [profile?.allegiance_team_id, teams]
   );
+  const introLine =
+    stage === "knockout" ? "Check out my picks for the knockout stage:" : "Check out my picks for the tourney:";
+  const cardLabel = stage === "knockout" ? "knockout stage story card" : "group stage story card";
 
   useEffect(() => {
     async function generate() {
       if (loading || !profile || !storyCardRef.current) return;
       if (shareSections.length === 0) {
-        setNotice({ text: "No public picks are available to share yet.", tone: "danger" });
+        setNotice({ text: `No public picks are available for this ${cardLabel}.`, tone: "danger" });
         setRendering(false);
         return;
       }
@@ -111,14 +127,14 @@ export default function StoryCardPreviewPage() {
         });
         setImageUrl(dataUrl);
       } catch {
-        setNotice({ text: "Could not generate your story card.", tone: "danger" });
+        setNotice({ text: `Could not generate your ${cardLabel}.`, tone: "danger" });
       } finally {
         setRendering(false);
       }
     }
 
     void generate();
-  }, [loading, profile, shareSections]);
+  }, [cardLabel, loading, profile, shareSections]);
 
   if (loading) {
     return <Loading label="Preparing your story card..." />;
@@ -160,6 +176,7 @@ export default function StoryCardPreviewPage() {
                 avatarUrl={profile.avatar_url}
                 displayName={profile.display_name || profile.email}
                 allegiance={allegianceTeam ? `${flagForCode(allegianceTeam.code)} ${allegianceTeam.name}` : null}
+                introLine={introLine}
                 sections={shareSections}
               />
             </div>
