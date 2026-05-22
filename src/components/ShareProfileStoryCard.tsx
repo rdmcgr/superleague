@@ -114,7 +114,7 @@ export default function ShareProfileStoryCard({
         </div>
 
         {isKnockout ? (
-          <div className="mt-2 flex flex-col items-center gap-2">
+          <div className="mt-5 flex flex-col items-center gap-2">
             {allegiance ? (
               <p className="text-center text-[32px] font-bold leading-[1.18] text-cyan-100">
                 But my allegiance is to {allegiance}! Let&apos;s go!
