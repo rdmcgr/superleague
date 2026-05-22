@@ -113,39 +113,71 @@ export default function ShareProfileStoryCard({
           ))}
         </div>
 
-        {allegiance ? (
-          <p className={`text-center font-bold leading-[1.18] text-cyan-100 ${isKnockout ? "mt-3 text-[32px]" : "mt-10 text-[38px]"}`}>
-            But my allegiance is to {allegiance}! Let&apos;s go!
-          </p>
-        ) : null}
+        {isKnockout ? (
+          <div className="mt-2 flex flex-col items-center gap-2">
+            {allegiance ? (
+              <p className="text-center text-[32px] font-bold leading-[1.18] text-cyan-100">
+                But my allegiance is to {allegiance}! Let&apos;s go!
+              </p>
+            ) : null}
 
-        <div className={`flex items-center justify-center ${isKnockout ? "mt-3 gap-5" : "mt-12 gap-6"}`}>
-          {allegiance ? <span className={`leading-none ${isKnockout ? "text-[170px]" : "text-[220px]"}`}>{allegiance.split(" ")[0]}</span> : null}
-          <img
-            alt="Super League"
-            className={`object-contain ${isKnockout ? "h-56 w-56" : "h-72 w-72"}`}
-            decoding="sync"
-            fetchPriority="high"
-            loading="eager"
-            src="/super-league-shield-logo.png"
-          />
-        </div>
+            <div className="flex items-center justify-center gap-4">
+              {allegiance ? <span className="text-[170px] leading-none">{allegiance.split(" ")[0]}</span> : null}
+              <img
+                alt="Super League"
+                className="h-56 w-56 object-contain"
+                decoding="sync"
+                fetchPriority="high"
+                loading="eager"
+                src="/super-league-shield-logo.png"
+              />
+            </div>
 
-        <div
-          className={`flex items-center justify-center gap-3 font-semibold uppercase text-slate-200/85 ${
-            isKnockout ? "mt-3 text-[20px] tracking-[0.14em]" : "mt-10 text-[24px] tracking-[0.18em]"
-          }`}
-        >
-          <span>© 2026 Superleague.party. An</span>
-          <img
-            alt="OWS"
-            className={`rounded-sm object-contain ${isKnockout ? "h-12 w-12" : "h-14 w-14"}`}
-            decoding="sync"
-            loading="eager"
-            src="/ows-nwo-logo.png"
-          />
-          <span>Joint.</span>
-        </div>
+            <div className="flex items-center justify-center gap-3 text-[20px] font-semibold uppercase tracking-[0.14em] text-slate-200/85">
+              <span>© 2026 Superleague.party. An</span>
+              <img
+                alt="OWS"
+                className="h-12 w-12 rounded-sm object-contain"
+                decoding="sync"
+                loading="eager"
+                src="/ows-nwo-logo.png"
+              />
+              <span>Joint.</span>
+            </div>
+          </div>
+        ) : (
+          <>
+            {allegiance ? (
+              <p className="mt-10 text-center text-[38px] font-bold leading-[1.18] text-cyan-100">
+                But my allegiance is to {allegiance}! Let&apos;s go!
+              </p>
+            ) : null}
+
+            <div className="mt-12 flex items-center justify-center gap-6">
+              {allegiance ? <span className="text-[220px] leading-none">{allegiance.split(" ")[0]}</span> : null}
+              <img
+                alt="Super League"
+                className="h-72 w-72 object-contain"
+                decoding="sync"
+                fetchPriority="high"
+                loading="eager"
+                src="/super-league-shield-logo.png"
+              />
+            </div>
+
+            <div className="mt-10 flex items-center justify-center gap-3 text-[24px] font-semibold uppercase tracking-[0.18em] text-slate-200/85">
+              <span>© 2026 Superleague.party. An</span>
+              <img
+                alt="OWS"
+                className="h-14 w-14 rounded-sm object-contain"
+                decoding="sync"
+                loading="eager"
+                src="/ows-nwo-logo.png"
+              />
+              <span>Joint.</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
