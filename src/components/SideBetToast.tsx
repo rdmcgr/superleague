@@ -105,9 +105,13 @@ export default function SideBetToast() {
 
       if (newlyConfirmed.length > 0) {
         if (newlyConfirmed.length === 1) {
-          setMessage(`${renderOtherUserName(newlyConfirmed[0], session.user.id)} confirmed the winner of your side bet.`);
+          setMessage(
+            `${renderOtherUserName(newlyConfirmed[0], session.user.id)} confirmed the winner of your side bet. Please confirm the winner on the Side Bet page if you have not.`
+          );
         } else {
-          setMessage(`${newlyConfirmed.length} of your side bets have new winner confirmations.`);
+          setMessage(
+            `${newlyConfirmed.length} of your side bets have new winner confirmations. Please confirm the winner on the Side Bet page if you have not.`
+          );
         }
         setToastKind("confirmed");
         setVisible(true);

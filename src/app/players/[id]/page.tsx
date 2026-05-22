@@ -152,9 +152,16 @@ export default function PlayerProfilePage() {
                     <p className="mb-2 text-xs uppercase tracking-[0.14em] text-slate-400">Knockout Stage Picks</p>
                     <div className="space-y-2">
                       {knockoutPicks.map((pick) => (
-                        <div key={pick.label} className="text-sm text-slate-200">
-                          <span className="text-slate-300">{pick.label}:</span>{" "}
-                          {`${flagForCode(pick.code)} ${pick.name}`}
+                        <div key={pick.label} className="flex items-center gap-2 text-sm text-slate-200">
+                          <span>
+                            <span className="text-slate-300">{pick.label}:</span>{" "}
+                            {`${flagForCode(pick.code)} ${pick.name}`}
+                          </span>
+                          {pick.correct !== null && pick.correct !== undefined ? (
+                            <span className={pick.correct ? "text-emerald-300" : "text-red-300"}>
+                              {pick.correct ? "✓" : "✕"}
+                            </span>
+                          ) : null}
                         </div>
                       ))}
                     </div>
@@ -218,6 +225,7 @@ type KnockoutPickSummary = {
   label: string;
   name: string;
   code: string;
+  correct?: boolean | null;
 };
 
 type PublicProfilePayload = {

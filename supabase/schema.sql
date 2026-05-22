@@ -342,9 +342,10 @@ begin
 
   select exists (
     select 1
-    from public.chapters c
-    where c.id = group_stage_id
-      and c.status = 'graded'
+    from public.result_teams rt
+    join public.questions q
+      on q.id = rt.question_id
+    where q.chapter_id = group_stage_id
   )
   into group_stage_graded;
 
@@ -477,7 +478,21 @@ begin
         jsonb_build_object(
           'label', coalesce(nullif(btrim(q.short_label), ''), q.prompt),
           'name', t.name,
-          'code', t.code
+          'code', t.code,
+          'correct',
+          case
+            when exists (
+              select 1
+              from public.result_teams rt
+              where rt.question_id = q.id
+            ) then exists (
+              select 1
+              from public.result_teams rt
+              where rt.question_id = q.id
+                and rt.team_id = t.id
+            )
+            else null
+          end
         )
         order by q.order_index
       ),
