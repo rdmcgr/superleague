@@ -38,7 +38,7 @@ export default function StandingsPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [visiblePicks, setVisiblePicks] = useState<PickWithUser[]>([]);
-  const [detail, setDetail] = useState<{ chapterId: number; teamId: number; top: number } | null>(null);
+  const [detail, setDetail] = useState<{ chapterId: number | null; teamId: number; top: number; combined?: boolean } | null>(null);
   const [talkDetail, setTalkDetail] = useState<{ userId: string; top: number } | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [showPointsAvailable, setShowPointsAvailable] = useState(true);
@@ -154,6 +154,30 @@ export default function StandingsPage() {
   if (loading) {
     return <Loading label="Loading standings..." />;
   }
+
+  const groupStageChapter = chapters.find((chapter) => chapter.slug === "group-stage");
+  const knockoutStageChapter = chapters.find((chapter) => chapter.slug === "knockout-stage");
+  const knockoutRevealed = Boolean(
+    knockoutStageChapter && (knockoutStageChapter.status === "locked" || knockoutStageChapter.status === "graded")
+  );
+  const combinedSummaryChapterIds = [groupStageChapter?.id, knockoutStageChapter?.id].filter(
+    (value): value is number => Boolean(value)
+  );
+  const summaryChapters = knockoutRevealed
+    ? []
+    : chapters.filter((chapter) => chapter.slug === "group-stage" && chapter.status !== "open" && chapter.status !== "draft");
+
+  const combinedSummaryItems = knockoutRevealed
+    ? teams
+        .map((team) => ({
+          team,
+          count: visiblePicks.filter(
+            (pick) => combinedSummaryChapterIds.includes(pick.chapter_id) && pick.team_id === team.id
+          ).length
+        }))
+        .filter((item) => item.count > 1)
+        .sort((a, b) => b.count - a.count || a.team.name.localeCompare(b.team.name))
+    : [];
 
   const seenKey = "shit_talk_seen_by_user";
   const seenMap: Record<string, number> = (() => {
@@ -351,9 +375,46 @@ export default function StandingsPage() {
             </section>
           ) : null}
 
-          {chapters
-            .filter((chapter) => chapter.status !== "open" && chapter.status !== "draft")
-            .map((chapter) => (
+          {knockoutRevealed ? (
+            <section className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">
+                  Group + Knockout Stage Summary
+                </h3>
+                <span className="chip">Teams picked more than once</span>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {combinedSummaryItems.map(({ team, count }) => {
+                  const flag = flagForCode(team.code);
+                  return (
+                    <div
+                      className="flex items-center justify-between rounded-lg border border-white/10 bg-slate-950/50 px-3 py-2 text-sm"
+                      key={`summary-combined-${team.id}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{flag}</span>
+                        <button
+                          className="text-left text-slate-100 underline decoration-white/20 hover:decoration-white"
+                          type="button"
+                          onClick={(event) =>
+                            setDetail({ chapterId: null, teamId: team.id, top: popupTopForClick(event), combined: true })
+                          }
+                        >
+                          {team.name}
+                        </button>
+                      </div>
+                      <span className="rounded-full bg-cyan-300/20 px-2 py-0.5 text-xs font-semibold text-cyan-100">
+                        {count}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
+
+          {summaryChapters.map((chapter) => (
               <section className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3" key={`summary-${chapter.id}`}>
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">
@@ -414,16 +475,18 @@ export default function StandingsPage() {
                 onClick={(e) => e.stopPropagation()}
               >
                 {(() => {
-                  const chapter = chapters.find((c) => c.id === detail.chapterId);
+                  const chapter = detail.chapterId ? chapters.find((c) => c.id === detail.chapterId) : null;
                   const team = teams.find((t) => t.id === detail.teamId);
-                  const picks = visiblePicks.filter(
-                    (p) => p.chapter_id === detail.chapterId && p.team_id === detail.teamId
+                  const picks = visiblePicks.filter((p) =>
+                    detail.combined
+                      ? combinedSummaryChapterIds.includes(p.chapter_id) && p.team_id === detail.teamId
+                      : p.chapter_id === detail.chapterId && p.team_id === detail.teamId
                   );
                   return (
                     <>
                       <div className="mb-3 flex items-center justify-between">
                         <h3 className="text-lg font-semibold">
-                          {chapter?.name} — {team?.name}
+                          {detail.combined ? `Group + Knockout Stages — ${team?.name}` : `${chapter?.name} — ${team?.name}`}
                         </h3>
                         <button className="btn btn-secondary" type="button" onClick={() => setDetail(null)}>
                           Close
