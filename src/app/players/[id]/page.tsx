@@ -68,10 +68,15 @@ export default function PlayerProfilePage() {
     () => payload?.revealed?.additional_qualifiers ?? [],
     [payload?.revealed?.additional_qualifiers]
   );
+  const knockoutPicks = useMemo(() => payload?.revealed?.knockout_picks ?? [], [payload?.revealed?.knockout_picks]);
   const hasRevealedPickData = Boolean(
-    payload?.revealed?.champion || groupWinners.length > 0 || additionalQualifiers.length > 0
+    payload?.revealed?.champion ||
+      groupWinners.length > 0 ||
+      additionalQualifiers.length > 0 ||
+      knockoutPicks.length > 0
   );
   const groupStageRevealed = Boolean(payload?.revealed?.group_stage_revealed ?? hasRevealedPickData);
+  const knockoutStageRevealed = Boolean(payload?.revealed?.knockout_stage_revealed ?? knockoutPicks.length > 0);
   const viewerIsMember = Boolean(payload?.viewer?.is_member ?? isRegisteredViewer);
 
   if (loading) return <Loading label="Loading player profile..." />;
@@ -141,6 +146,19 @@ export default function PlayerProfilePage() {
           {groupStageRevealed || viewerIsMember ? (
             <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
               <div className="grid gap-3 md:grid-cols-2">
+                {knockoutStageRevealed ? (
+                  <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3 md:col-span-2">
+                    <p className="mb-2 text-xs uppercase tracking-[0.14em] text-slate-400">Knockout Stage Picks</p>
+                    <div className="space-y-2">
+                      {knockoutPicks.map((pick) => (
+                        <div key={pick.label} className="text-sm text-slate-200">
+                          <span className="font-semibold text-slate-100">{pick.label}:</span>{" "}
+                          {`${flagForCode(pick.code)} ${pick.name}`}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
                   <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Stage Pick For Tourney Winner</p>
                   <p className="text-sm text-slate-200">
@@ -204,6 +222,12 @@ type TeamSummary = {
   code: string;
 };
 
+type KnockoutPickSummary = {
+  label: string;
+  name: string;
+  code: string;
+};
+
 type PublicProfilePayload = {
   viewer?: {
     is_member: boolean;
@@ -217,6 +241,8 @@ type PublicProfilePayload = {
   };
   revealed: {
     group_stage_revealed?: boolean;
+    knockout_stage_revealed?: boolean;
+    knockout_picks?: KnockoutPickSummary[];
     champion: TeamSummary | null;
     group_winners: TeamSummary[];
     additional_qualifiers: TeamSummary[];

@@ -281,7 +281,9 @@ declare
   target_profile public.profiles%rowtype;
   viewer_can_see_shit_talk boolean := false;
   group_stage_id bigint;
+  knockout_stage_id bigint;
   group_stage_revealed boolean := false;
+  knockout_stage_revealed boolean := false;
   total_points_value int := 0;
   correct_picks_value int := 0;
   wins_value int := 0;
@@ -291,6 +293,7 @@ declare
   champion_value jsonb;
   group_winners_value jsonb := '[]'::jsonb;
   additional_qualifiers_value jsonb := '[]'::jsonb;
+  knockout_picks_value jsonb := '[]'::jsonb;
 begin
   if auth.uid() is not null then
     select exists (
@@ -322,6 +325,12 @@ begin
   where c.slug = 'group-stage'
   limit 1;
 
+  select c.id
+  into knockout_stage_id
+  from public.chapters c
+  where c.slug = 'knockout-stage'
+  limit 1;
+
   select exists (
     select 1
     from public.chapters c
@@ -329,6 +338,14 @@ begin
       and c.status in ('locked', 'graded')
   )
   into group_stage_revealed;
+
+  select exists (
+    select 1
+    from public.chapters c
+    where c.id = knockout_stage_id
+      and c.status in ('locked', 'graded')
+  )
+  into knockout_stage_revealed;
 
   select coalesce(sl.total_points, 0), coalesce(sl.correct_picks, 0)
   into total_points_value, correct_picks_value
@@ -400,6 +417,29 @@ begin
       and q.order_index in (4, 5);
   end if;
 
+  if knockout_stage_revealed then
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'label', coalesce(nullif(btrim(q.short_label), ''), q.prompt),
+          'name', t.name,
+          'code', t.code
+        )
+        order by q.order_index
+      ),
+      '[]'::jsonb
+    )
+    into knockout_picks_value
+    from public.questions q
+    join public.picks pk
+      on pk.question_id = q.id
+     and pk.user_id = target_profile.id
+    join public.teams t
+      on t.id = pk.team_id
+    where q.chapter_id = knockout_stage_id
+      and q.is_active = true;
+  end if;
+
   return jsonb_build_object(
     'viewer',
       jsonb_build_object(
@@ -426,6 +466,8 @@ begin
     'revealed',
       jsonb_build_object(
         'group_stage_revealed', group_stage_revealed,
+        'knockout_stage_revealed', knockout_stage_revealed,
+        'knockout_picks', knockout_picks_value,
         'champion', champion_value,
         'group_winners', group_winners_value,
         'additional_qualifiers', additional_qualifiers_value
