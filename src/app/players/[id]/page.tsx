@@ -152,7 +152,7 @@ export default function PlayerProfilePage() {
                     <div className="space-y-2">
                       {knockoutPicks.map((pick) => (
                         <div key={pick.label} className="text-sm text-slate-200">
-                          <span className="font-semibold text-slate-100">{pick.label}:</span>{" "}
+                          <span className="text-slate-300">{pick.label}:</span>{" "}
                           {`${flagForCode(pick.code)} ${pick.name}`}
                         </div>
                       ))}
