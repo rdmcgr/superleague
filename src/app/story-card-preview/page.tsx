@@ -103,7 +103,7 @@ export default function StoryCardPreviewPage() {
     [profile?.allegiance_team_id, teams]
   );
   const introLine =
-    stage === "knockout" ? "Check out my picks for the knockout stage:" : "Check out my picks for the tourney:";
+    stage === "knockout" ? "Check out my picks:" : "Check out my picks for the tourney:";
   const cardLabel = stage === "knockout" ? "knockout stage story card" : "group stage story card";
 
   useEffect(() => {
@@ -178,6 +178,7 @@ export default function StoryCardPreviewPage() {
                 allegiance={allegianceTeam ? `${flagForCode(allegianceTeam.code)} ${allegianceTeam.name}` : null}
                 introLine={introLine}
                 sections={shareSections}
+                variant={stage}
               />
             </div>
           </div>

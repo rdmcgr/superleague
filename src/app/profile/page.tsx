@@ -439,6 +439,7 @@ export default function ProfilePage() {
                 allegiance={allegianceTeam ? `${flagForCode(allegianceTeam.code)} ${allegianceTeam.name}` : null}
                 introLine="Check out my picks for the tourney:"
                 sections={groupStageShareSections}
+                variant="group"
               />
             </div>
           ) : null}
@@ -448,8 +449,9 @@ export default function ProfilePage() {
                 avatarUrl={profile.avatar_url}
                 displayName={profile.display_name || profile.email}
                 allegiance={allegianceTeam ? `${flagForCode(allegianceTeam.code)} ${allegianceTeam.name}` : null}
-                introLine="Check out my picks for the knockout stage:"
+                introLine="Check out my picks:"
                 sections={knockoutStageShareSections}
+                variant="knockout"
               />
             </div>
           ) : null}

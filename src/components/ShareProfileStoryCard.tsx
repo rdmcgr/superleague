@@ -8,6 +8,7 @@ type ShareProfileStoryCardProps = {
   allegiance: string | null;
   introLine: string;
   sections: StoryCardSection[];
+  variant?: "group" | "knockout";
 };
 
 export default function ShareProfileStoryCard({
@@ -15,8 +16,11 @@ export default function ShareProfileStoryCard({
   displayName,
   allegiance,
   introLine,
-  sections
+  sections,
+  variant = "group"
 }: ShareProfileStoryCardProps) {
+  const isKnockout = variant === "knockout";
+
   return (
     <div
       className="relative flex h-[1920px] w-[1080px] flex-col overflow-hidden bg-slate-950 text-slate-50"
@@ -34,12 +38,12 @@ export default function ShareProfileStoryCard({
         }}
       />
 
-      <div className="relative flex flex-1 flex-col px-18 pb-16 pt-18">
-        <div className="mb-16 flex flex-col items-center text-center">
+      <div className={`relative flex flex-1 flex-col px-18 ${isKnockout ? "pb-12 pt-14" : "pb-16 pt-18"}`}>
+        <div className={`flex flex-col items-center text-center ${isKnockout ? "mb-10" : "mb-16"}`}>
           <p className="text-[26px] font-semibold uppercase tracking-[0.45em] text-cyan-100/80">World Cup 2026</p>
           <img
             alt="Super League wordmark"
-            className="mt-6 h-28 w-[760px] object-contain"
+            className={`object-contain ${isKnockout ? "mt-4 h-24 w-[700px]" : "mt-6 h-28 w-[760px]"}`}
             decoding="sync"
             fetchPriority="high"
             loading="eager"
@@ -47,35 +51,60 @@ export default function ShareProfileStoryCard({
           />
         </div>
 
-        <div className="mb-12 flex flex-col items-center text-center">
-          <div className="flex max-w-[920px] items-center gap-8">
+        <div className={`flex flex-col items-center text-center ${isKnockout ? "mb-8" : "mb-12"}`}>
+          <div className={`flex max-w-[920px] items-center ${isKnockout ? "gap-6" : "gap-8"}`}>
             {avatarUrl ? (
               <img
                 alt={`${displayName} avatar`}
-                className="h-36 w-36 shrink-0 rounded-full border-4 border-cyan-200/70 object-cover shadow-[0_24px_80px_rgba(0,0,0,0.35)]"
+                className={`shrink-0 rounded-full border-4 border-cyan-200/70 object-cover shadow-[0_24px_80px_rgba(0,0,0,0.35)] ${
+                  isKnockout ? "h-32 w-32" : "h-36 w-36"
+                }`}
                 crossOrigin="anonymous"
                 src={avatarUrl}
               />
             ) : (
-              <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-full border-4 border-cyan-200/70 bg-white/10 text-6xl font-black uppercase">
+              <div
+                className={`flex shrink-0 items-center justify-center rounded-full border-4 border-cyan-200/70 bg-white/10 font-black uppercase ${
+                  isKnockout ? "h-32 w-32 text-5xl" : "h-36 w-36 text-6xl"
+                }`}
+              >
                 {displayName.slice(0, 1)}
               </div>
             )}
-            <h2 className="text-left text-[76px] font-black leading-[0.95] text-white">{displayName}</h2>
+            <h2 className={`text-left font-black leading-[0.95] text-white ${isKnockout ? "text-[68px]" : "text-[76px]"}`}>
+              {displayName}
+            </h2>
           </div>
-          <p className="mt-8 text-[28px] font-semibold uppercase tracking-[0.3em] text-cyan-100/78">{introLine}</p>
+          <p
+            className={`font-semibold uppercase text-cyan-100/78 ${
+              isKnockout ? "mt-6 text-[24px] tracking-[0.24em]" : "mt-8 text-[28px] tracking-[0.3em]"
+            }`}
+          >
+            {introLine}
+          </p>
         </div>
 
-        <div className="flex flex-1 flex-col gap-7">
+        <div className={`flex flex-1 flex-col ${isKnockout ? "gap-5" : "gap-7"}`}>
           {sections.map((section) => (
             <div
               key={section.title}
-              className="rounded-[32px] border border-white/12 bg-slate-950/45 px-10 py-8 shadow-[0_18px_55px_rgba(0,0,0,0.22)] backdrop-blur-sm"
+              className={`rounded-[32px] border border-white/12 bg-slate-950/45 shadow-[0_18px_55px_rgba(0,0,0,0.22)] backdrop-blur-sm ${
+                isKnockout ? "px-8 py-6" : "px-10 py-8"
+              }`}
             >
-              <p className="mb-4 text-[30px] font-semibold uppercase tracking-[0.24em] text-cyan-100/80">{section.title}</p>
-              <div className="flex flex-col gap-3">
+              <p
+                className={`font-semibold uppercase text-cyan-100/80 ${
+                  isKnockout ? "mb-3 text-[24px] tracking-[0.18em]" : "mb-4 text-[30px] tracking-[0.24em]"
+                }`}
+              >
+                {section.title}
+              </p>
+              <div className={`flex flex-col ${isKnockout ? "gap-2" : "gap-3"}`}>
                 {section.items.map((item) => (
-                  <p key={item} className="text-[50px] font-semibold leading-[1.14] text-white">
+                  <p
+                    key={item}
+                    className={`font-semibold leading-[1.14] text-white ${isKnockout ? "text-[40px]" : "text-[50px]"}`}
+                  >
                     {item}
                   </p>
                 ))}
@@ -85,16 +114,16 @@ export default function ShareProfileStoryCard({
         </div>
 
         {allegiance ? (
-          <p className="mt-10 text-center text-[38px] font-bold leading-[1.18] text-cyan-100">
+          <p className={`text-center font-bold leading-[1.18] text-cyan-100 ${isKnockout ? "mt-7 text-[32px]" : "mt-10 text-[38px]"}`}>
             But my allegiance is to {allegiance}! Let&apos;s go!
           </p>
         ) : null}
 
-        <div className="mt-12 flex items-center justify-center gap-6">
-          {allegiance ? <span className="text-[220px] leading-none">{allegiance.split(" ")[0]}</span> : null}
+        <div className={`flex items-center justify-center ${isKnockout ? "mt-8 gap-5" : "mt-12 gap-6"}`}>
+          {allegiance ? <span className={`leading-none ${isKnockout ? "text-[170px]" : "text-[220px]"}`}>{allegiance.split(" ")[0]}</span> : null}
           <img
             alt="Super League"
-            className="h-72 w-72 object-contain"
+            className={`object-contain ${isKnockout ? "h-56 w-56" : "h-72 w-72"}`}
             decoding="sync"
             fetchPriority="high"
             loading="eager"
@@ -102,11 +131,15 @@ export default function ShareProfileStoryCard({
           />
         </div>
 
-        <div className="mt-10 flex items-center justify-center gap-3 text-[24px] font-semibold uppercase tracking-[0.18em] text-slate-200/85">
+        <div
+          className={`flex items-center justify-center gap-3 font-semibold uppercase text-slate-200/85 ${
+            isKnockout ? "mt-7 text-[20px] tracking-[0.14em]" : "mt-10 text-[24px] tracking-[0.18em]"
+          }`}
+        >
           <span>© 2026 Superleague.party. An</span>
           <img
             alt="OWS"
-            className="h-14 w-14 rounded-sm object-contain"
+            className={`rounded-sm object-contain ${isKnockout ? "h-12 w-12" : "h-14 w-14"}`}
             decoding="sync"
             loading="eager"
             src="/ows-nwo-logo.png"
