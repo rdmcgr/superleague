@@ -114,12 +114,12 @@ export default function ShareProfileStoryCard({
         </div>
 
         {allegiance ? (
-          <p className={`text-center font-bold leading-[1.18] text-cyan-100 ${isKnockout ? "mt-7 text-[32px]" : "mt-10 text-[38px]"}`}>
+          <p className={`text-center font-bold leading-[1.18] text-cyan-100 ${isKnockout ? "mt-3 text-[32px]" : "mt-10 text-[38px]"}`}>
             But my allegiance is to {allegiance}! Let&apos;s go!
           </p>
         ) : null}
 
-        <div className={`flex items-center justify-center ${isKnockout ? "mt-8 gap-5" : "mt-12 gap-6"}`}>
+        <div className={`flex items-center justify-center ${isKnockout ? "mt-3 gap-5" : "mt-12 gap-6"}`}>
           {allegiance ? <span className={`leading-none ${isKnockout ? "text-[170px]" : "text-[220px]"}`}>{allegiance.split(" ")[0]}</span> : null}
           <img
             alt="Super League"
@@ -133,7 +133,7 @@ export default function ShareProfileStoryCard({
 
         <div
           className={`flex items-center justify-center gap-3 font-semibold uppercase text-slate-200/85 ${
-            isKnockout ? "mt-7 text-[20px] tracking-[0.14em]" : "mt-10 text-[24px] tracking-[0.18em]"
+            isKnockout ? "mt-3 text-[20px] tracking-[0.14em]" : "mt-10 text-[24px] tracking-[0.18em]"
           }`}
         >
           <span>© 2026 Superleague.party. An</span>
