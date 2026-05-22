@@ -76,6 +76,7 @@ export default function PlayerProfilePage() {
       knockoutPicks.length > 0
   );
   const groupStageRevealed = Boolean(payload?.revealed?.group_stage_revealed ?? hasRevealedPickData);
+  const groupStageGraded = Boolean(payload?.revealed?.group_stage_graded);
   const knockoutStageRevealed = Boolean(payload?.revealed?.knockout_stage_revealed ?? knockoutPicks.length > 0);
   const viewerIsMember = Boolean(payload?.viewer?.is_member ?? isRegisteredViewer);
 
@@ -161,27 +162,17 @@ export default function PlayerProfilePage() {
                 ) : null}
                 <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
                   <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Stage Pick For Tourney Winner</p>
-                  <p className="text-sm text-slate-200">
-                    {payload.revealed.champion ? `${flagForCode(payload.revealed.champion.code)} ${payload.revealed.champion.name}` : "No pick"}
-                  </p>
+                  <PickLine pick={payload.revealed.champion} graded={groupStageGraded} />
                 </div>
                 <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3">
                   <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Group Winners</p>
-                  <p className="text-sm text-slate-200">
-                    {groupWinners[0] ? `${flagForCode(groupWinners[0].code)} ${groupWinners[0].name}` : "No pick"}
-                  </p>
-                  <p className="text-sm text-slate-200">
-                    {groupWinners[1] ? `${flagForCode(groupWinners[1].code)} ${groupWinners[1].name}` : "No pick"}
-                  </p>
+                  <PickLine pick={groupWinners[0] ?? null} graded={groupStageGraded} />
+                  <PickLine pick={groupWinners[1] ?? null} graded={groupStageGraded} />
                 </div>
                 <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3 md:col-span-2">
                   <p className="mb-1 text-xs uppercase tracking-[0.14em] text-slate-400">Additional Knockout Stage Qualifiers</p>
-                  <p className="text-sm text-slate-200">
-                    {additionalQualifiers[0] ? `${flagForCode(additionalQualifiers[0].code)} ${additionalQualifiers[0].name}` : "No pick"}
-                  </p>
-                  <p className="text-sm text-slate-200">
-                    {additionalQualifiers[1] ? `${flagForCode(additionalQualifiers[1].code)} ${additionalQualifiers[1].name}` : "No pick"}
-                  </p>
+                  <PickLine pick={additionalQualifiers[0] ?? null} graded={groupStageGraded} />
+                  <PickLine pick={additionalQualifiers[1] ?? null} graded={groupStageGraded} />
                 </div>
               </div>
             </div>
@@ -220,6 +211,7 @@ type PlayerProfile = {
 type TeamSummary = {
   name: string;
   code: string;
+  correct?: boolean | null;
 };
 
 type KnockoutPickSummary = {
@@ -241,6 +233,7 @@ type PublicProfilePayload = {
   };
   revealed: {
     group_stage_revealed?: boolean;
+    group_stage_graded?: boolean;
     knockout_stage_revealed?: boolean;
     knockout_picks?: KnockoutPickSummary[];
     champion: TeamSummary | null;
@@ -248,3 +241,20 @@ type PublicProfilePayload = {
     additional_qualifiers: TeamSummary[];
   };
 };
+
+function PickLine({ pick, graded }: { pick: TeamSummary | null; graded: boolean }) {
+  if (!pick) {
+    return <p className="text-sm text-slate-200">No pick</p>;
+  }
+
+  const showOutcome = graded && pick.correct !== null && pick.correct !== undefined;
+
+  return (
+    <p className="flex items-center gap-2 text-sm text-slate-200">
+      <span>{`${flagForCode(pick.code)} ${pick.name}`}</span>
+      {showOutcome ? (
+        <span className={pick.correct ? "text-emerald-300" : "text-red-300"}>{pick.correct ? "✓" : "✕"}</span>
+      ) : null}
+    </p>
+  );
+}

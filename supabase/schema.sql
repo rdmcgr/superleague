@@ -283,6 +283,7 @@ declare
   group_stage_id bigint;
   knockout_stage_id bigint;
   group_stage_revealed boolean := false;
+  group_stage_graded boolean := false;
   knockout_stage_revealed boolean := false;
   total_points_value int := 0;
   correct_picks_value int := 0;
@@ -342,6 +343,14 @@ begin
   select exists (
     select 1
     from public.chapters c
+    where c.id = group_stage_id
+      and c.status = 'graded'
+  )
+  into group_stage_graded;
+
+  select exists (
+    select 1
+    from public.chapters c
     where c.id = knockout_stage_id
       and c.status in ('locked', 'graded')
   )
@@ -375,7 +384,20 @@ begin
     select
       case
         when t.id is null then null
-        else jsonb_build_object('name', t.name, 'code', t.code)
+        else jsonb_build_object(
+          'name', t.name,
+          'code', t.code,
+          'correct',
+          case
+            when group_stage_graded then exists (
+              select 1
+              from public.result_teams rt
+              where rt.question_id = q.id
+                and rt.team_id = t.id
+            )
+            else null
+          end
+        )
       end
     into champion_value
     from public.questions q
@@ -389,7 +411,23 @@ begin
     limit 1;
 
     select coalesce(
-      jsonb_agg(jsonb_build_object('name', t.name, 'code', t.code) order by q.order_index),
+      jsonb_agg(
+        jsonb_build_object(
+          'name', t.name,
+          'code', t.code,
+          'correct',
+          case
+            when group_stage_graded then exists (
+              select 1
+              from public.result_teams rt
+              where rt.question_id = q.id
+                and rt.team_id = t.id
+            )
+            else null
+          end
+        )
+        order by q.order_index
+      ),
       '[]'::jsonb
     )
     into group_winners_value
@@ -403,7 +441,23 @@ begin
       and q.order_index in (2, 3);
 
     select coalesce(
-      jsonb_agg(jsonb_build_object('name', t.name, 'code', t.code) order by q.order_index),
+      jsonb_agg(
+        jsonb_build_object(
+          'name', t.name,
+          'code', t.code,
+          'correct',
+          case
+            when group_stage_graded then exists (
+              select 1
+              from public.result_teams rt
+              where rt.question_id = q.id
+                and rt.team_id = t.id
+            )
+            else null
+          end
+        )
+        order by q.order_index
+      ),
       '[]'::jsonb
     )
     into additional_qualifiers_value
@@ -466,6 +520,7 @@ begin
     'revealed',
       jsonb_build_object(
         'group_stage_revealed', group_stage_revealed,
+        'group_stage_graded', group_stage_graded,
         'knockout_stage_revealed', knockout_stage_revealed,
         'knockout_picks', knockout_picks_value,
         'champion', champion_value,
