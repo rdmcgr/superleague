@@ -84,7 +84,7 @@ export default function ShareProfileStoryCard({
           </p>
         </div>
 
-        <div className={`flex flex-1 flex-col ${isKnockout ? "gap-5" : "gap-7"}`}>
+        <div className={`${isKnockout ? "flex flex-col gap-5" : "flex flex-1 flex-col gap-7"}`}>
           {sections.map((section) => (
             <div
               key={section.title}
