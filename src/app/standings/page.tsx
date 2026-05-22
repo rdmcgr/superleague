@@ -379,9 +379,9 @@ export default function StandingsPage() {
             <section className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">
-                  Group + Knockout Stage Summary
+                  Summary
                 </h3>
-                <span className="chip">Teams picked more than once</span>
+                <span className="chip">Most Picked</span>
               </div>
 
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
