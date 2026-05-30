@@ -341,12 +341,12 @@ export default function StandingsPage() {
                   >
                     <td className={`px-2 py-2 font-semibold ${isChampionRow ? "text-amber-100" : ""}`}>
                       <span className="inline-flex items-center gap-2">
+                        <span>{index + 1}</span>
                         {isChampionRow ? (
                           <span aria-hidden="true" className="text-base">
                             👑
                           </span>
                         ) : null}
-                        <span>{index + 1}</span>
                       </span>
                     </td>
                     <td className="px-2 py-2">
