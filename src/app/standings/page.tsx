@@ -285,7 +285,6 @@ export default function StandingsPage() {
                           {champion.display_name || "Player"}
                         </p>
                       </div>
-                      <p className="mt-1 text-sm text-amber-50/85">World Cup 2026 champion of the party.</p>
                     </div>
                   </div>
                 </div>
