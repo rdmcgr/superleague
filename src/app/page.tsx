@@ -403,23 +403,23 @@ export default function HomePage() {
                                 { sensitivity: "base" }
                               )
                             )
-                            .map((p) => (
-                              <li key={p.id}>
-                                {(() => {
-                                  return `${shortPlayerName(p.profiles?.display_name ?? null, p.profiles?.email ?? null)}: `;
-                                })()}
-                                {(() => {
-                                  const team = teamMap.get(p.team_id);
-                                  if (!team) return "Unknown";
-                                  const flag = flagForCode(team.code);
-                                  const winners = gradedTeams.get(q.id);
-                                  const isGraded = chapter.status === "graded" && winners;
-                                  const isCorrect = Boolean(winners?.has(p.team_id));
-                                  const marker = isGraded ? (isCorrect ? " ✅" : " ❌") : "";
-                                  return `${flag ? flag + " " : ""}${team.name}${marker}`;
-                                })()}
-                              </li>
-                            ))}
+                            .map((p) => {
+                              const team = teamMap.get(p.team_id);
+                              const winners = gradedTeams.get(q.id);
+                              const isGraded = chapter.status === "graded" && winners;
+                              const isCorrect = Boolean(winners?.has(p.team_id));
+                              return (
+                                <li key={p.id}>
+                                  {`${shortPlayerName(p.profiles?.display_name ?? null, p.profiles?.email ?? null)}: `}
+                                  {team ? `${flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}${team.name}` : "Unknown"}
+                                  {isGraded ? (
+                                    <span className={`ml-1 ${isCorrect ? "text-emerald-300" : "text-red-300"}`}>
+                                      {isCorrect ? "✓" : "✕"}
+                                    </span>
+                                  ) : null}
+                                </li>
+                              );
+                            })}
                         </ul>
                       </div>
                     ) : null}
