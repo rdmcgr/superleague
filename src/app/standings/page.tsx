@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import AppHeader from "@/components/AppHeader";
+import ChampionFireworks from "@/components/ChampionFireworks";
 import Loading from "@/components/Loading";
 import Notice from "@/components/Notice";
 import { supabase } from "@/lib/supabase-browser";
@@ -226,6 +227,9 @@ export default function StandingsPage() {
 
   return (
     <>
+      <ChampionFireworks
+        playKey={champion ? `${champion.user_id}:${champion.total_points}:${knockoutFinalQuestion?.id ?? "final"}` : null}
+      />
       <AppHeader user={user} isAdmin={Boolean(profile?.is_admin)} />
 
       {error ? (
