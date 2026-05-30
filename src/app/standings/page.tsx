@@ -222,7 +222,7 @@ export default function StandingsPage() {
         <Notice text={error} tone="danger" />
       ) : (
         <section className="glass rounded-2xl p-4">
-          {showPointsAvailable ? (
+          {showPointsAvailable && !tournamentFinished ? (
             <div className="mb-4 rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-slate-300">
               <div className="mb-1 flex items-center justify-between gap-2">
                 <p className="font-semibold uppercase tracking-[0.14em] text-slate-200">Points available</p>
