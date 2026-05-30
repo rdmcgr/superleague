@@ -9,7 +9,7 @@ import Notice from "@/components/Notice";
 import { supabase } from "@/lib/supabase-browser";
 import { flagForCode } from "@/lib/flags";
 import Image from "next/image";
-import type { Chapter, Profile, Question, StandingRow, Team } from "@/lib/types";
+import type { Chapter, Profile, Question, ResultTeam, StandingRow, Team } from "@/lib/types";
 import { useAuthResync } from "@/lib/useAuthResync";
 
 function shortPlayerName(displayName: string | null, email: string | null) {
@@ -36,6 +36,7 @@ export default function StandingsPage() {
   const [profileShitTalkUpdatedAt, setProfileShitTalkUpdatedAt] = useState<Record<string, string>>({});
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [resultTeams, setResultTeams] = useState<ResultTeam[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [visiblePicks, setVisiblePicks] = useState<PickWithUser[]>([]);
   const [detail, setDetail] = useState<{ chapterId: number | null; teamId: number; top: number; combined?: boolean } | null>(null);
@@ -76,15 +77,16 @@ export default function StandingsPage() {
       return;
     }
 
-    const [standingsRes, chaptersRes, questionsRes, teamsRes, avatarsRes] = await Promise.all([
+    const [standingsRes, chaptersRes, questionsRes, teamsRes, avatarsRes, resultsRes] = await Promise.all([
       supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").order("total_points", { ascending: false }),
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code,is_active").order("name"),
-      supabase.from("profiles").select("id,public_slug,avatar_url,shit_talk,shit_talk_updated_at")
+      supabase.from("profiles").select("id,public_slug,avatar_url,shit_talk,shit_talk_updated_at"),
+      supabase.from("result_teams").select("question_id,team_id,points")
     ]);
 
-    if (standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error) {
+    if (standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error || resultsRes.error) {
       setError("Could not load standings. Ensure SQL view standings_live exists.");
       setLoading(false);
       return;
@@ -92,6 +94,7 @@ export default function StandingsPage() {
     setRows(standingsRes.data ?? []);
     setChapters(chaptersRes.data ?? []);
     setQuestions(questionsRes.data ?? []);
+    setResultTeams((resultsRes.data ?? []) as ResultTeam[]);
     setTeams(teamsRes.data ?? []);
     const avatarMap: Record<string, string> = {};
     const slugMap: Record<string, string> = {};
@@ -160,7 +163,14 @@ export default function StandingsPage() {
   const tournamentFinished = Boolean(
     groupStageChapter?.status === "graded" && knockoutStageChapter?.status === "graded"
   );
-  const champion = tournamentFinished && rows.length > 0 ? rows[0] : null;
+  const knockoutFinalQuestion = knockoutStageChapter
+    ? questions.find((question) => question.chapter_id === knockoutStageChapter.id && question.order_index === 5)
+    : null;
+  const knockoutFinalWinnerSaved = Boolean(
+    knockoutFinalQuestion && resultTeams.some((result) => result.question_id === knockoutFinalQuestion.id)
+  );
+  const championCelebrationReady = tournamentFinished && knockoutFinalWinnerSaved;
+  const champion = championCelebrationReady && rows.length > 0 ? rows[0] : null;
   const knockoutRevealed = Boolean(
     knockoutStageChapter && (knockoutStageChapter.status === "locked" || knockoutStageChapter.status === "graded")
   );
