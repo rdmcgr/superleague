@@ -390,7 +390,11 @@ begin
           'code', t.code,
           'correct',
           case
-            when group_stage_graded then exists (
+            when exists (
+              select 1
+              from public.result_teams rt
+              where rt.question_id = q.id
+            ) then exists (
               select 1
               from public.result_teams rt
               where rt.question_id = q.id
@@ -418,7 +422,11 @@ begin
           'code', t.code,
           'correct',
           case
-            when group_stage_graded then exists (
+            when exists (
+              select 1
+              from public.result_teams rt
+              where rt.question_id = q.id
+            ) then exists (
               select 1
               from public.result_teams rt
               where rt.question_id = q.id
@@ -448,7 +456,11 @@ begin
           'code', t.code,
           'correct',
           case
-            when group_stage_graded then exists (
+            when exists (
+              select 1
+              from public.result_teams rt
+              where rt.question_id = q.id
+            ) then exists (
               select 1
               from public.result_teams rt
               where rt.question_id = q.id

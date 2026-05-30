@@ -157,6 +157,10 @@ export default function StandingsPage() {
 
   const groupStageChapter = chapters.find((chapter) => chapter.slug === "group-stage");
   const knockoutStageChapter = chapters.find((chapter) => chapter.slug === "knockout-stage");
+  const tournamentFinished = Boolean(
+    groupStageChapter?.status === "graded" && knockoutStageChapter?.status === "graded"
+  );
+  const champion = tournamentFinished && rows.length > 0 ? rows[0] : null;
   const knockoutRevealed = Boolean(
     knockoutStageChapter && (knockoutStageChapter.status === "locked" || knockoutStageChapter.status === "graded")
   );
@@ -242,6 +246,58 @@ export default function StandingsPage() {
               })}
             </div>
           ) : null}
+          {champion ? (
+            <div className="relative mb-5 overflow-hidden rounded-[28px] border border-amber-300/45 bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.32),_transparent_42%),linear-gradient(135deg,rgba(120,53,15,0.92),rgba(15,23,42,0.96)_56%,rgba(120,113,108,0.9))] p-5 shadow-[0_0_32px_rgba(251,191,36,0.18)]">
+              <div className="pointer-events-none absolute inset-0 opacity-80">
+                <div className="absolute left-5 top-4 text-xl text-amber-200/80">✦</div>
+                <div className="absolute right-8 top-6 text-2xl text-cyan-200/70">✦</div>
+                <div className="absolute left-1/4 top-16 text-lg text-rose-200/70">✦</div>
+                <div className="absolute bottom-8 left-10 text-xl text-amber-100/75">✦</div>
+                <div className="absolute bottom-6 right-16 text-lg text-cyan-100/70">✦</div>
+              </div>
+              <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-100/80">
+                    Super League Champion
+                  </p>
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-amber-200/75 bg-white/10 shadow-[0_0_18px_rgba(251,191,36,0.25)]">
+                      {profileAvatars[champion.user_id] ? (
+                        <Image
+                          alt="Champion avatar"
+                          className="h-full w-full object-cover"
+                          src={profileAvatars[champion.user_id]}
+                          width={64}
+                          height={64}
+                        />
+                      ) : (
+                        <span className="text-xl font-semibold text-amber-50">
+                          {(champion.display_name || "P").slice(0, 1).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl" aria-hidden="true">
+                          👑
+                        </span>
+                        <p className="text-2xl font-black tracking-[0.04em] text-white sm:text-3xl">
+                          {champion.display_name || "Player"}
+                        </p>
+                      </div>
+                      <p className="mt-1 text-sm text-amber-50/85">World Cup 2026 champion of the party.</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-amber-200/45 bg-slate-950/35 px-4 py-3 text-left shadow-[0_0_20px_rgba(251,191,36,0.12)] sm:min-w-[160px] sm:text-right">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-100/75">
+                    Final Points
+                  </p>
+                  <p className="mt-1 text-4xl font-black leading-none text-amber-100">{champion.total_points}</p>
+                </div>
+              </div>
+            </div>
+          ) : null}
           <h2 className="section-title mb-4 flex items-center gap-2">
             <Image
               alt="Super League wordmark"
@@ -263,9 +319,27 @@ export default function StandingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row, index) => (
-                  <tr className="border-b border-white/10" key={row.user_id}>
-                    <td className="px-2 py-2 font-semibold">{index + 1}</td>
+                {rows.map((row, index) => {
+                  const isChampionRow = Boolean(champion && row.user_id === champion.user_id);
+                  return (
+                  <tr
+                    className={
+                      isChampionRow
+                        ? "border border-amber-300/55 bg-[linear-gradient(90deg,rgba(120,53,15,0.32),rgba(251,191,36,0.16),rgba(15,23,42,0.22))] shadow-[0_0_22px_rgba(251,191,36,0.12)]"
+                        : "border-b border-white/10"
+                    }
+                    key={row.user_id}
+                  >
+                    <td className={`px-2 py-2 font-semibold ${isChampionRow ? "text-amber-100" : ""}`}>
+                      <span className="inline-flex items-center gap-2">
+                        {isChampionRow ? (
+                          <span aria-hidden="true" className="text-base">
+                            👑
+                          </span>
+                        ) : null}
+                        <span>{index + 1}</span>
+                      </span>
+                    </td>
                     <td className="px-2 py-2">
                       <div className="flex items-center gap-2">
                         {(() => {
@@ -302,17 +376,19 @@ export default function StandingsPage() {
                           );
                         })()}
                         <a
-                          className="text-left text-slate-100 underline decoration-white/20 hover:decoration-white"
+                          className={`text-left underline hover:decoration-white ${
+                            isChampionRow ? "font-semibold text-amber-50 decoration-amber-200/35" : "text-slate-100 decoration-white/20"
+                          }`}
                           href={`/players/${profileSlugs[row.user_id] || row.user_id}`}
                         >
                           {row.display_name || "Player"}
                         </a>
                       </div>
                     </td>
-                    <td className="px-2 py-2">{row.total_points}</td>
-                    <td className="px-2 py-2">{row.correct_picks}</td>
+                    <td className={`px-2 py-2 ${isChampionRow ? "font-semibold text-amber-50" : ""}`}>{row.total_points}</td>
+                    <td className={`px-2 py-2 ${isChampionRow ? "font-semibold text-amber-50" : ""}`}>{row.correct_picks}</td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           </div>
