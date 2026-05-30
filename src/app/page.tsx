@@ -332,15 +332,15 @@ export default function HomePage() {
                 <p className="text-xs text-slate-400 whitespace-pre-line">
                   {chapter.status === "open"
                     ? chapter.slug === "knockout-stage"
-                      ? "Picks are open. Picks due by June 28th."
-                      : "Picks are open. Picks due by June 8th."
+                      ? `Picks are open. Picks due by June 28th.${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
+                      : `Picks are open. Picks due by June 8th.${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
                     : chapter.status === "locked"
                       ? "Picks revealed."
-                      : chapter.slug === "knockout-stage"
-                        ? "Not open yet. Picks will open June 19th.\nPicks due by June 28th."
-                        : "Not open yet."}
-                  {chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}
-                  {chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}
+                      : chapter.status === "graded"
+                        ? "Picks graded."
+                        : chapter.slug === "knockout-stage"
+                          ? `Not open yet. Picks will open June 19th.\nPicks due by June 28th.${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
+                          : `${"Not open yet."}${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`}
                 </p>
               </div>
               <span className="chip">{prettyStatus(chapter.status)}</span>
