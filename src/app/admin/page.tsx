@@ -45,6 +45,7 @@ export default function AdminPage() {
   const [notice, setNotice] = useState<{ text: string; tone: "neutral" | "success" | "danger" } | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string>("");
   const [cooldownTargetId, setCooldownTargetId] = useState<string>("");
+  const [clearPicksTargetId, setClearPicksTargetId] = useState<string>("");
 
   const loadAdmin = useCallback(async () => {
     setLoading(true);
@@ -275,6 +276,31 @@ export default function AdminPage() {
     setSaving(false);
   }
 
+  async function clearUserPicks() {
+    if (!clearPicksTargetId) return;
+    const target = allProfiles.find((p) => p.id === clearPicksTargetId);
+    const name = target?.display_name || target?.email || "this user";
+    const ok = window.confirm(`Clear all saved picks for ${name}? This cannot be undone.`);
+    if (!ok) return;
+
+    setSaving(true);
+    setNotice(null);
+    const res = await supabase.rpc("clear_picks_by_admin", { target_user_id: clearPicksTargetId });
+    if (res.error) {
+      setNotice({ text: res.error.message, tone: "danger" });
+      setSaving(false);
+      return;
+    }
+    const clearedCount = Number(res.data ?? 0);
+    setNotice({
+      text: clearedCount > 0 ? `Cleared ${clearedCount} picks.` : "This user had no picks to clear.",
+      tone: "success"
+    });
+    setClearPicksTargetId("");
+    await loadAdmin();
+    setSaving(false);
+  }
+
   if (loading) return <Loading label="Loading admin dashboard..." />;
 
   const isAdmin = Boolean(profile?.is_admin);
@@ -458,6 +484,38 @@ export default function AdminPage() {
                 onClick={() => void resetShitTalkCooldown()}
               >
                 Reset Cooldown
+              </button>
+            </div>
+          </section>
+
+          <section className="glass rounded-2xl p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="section-title">Clear User Picks</h2>
+              <span className="chip">Danger</span>
+            </div>
+            <p className="mb-3 text-sm text-slate-300">
+              Deletes all saved picks for one selected user across every stage. This cannot be undone.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                className="min-w-[260px] rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                value={clearPicksTargetId}
+                onChange={(e) => setClearPicksTargetId(e.target.value)}
+              >
+                <option value="">Select user</option>
+                {allProfiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.display_name || p.email}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="btn btn-danger"
+                type="button"
+                disabled={saving || !clearPicksTargetId}
+                onClick={() => void clearUserPicks()}
+              >
+                Clear Picks
               </button>
             </div>
           </section>

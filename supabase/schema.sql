@@ -768,6 +768,36 @@ begin
 end;
 $$;
 
+create or replace function public.clear_picks_by_admin(target_user_id uuid)
+returns bigint
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  actor_is_admin boolean;
+  deleted_count bigint;
+begin
+  select p.is_admin into actor_is_admin
+  from public.profiles p
+  where p.id = auth.uid();
+
+  if coalesce(actor_is_admin, false) = false then
+    raise exception 'Only admins can clear picks';
+  end if;
+
+  with deleted_rows as (
+    delete from public.picks
+    where user_id = target_user_id
+    returning 1
+  )
+  select count(*)::bigint into deleted_count
+  from deleted_rows;
+
+  return coalesce(deleted_count, 0);
+end;
+$$;
+
 create or replace function public.admin_player_completion()
 returns table (
   user_id uuid,
