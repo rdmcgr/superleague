@@ -37,6 +37,7 @@ export default function SideBetsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [showIntro, setShowIntro] = useState(true);
+  const [showAllMatched, setShowAllMatched] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -155,6 +156,7 @@ export default function SideBetsPage() {
 
   const openBets = bets.filter((bet) => bet.status === "open");
   const myBets = bets.filter((bet) => (bet.creator_id === user?.id || bet.taker_id === user?.id) && Boolean(bet.taker_id));
+  const allMatchedBets = bets.filter((bet) => Boolean(bet.taker_id) && bet.status !== "cancelled");
   const isTakenForSettlement = (bet: BetRow) =>
     Boolean(bet.taker_id) && bet.status !== "closed" && bet.status !== "cancelled";
   const isAdminManageableBet = (bet: BetRow) =>
@@ -880,6 +882,64 @@ export default function SideBetsPage() {
           </div>
         )}
       </section>
+
+      {showAllMatched ? (
+        <section className="glass mt-6 rounded-2xl p-5">
+          <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold">All Matched Bets</h2>
+              <p className="text-sm text-slate-300">All bets that have been matched across the league.</p>
+            </div>
+            <button
+              className="justify-self-end rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+              onClick={() => setShowAllMatched(false)}
+              type="button"
+            >
+              Hide
+            </button>
+          </div>
+          {allMatchedBets.length === 0 ? (
+            <p className="text-sm text-slate-400">No matched bets yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {allMatchedBets.map((bet) => (
+                <article key={`all-matched-${bet.id}`} className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-100">{renderBetTitle(bet)}</p>
+                      <p className="text-xs text-slate-400">{renderBetLine(bet)}</p>
+                      {bet.taker_id ? <p className="text-xs text-slate-400">{renderMatchedTakerLine(bet)}</p> : null}
+                      <p className="mt-1 text-xs text-slate-400">Stake: {formatStake(bet.stake_amount)}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Posted by {renderUserName(bet.creator)} vs {renderUserName(bet.taker)}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">Status: {bet.status}</p>
+                      {bet.status !== "closed" && bet.creator_selected_winner_id ? (
+                        <p className="mt-1 text-xs text-slate-400">
+                          {renderUserName(bet.creator)} confirmed winner as {renderSelectedWinner(bet, bet.creator_selected_winner_id)}
+                        </p>
+                      ) : null}
+                      {bet.status !== "closed" && bet.taker_selected_winner_id ? (
+                        <p className="mt-1 text-xs text-slate-400">
+                          {renderUserName(bet.taker)} confirmed winner as {renderSelectedWinner(bet, bet.taker_selected_winner_id)}
+                        </p>
+                      ) : null}
+                      {bet.status === "closed" ? (
+                        <p className="mt-2 inline-flex items-center rounded-full border border-emerald-300/35 bg-emerald-400/12 px-3 py-1 text-xs font-semibold tracking-[0.06em] text-emerald-100">
+                          Winner: {renderWinner(bet)}
+                        </p>
+                      ) : null}
+                      {bet.description ? <p className="mt-2 text-sm text-slate-200">{bet.description}</p> : null}
+                    </div>
+                    <div className="flex flex-wrap items-start justify-end gap-2">{renderCommentControls(bet.id)}</div>
+                  </div>
+                  {renderComments(bet.id)}
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
 
       {profile?.is_admin ? (
         <section className="glass mt-6 rounded-2xl p-5">
