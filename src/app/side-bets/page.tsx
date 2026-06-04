@@ -616,7 +616,7 @@ export default function SideBetsPage() {
           <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
             <div className="min-w-0">
               <h1 className="text-2xl font-bold">Side Bets</h1>
-              <p className="text-sm text-slate-300">Make real money side bets with other users!</p>
+              <p className="text-sm text-slate-300">Make real money side bets with other league members!</p>
             </div>
             <button
               className="justify-self-end rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
