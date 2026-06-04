@@ -754,7 +754,7 @@ export default function SideBetsPage() {
         <h2 className="mb-1 text-lg font-semibold">Unmatched Bets</h2>
         <p className="mb-3 text-sm text-slate-300">Posted by other users. Do you want to take the other side?</p>
         {openBets.length === 0 ? (
-          <p className="text-sm text-slate-400">No open bets yet. Post one above.</p>
+          <p className="text-sm text-slate-400">No open bets at the moment. Post one above.</p>
         ) : (
           <div className="space-y-3">
             {openBets.map((bet) => {
@@ -888,7 +888,7 @@ export default function SideBetsPage() {
           <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
             <div className="min-w-0">
               <h2 className="text-lg font-semibold">All Matched Bets</h2>
-              <p className="text-sm text-slate-300">All bets that have been matched across the league.</p>
+              <p className="text-sm text-slate-300">All bets across the league.</p>
             </div>
             <button
               className="justify-self-end rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
