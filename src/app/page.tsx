@@ -269,7 +269,7 @@ export default function HomePage() {
           </div>
           <ul className="space-y-2 text-sm text-slate-200/90">
             <li>Pick one team per question. Each team can be used only once per stage.</li>
-            <li>Stages open one at a time. Group Stage picks due by June 8th, Knockout Stage picks due by June 28th.</li>
+            <li>Stages open one at a time. Group Stage picks due by June 8th, Knockout Stage picks due by June 27th.</li>
             <li>Picks lock and become visible to all participants after the due date.</li>
             <li>Correct answer point value varies by quesiton.</li>
             <li>
@@ -332,14 +332,14 @@ export default function HomePage() {
                 <p className="text-xs text-slate-400 whitespace-pre-line">
                   {chapter.status === "open"
                     ? chapter.slug === "knockout-stage"
-                      ? `Picks are open. Picks due by June 28th.${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
+                      ? `Picks are open. Picks due by June 27th.${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
                       : `Picks are open. Picks due by June 8th.${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
                     : chapter.status === "locked"
                       ? "Picks revealed."
                       : chapter.status === "graded"
                         ? "Picks graded."
                         : chapter.slug === "knockout-stage"
-                          ? `Not open yet. Picks will open June 19th.\nPicks due by June 28th.${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
+                          ? `Not open yet. Picks will open June 19th.\nPicks due by June 27th.${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
                           : `${"Not open yet."}${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`}
                 </p>
               </div>

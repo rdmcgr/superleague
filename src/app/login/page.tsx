@@ -106,7 +106,7 @@ export default function LoginPage() {
         </div>
         <ul className="space-y-2 text-sm text-slate-200/90">
           <li>Pick one team per question. Each team can be used only once per stage.</li>
-          <li>Stages open one at a time. Group Stage picks due by June 8th, Knockout Stage picks due by June 28th.</li>
+          <li>Stages open one at a time. Group Stage picks due by June 8th, Knockout Stage picks due by June 27th.</li>
           <li>Picks lock and become visible to all participants after the due date.</li>
           <li>Correct answer point value varies by quesiton.</li>
           <li>One entry per person -- $40 fee to enter.</li>
