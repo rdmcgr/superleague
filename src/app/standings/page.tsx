@@ -24,6 +24,13 @@ function shortPlayerName(displayName: string | null, email: string | null) {
   return lastInitial ? `${firstName} ${lastInitial}.` : firstName;
 }
 
+function standingsTableName(value: string | null) {
+  const source = value?.trim() || "";
+  if (!source) return "Player";
+  if (!source.includes("@")) return source;
+  return source.split("@")[0]?.trim() || "Player";
+}
+
 export default function StandingsPage() {
   useAuthResync();
   const router = useRouter();
@@ -394,7 +401,7 @@ export default function StandingsPage() {
                           }`}
                           href={`/players/${profileSlugs[row.user_id] || row.user_id}`}
                         >
-                          {row.display_name || "Player"}
+                          {standingsTableName(row.display_name)}
                         </a>
                       </div>
                     </td>
