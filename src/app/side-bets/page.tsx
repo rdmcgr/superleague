@@ -688,7 +688,7 @@ export default function SideBetsPage() {
                 Comment (optional)
                 <input
                   className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                  placeholder="e.g., final score or vibe"
+                  placeholder="Anything else to say?"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
