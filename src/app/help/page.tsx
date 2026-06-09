@@ -7,7 +7,7 @@ import AppHeader from "@/components/AppHeader";
 import { supabase } from "@/lib/supabase-browser";
 import { useAuthResync } from "@/lib/useAuthResync";
 
-type BrowserOption = "safari" | "chrome";
+type BrowserOption = "safari" | "chrome-ios" | "chrome-android";
 
 const browserImages: Record<
   BrowserOption,
@@ -18,10 +18,15 @@ const browserImages: Record<
     alt: "Instructions for adding Super League to your iPhone home screen in Safari",
     label: "Safari"
   },
-  chrome: {
+  "chrome-ios": {
     src: "/help-add-to-home-screen-chrome.png",
-    alt: "Instructions for adding Super League to your iPhone home screen in Chrome",
-    label: "Chrome"
+    alt: "Instructions for adding Super League to your iPhone home screen in Chrome on iPhone",
+    label: "Chrome on iOS"
+  },
+  "chrome-android": {
+    src: "/help-add-to-home-screen-chrome-android.png",
+    alt: "Instructions for adding Super League to your Android home screen in Chrome",
+    label: "Chrome on Android"
   }
 };
 
@@ -65,7 +70,7 @@ export default function HelpPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="text-xl font-semibold text-slate-100 sm:text-2xl">Add Super League to Your Home Screen</h1>
-              <p className="mt-1 text-sm text-slate-300">Choose the browser you use on iPhone.</p>
+              <p className="mt-1 text-sm text-slate-300">Choose the browser you use.</p>
             </div>
             <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/50 p-1">
               {(Object.entries(browserImages) as Array<[BrowserOption, (typeof browserImages)[BrowserOption]]>).map(
