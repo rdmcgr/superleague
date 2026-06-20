@@ -339,7 +339,7 @@ export default function HomePage() {
                       : chapter.status === "graded"
                         ? "Picks graded."
                         : chapter.slug === "knockout-stage"
-                          ? `Not open yet. Picks will open June 19th.\nPicks due by June 27th.${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
+                          ? `Not open yet. Picks will open June 21st.\nPicks due by June 27th.${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
                           : `${"Not open yet."}${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`}
                 </p>
               </div>
