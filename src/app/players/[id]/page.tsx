@@ -255,13 +255,14 @@ function PickLine({ pick, graded }: { pick: TeamSummary | null; graded: boolean 
     return <p className="text-sm text-slate-200">No pick</p>;
   }
 
-  const showOutcome = graded && pick.correct !== null && pick.correct !== undefined;
+  const showGreenCheck = pick.correct === true;
+  const showRedX = graded && pick.correct === false;
 
   return (
     <p className="flex items-center gap-2 text-sm text-slate-200">
       <span>{`${flagForCode(pick.code)} ${pick.name}`}</span>
-      {showOutcome ? (
-        <span className={pick.correct ? "text-emerald-300" : "text-red-300"}>{pick.correct ? "✓" : "✕"}</span>
+      {showGreenCheck || showRedX ? (
+        <span className={showGreenCheck ? "text-emerald-300" : "text-red-300"}>{showGreenCheck ? "✓" : "✕"}</span>
       ) : null}
     </p>
   );

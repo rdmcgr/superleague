@@ -342,10 +342,9 @@ begin
 
   select exists (
     select 1
-    from public.result_teams rt
-    join public.questions q
-      on q.id = rt.question_id
-    where q.chapter_id = group_stage_id
+    from public.chapters c
+    where c.id = group_stage_id
+      and c.status = 'graded'
   )
   into group_stage_graded;
 
