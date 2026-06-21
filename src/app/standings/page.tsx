@@ -450,10 +450,20 @@ export default function StandingsPage() {
                               (p) => p.user_id === selectedPlayerId && p.question_id === q.id
                             );
                             const team = pick ? teams.find((t) => t.id === pick.team_id) : null;
+                            const winners = resultTeams.filter((result) => result.question_id === q.id);
+                            const hasSavedWinners = winners.length > 0;
+                            const isCorrect = Boolean(team && winners.some((result) => result.team_id === team.id));
+                            const showGreenCheck = hasSavedWinners && isCorrect;
+                            const showRedX = chapter.status === "graded" && hasSavedWinners && Boolean(team) && !isCorrect;
                             return (
                             <li key={`player-${chapter.id}-${q.id}`}>
                               Q{q.order_index} ({q.short_label || q.prompt}):{" "}
                               {team ? `${flagForCode(team.code)} ${team.name}` : "No pick"}
+                              {showGreenCheck || showRedX ? (
+                                <span className={`ml-1 ${showGreenCheck ? "text-emerald-300" : "text-red-300"}`}>
+                                  {showGreenCheck ? "✓" : "✕"}
+                                </span>
+                              ) : null}
                             </li>
                             );
                           })}
