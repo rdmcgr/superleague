@@ -261,9 +261,10 @@ export default function ProfilePage() {
 
       const dataUrl = await toPng(targetRef.current, {
         cacheBust: true,
-        pixelRatio: 1,
-        canvasWidth: 1080,
-        canvasHeight: 1920
+        pixelRatio: 2,
+        canvasWidth: 2160,
+        canvasHeight: 3840,
+        skipAutoScale: true
       });
 
       const blob = await (await fetch(dataUrl)).blob();
