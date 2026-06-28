@@ -431,7 +431,7 @@ export default function ProfilePage() {
       </section>
 
       {profile ? (
-        <div aria-hidden="true" className="pointer-events-none fixed left-[-99999px] top-0 opacity-0">
+        <div aria-hidden="true" className="pointer-events-none fixed left-[-200vw] top-0">
           {canShareGroupStageStoryCard ? (
             <div ref={storyCardRef}>
               <ShareProfileStoryCard
