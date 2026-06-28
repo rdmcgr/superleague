@@ -261,10 +261,9 @@ export default function ProfilePage() {
 
       const dataUrl = await toPng(targetRef.current, {
         cacheBust: true,
-        pixelRatio: 2,
-        canvasWidth: 2160,
-        canvasHeight: 3840,
-        skipAutoScale: true
+        pixelRatio: 1,
+        canvasWidth: 1080,
+        canvasHeight: 1920
       });
 
       const blob = await (await fetch(dataUrl)).blob();
@@ -431,7 +430,7 @@ export default function ProfilePage() {
       </section>
 
       {profile ? (
-        <div aria-hidden="true" className="pointer-events-none fixed left-[-200vw] top-0">
+        <div aria-hidden="true" className="pointer-events-none fixed left-[-99999px] top-0 opacity-0">
           {canShareGroupStageStoryCard ? (
             <div ref={storyCardRef}>
               <ShareProfileStoryCard
