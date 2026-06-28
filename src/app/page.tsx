@@ -146,6 +146,21 @@ export default function HomePage() {
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
   const activeTeams = useMemo(() => teams.filter((t) => t.is_active), [teams]);
   const groupStageChapter = useMemo(() => chapters.find((chapter) => chapter.slug === "group-stage"), [chapters]);
+  const orderedChapters = useMemo(() => {
+    if (groupStageChapter?.status !== "graded") return chapters;
+
+    const knockoutStageChapter = chapters.find((chapter) => chapter.slug === "knockout-stage");
+    if (!knockoutStageChapter) return chapters;
+
+    return [...chapters].sort((a, b) => {
+      if (a.id === knockoutStageChapter.id) return -1;
+      if (b.id === knockoutStageChapter.id) return 1;
+      if (a.id === groupStageChapter.id) return 1;
+      if (b.id === groupStageChapter.id) return -1;
+      return 0;
+    });
+  }, [chapters, groupStageChapter]);
+  const isGroupStageGraded = groupStageChapter?.status === "graded";
   const showStoryCardCallout = Boolean(
     groupStageChapter && (groupStageChapter.status === "locked" || groupStageChapter.status === "graded")
   );
@@ -247,43 +262,45 @@ export default function HomePage() {
     return <Loading label="Loading your league..." />;
   }
 
+  const howItWorksSection = showHowItWorks ? (
+    <section className="glass mb-6 rounded-2xl p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="section-title">How It Works</h2>
+        <div className="flex items-center gap-2">
+          <button
+            className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
+            onClick={() => setShowHowItWorks(false)}
+            type="button"
+          >
+            Hide
+          </button>
+        </div>
+      </div>
+      <ul className="space-y-2 text-sm text-slate-200/90">
+        <li>Pick one team per question. Each team can be used only once per stage.</li>
+        <li>Stages open one at a time. Group Stage picks due by June 8th, Knockout Stage picks due by June 27th.</li>
+        <li>Picks lock and become visible to all participants after the due date.</li>
+        <li>Correct answer point value varies by quesiton.</li>
+        <li>
+          One entry per person. $40 fee.{" "}
+          <a
+            className="inline-flex items-center rounded-md border border-cyan-200/40 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100 hover:bg-cyan-200/20"
+            href="/payment"
+          >
+            Venmo
+          </a>
+        </li>
+      </ul>
+    </section>
+  ) : null;
+
   return (
     <>
       <AppHeader user={user} isAdmin={Boolean(profile?.is_admin)} />
 
       {notice ? <div className="mb-4"><Notice text={notice.text} tone={notice.tone} /></div> : null}
 
-      {showHowItWorks ? (
-        <section className="glass mb-6 rounded-2xl p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="section-title">How It Works</h2>
-            <div className="flex items-center gap-2">
-              <button
-                className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.14em] text-slate-200 hover:bg-white/10"
-                onClick={() => setShowHowItWorks(false)}
-                type="button"
-              >
-                Hide
-              </button>
-            </div>
-          </div>
-          <ul className="space-y-2 text-sm text-slate-200/90">
-            <li>Pick one team per question. Each team can be used only once per stage.</li>
-            <li>Stages open one at a time. Group Stage picks due by June 8th, Knockout Stage picks due by June 27th.</li>
-            <li>Picks lock and become visible to all participants after the due date.</li>
-            <li>Correct answer point value varies by quesiton.</li>
-            <li>
-              One entry per person. $40 fee.{" "}
-              <a
-                className="inline-flex items-center rounded-md border border-cyan-200/40 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100 hover:bg-cyan-200/20"
-                href="/payment"
-              >
-                Venmo
-              </a>
-            </li>
-          </ul>
-        </section>
-      ) : null}
+      {!isGroupStageGraded ? howItWorksSection : null}
 
       {showStoryCardCallout && showShareYourPicks ? (
         <section className="glass mb-6 rounded-2xl p-4">
@@ -320,115 +337,117 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      {chapters.map((chapter) => {
+      {orderedChapters.map((chapter) => {
         const qs = chapterQuestions(chapter.id);
         const chapterVisible = chapter.status !== "open" && chapter.status !== "draft";
 
         return (
-          <section className="glass mb-6 rounded-2xl p-4" key={chapter.id}>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h2 className="section-title">{chapter.name}</h2>
-                <p className="text-xs text-slate-400 whitespace-pre-line">
-                  {chapter.status === "open"
-                    ? chapter.slug === "knockout-stage"
-                      ? `Picks are open. Picks due by June 27th.${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
-                      : `Picks are open. Picks due by June 8th.${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
-                    : chapter.status === "locked"
-                      ? "Picks revealed."
-                      : chapter.status === "graded"
-                        ? "Picks graded."
-                        : chapter.slug === "knockout-stage"
-                          ? `Not open yet. Picks will open June 21st.\nPicks due by June 27th.${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
-                          : `${"Not open yet."}${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`}
-                </p>
+          <div key={chapter.id}>
+            <section className="glass mb-6 rounded-2xl p-4">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="section-title">{chapter.name}</h2>
+                  <p className="text-xs text-slate-400 whitespace-pre-line">
+                    {chapter.status === "open"
+                      ? chapter.slug === "knockout-stage"
+                        ? `Picks are open. Picks due by June 27th.${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
+                        : `Picks are open. Picks due by June 8th.${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
+                      : chapter.status === "locked"
+                        ? "Picks revealed."
+                        : chapter.status === "graded"
+                          ? "Picks graded."
+                          : chapter.slug === "knockout-stage"
+                            ? `Not open yet. Picks will open June 21st.\nPicks due by June 27th.${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`
+                            : `${"Not open yet."}${chapter.opens_at ? ` Opens: ${shortDate(chapter.opens_at)}.` : ""}${chapter.locks_at ? ` Locks: ${shortDate(chapter.locks_at)}.` : ""}`}
+                  </p>
+                </div>
+                <span className="chip">{prettyStatus(chapter.status)}</span>
               </div>
-              <span className="chip">{prettyStatus(chapter.status)}</span>
-            </div>
 
-            <div className="space-y-4">
-              {qs.map((q) => {
-                const pick = myPickForQuestion(q.id);
-                const used = usedTeamIdsByChapter(chapter.id, q.id);
+              <div className="space-y-4">
+                {qs.map((q) => {
+                  const pick = myPickForQuestion(q.id);
+                  const used = usedTeamIdsByChapter(chapter.id, q.id);
 
-                return (
-                  <article className="rounded-xl border border-white/15 bg-white/5 p-3" key={q.id}>
-                    <p className="mb-2 text-sm text-slate-200">
-                      Q{q.order_index}: {q.prompt} <span className="text-xs text-slate-400">({q.points} pts)</span>
-                    </p>
+                  return (
+                    <article className="rounded-xl border border-white/15 bg-white/5 p-3" key={q.id}>
+                      <p className="mb-2 text-sm text-slate-200">
+                        Q{q.order_index}: {q.prompt} <span className="text-xs text-slate-400">({q.points} pts)</span>
+                      </p>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                      <select
-                        className="min-w-[240px] rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
-                        value={pick?.team_id ?? ""}
-                        disabled={chapter.status !== "open" || savingQuestion === q.id}
-                        onChange={(e) => void savePick(chapter, q, e.target.value)}
-                      >
-                        <option value="" disabled>
-                          Select team
-                        </option>
-                        {activeTeams.map((team) => {
-                          const blocked = used.has(team.id);
-                          const flag = flagForCode(team.code);
-                          return (
-                            <option disabled={blocked} key={team.id} value={team.id}>
-                              {flag ? `${flag} ` : ""}{team.name} {blocked ? "(used)" : ""}
-                            </option>
-                          );
-                        })}
-                      </select>
-
-                      {pick && chapter.status === "open" ? (
-                        <button
-                          className="rounded-md border border-white/15 bg-white/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-200 hover:bg-white/15"
-                          type="button"
-                          disabled={savingQuestion === q.id}
-                          onClick={() => void clearPick(chapter, q)}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          className="min-w-[240px] rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                          value={pick?.team_id ?? ""}
+                          disabled={chapter.status !== "open" || savingQuestion === q.id}
+                          onChange={(e) => void savePick(chapter, q, e.target.value)}
                         >
-                          Clear Pick
-                        </button>
-                      ) : null}
-                    </div>
+                          <option value="" disabled>
+                            Select team
+                          </option>
+                          {activeTeams.map((team) => {
+                            const blocked = used.has(team.id);
+                            const flag = flagForCode(team.code);
+                            return (
+                              <option disabled={blocked} key={team.id} value={team.id}>
+                                {flag ? `${flag} ` : ""}{team.name} {blocked ? "(used)" : ""}
+                              </option>
+                            );
+                          })}
+                        </select>
 
-                    {chapterVisible ? (
-                      <div className="mt-3 rounded-lg border border-cyan-100/20 bg-cyan-400/5 p-2">
-                        <p className="mb-2 text-xs uppercase tracking-[0.16em] text-cyan-100/80">Individual Picks Revealed</p>
-                        <ul className="grid gap-1 text-sm text-slate-200">
-                          {allVisiblePicks
-                            .filter((p) => p.question_id === q.id)
-                            .sort((a, b) =>
-                              shortPlayerName(a.profiles?.display_name ?? null, a.profiles?.email ?? null).localeCompare(
-                                shortPlayerName(b.profiles?.display_name ?? null, b.profiles?.email ?? null),
-                                undefined,
-                                { sensitivity: "base" }
-                              )
-                            )
-                            .map((p) => {
-                              const team = teamMap.get(p.team_id);
-                              const winners = gradedTeams.get(q.id);
-                              const isGraded = chapter.status === "graded" && winners;
-                              const isCorrect = Boolean(winners?.has(p.team_id));
-                              return (
-                                <li key={p.id}>
-                                  {`${shortPlayerName(p.profiles?.display_name ?? null, p.profiles?.email ?? null)}: `}
-                                  {team ? `${flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}${team.name}` : "Unknown"}
-                                  {isGraded ? (
-                                    <span className={`ml-1 ${isCorrect ? "text-emerald-300" : "text-red-300"}`}>
-                                      {isCorrect ? "✓" : "✕"}
-                                    </span>
-                                  ) : null}
-                                </li>
-                              );
-                            })}
-                        </ul>
+                        {pick && chapter.status === "open" ? (
+                          <button
+                            className="rounded-md border border-white/15 bg-white/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-200 hover:bg-white/15"
+                            type="button"
+                            disabled={savingQuestion === q.id}
+                            onClick={() => void clearPick(chapter, q)}
+                          >
+                            Clear Pick
+                          </button>
+                        ) : null}
                       </div>
-                    ) : null}
-                  </article>
-                );
-              })}
 
-            </div>
-          </section>
+                      {chapterVisible ? (
+                        <div className="mt-3 rounded-lg border border-cyan-100/20 bg-cyan-400/5 p-2">
+                          <p className="mb-2 text-xs uppercase tracking-[0.16em] text-cyan-100/80">Individual Picks Revealed</p>
+                          <ul className="grid gap-1 text-sm text-slate-200">
+                            {allVisiblePicks
+                              .filter((p) => p.question_id === q.id)
+                              .sort((a, b) =>
+                                shortPlayerName(a.profiles?.display_name ?? null, a.profiles?.email ?? null).localeCompare(
+                                  shortPlayerName(b.profiles?.display_name ?? null, b.profiles?.email ?? null),
+                                  undefined,
+                                  { sensitivity: "base" }
+                                )
+                              )
+                              .map((p) => {
+                                const team = teamMap.get(p.team_id);
+                                const winners = gradedTeams.get(q.id);
+                                const isGraded = chapter.status === "graded" && winners;
+                                const isCorrect = Boolean(winners?.has(p.team_id));
+                                return (
+                                  <li key={p.id}>
+                                    {`${shortPlayerName(p.profiles?.display_name ?? null, p.profiles?.email ?? null)}: `}
+                                    {team ? `${flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}${team.name}` : "Unknown"}
+                                    {isGraded ? (
+                                      <span className={`ml-1 ${isCorrect ? "text-emerald-300" : "text-red-300"}`}>
+                                        {isCorrect ? "✓" : "✕"}
+                                      </span>
+                                    ) : null}
+                                  </li>
+                                );
+                              })}
+                          </ul>
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+            {isGroupStageGraded && chapter.slug === "group-stage" ? howItWorksSection : null}
+          </div>
         );
       })}
     </>
