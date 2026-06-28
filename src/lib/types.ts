@@ -71,7 +71,7 @@ export type StandingRow = {
 
 export type SideBetStatus = "open" | "taken" | "closed" | "cancelled";
 
-export type SideBetType = "moneyline" | "spread";
+export type SideBetType = "moneyline" | "spread" | "to_advance";
 
 export type SideBet = {
   id: number;

@@ -9,7 +9,7 @@ import Loading from "@/components/Loading";
 import Notice from "@/components/Notice";
 import { supabase } from "@/lib/supabase-browser";
 import { flagForCode } from "@/lib/flags";
-import type { Profile, SideBet, SideBetComment, Team } from "@/lib/types";
+import type { Chapter, Profile, SideBet, SideBetComment, SideBetType, Team } from "@/lib/types";
 import { useAuthResync } from "@/lib/useAuthResync";
 
 type BetRow = SideBet & {
@@ -40,6 +40,7 @@ export default function SideBetsPage() {
   const [showAllMatched, setShowAllMatched] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [bets, setBets] = useState<BetRow[]>([]);
   const [comments, setComments] = useState<CommentRow[]>([]);
@@ -48,7 +49,7 @@ export default function SideBetsPage() {
 
   const [teamA, setTeamA] = useState<string>("");
   const [teamB, setTeamB] = useState<string>("");
-  const [betType, setBetType] = useState<"moneyline" | "spread">("moneyline");
+  const [betType, setBetType] = useState<SideBetType>("moneyline");
   const [spreadTeam, setSpreadTeam] = useState<string>("");
   const [spreadValue, setSpreadValue] = useState<string>("");
   const [stake, setStake] = useState<string>("");
@@ -62,6 +63,8 @@ export default function SideBetsPage() {
 
   const teamMap = useMemo(() => new Map(teams.map((t) => [String(t.id), t])), [teams]);
   const activeTeams = useMemo(() => teams.filter((t) => t.is_active), [teams]);
+  const knockoutStageChapter = useMemo(() => chapters.find((chapter) => chapter.slug === "knockout-stage"), [chapters]);
+  const canUseToAdvanceBetType = knockoutStageChapter?.status === "locked";
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -96,7 +99,8 @@ export default function SideBetsPage() {
       return;
     }
 
-    const [teamsRes, betsRes, commentsRes] = await Promise.all([
+    const [chaptersRes, teamsRes, betsRes, commentsRes] = await Promise.all([
+      supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("teams").select("id,name,code,is_active").order("name"),
       supabase
         .from("side_bets")
@@ -110,12 +114,13 @@ export default function SideBetsPage() {
         .order("created_at", { ascending: true })
     ]);
 
-    if (teamsRes.error || betsRes.error || commentsRes.error) {
+    if (chaptersRes.error || teamsRes.error || betsRes.error || commentsRes.error) {
       setError("Could not load side bets.");
       setLoading(false);
       return;
     }
 
+    setChapters(chaptersRes.data ?? []);
     setTeams(teamsRes.data ?? []);
     const normalizedBets = (betsRes.data ?? []).map((row) => {
       const creatorValue = Array.isArray(row.creator) ? row.creator[0] : row.creator;
@@ -153,6 +158,12 @@ export default function SideBetsPage() {
     }
     setSpreadTeam("");
   }, [betType, teamA]);
+
+  useEffect(() => {
+    if (betType === "to_advance" && !canUseToAdvanceBetType) {
+      setBetType("moneyline");
+    }
+  }, [betType, canUseToAdvanceBetType]);
 
   const openBets = bets.filter((bet) => bet.status === "open");
   const myBets = bets.filter((bet) => (bet.creator_id === user?.id || bet.taker_id === user?.id) && Boolean(bet.taker_id));
@@ -420,6 +431,11 @@ export default function SideBetsPage() {
       const teamAFlag = teamAInfo ? flagForCode(teamAInfo.code) : null;
       return `${renderSpreadLabel(bet.creator)} got: ${teamAFlag ? teamAFlag + " " : ""}${teamAInfo?.name ?? "Team"}'s moneyline`;
     }
+    if (bet.bet_type === "to_advance") {
+      const teamAInfo = teamMap.get(String(bet.team_a_id));
+      const teamAFlag = teamAInfo ? flagForCode(teamAInfo.code) : null;
+      return `${renderSpreadLabel(bet.creator)} got: ${teamAFlag ? teamAFlag + " " : ""}${teamAInfo?.name ?? "Team"} to advance`;
+    }
     const spreadTeamInfo = bet.spread_team_id ? teamMap.get(String(bet.spread_team_id)) : null;
     const spreadFlag = spreadTeamInfo ? flagForCode(spreadTeamInfo.code) : null;
     const spreadAmount = Number(bet.spread_value);
@@ -461,6 +477,10 @@ export default function SideBetsPage() {
       }
       return `Take ${opposingTeamInfo?.name ?? "Opponent"}`;
     }
+    if (bet.bet_type === "to_advance") {
+      const teamBInfo = teamMap.get(String(bet.team_b_id));
+      return `Take ${teamBInfo?.name ?? "Opponent"} to advance`;
+    }
     const teamBInfo = teamMap.get(String(bet.team_b_id));
     return `Take ${teamBInfo?.name ?? "Opponent"}`;
   };
@@ -471,6 +491,11 @@ export default function SideBetsPage() {
       const teamBInfo = teamMap.get(String(bet.team_b_id));
       const teamBFlag = teamBInfo ? flagForCode(teamBInfo.code) : null;
       return `${renderSpreadLabel(bet.taker)} got: ${teamBFlag ? teamBFlag + " " : ""}${teamBInfo?.name ?? "Team"}'s moneyline`;
+    }
+    if (bet.bet_type === "to_advance") {
+      const teamBInfo = teamMap.get(String(bet.team_b_id));
+      const teamBFlag = teamBInfo ? flagForCode(teamBInfo.code) : null;
+      return `${renderSpreadLabel(bet.taker)} got: ${teamBFlag ? teamBFlag + " " : ""}${teamBInfo?.name ?? "Team"} to advance`;
     }
 
     const spreadAmount = Number(bet.spread_value);
@@ -668,10 +693,13 @@ export default function SideBetsPage() {
                 <select
                   className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
                   value={betType}
-                  onChange={(e) => setBetType(e.target.value as "moneyline" | "spread")}
+                  onChange={(e) => setBetType(e.target.value as SideBetType)}
                 >
                   <option value="moneyline">Moneyline</option>
                   <option value="spread">Spread</option>
+                  {canUseToAdvanceBetType || betType === "to_advance" ? (
+                    <option value="to_advance">To Advance</option>
+                  ) : null}
                 </select>
               </label>
               <label className="text-sm text-slate-200">

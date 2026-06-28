@@ -84,7 +84,7 @@ create table if not exists public.side_bets (
   taker_id uuid references public.profiles(id) on delete set null,
   team_a_id bigint not null references public.teams(id),
   team_b_id bigint not null references public.teams(id),
-  bet_type text not null check (bet_type in ('moneyline', 'spread')),
+  bet_type text not null check (bet_type in ('moneyline', 'spread', 'to_advance')),
   spread_team_id bigint references public.teams(id),
   spread_value numeric(4,1),
   stake_amount numeric(10,2) not null,
