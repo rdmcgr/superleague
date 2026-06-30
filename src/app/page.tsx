@@ -146,10 +146,10 @@ export default function HomePage() {
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
   const activeTeams = useMemo(() => teams.filter((t) => t.is_active), [teams]);
   const groupStageChapter = useMemo(() => chapters.find((chapter) => chapter.slug === "group-stage"), [chapters]);
+  const knockoutStageChapter = useMemo(() => chapters.find((chapter) => chapter.slug === "knockout-stage"), [chapters]);
   const orderedChapters = useMemo(() => {
     if (groupStageChapter?.status !== "graded") return chapters;
 
-    const knockoutStageChapter = chapters.find((chapter) => chapter.slug === "knockout-stage");
     if (!knockoutStageChapter) return chapters;
 
     return [...chapters].sort((a, b) => {
@@ -159,8 +159,9 @@ export default function HomePage() {
       if (b.id === groupStageChapter.id) return -1;
       return 0;
     });
-  }, [chapters, groupStageChapter]);
+  }, [chapters, groupStageChapter, knockoutStageChapter]);
   const isGroupStageGraded = groupStageChapter?.status === "graded";
+  const isKnockoutStageGraded = knockoutStageChapter?.status === "graded";
   const showStoryCardCallout = Boolean(
     groupStageChapter && (groupStageChapter.status === "locked" || groupStageChapter.status === "graded")
   );
@@ -427,7 +428,11 @@ export default function HomePage() {
                               const hasSavedWinners = Boolean(winners && winners.size > 0);
                               const isCorrect = Boolean(winners?.has(p.team_id));
                               const showGreenCheck = hasSavedWinners && isCorrect;
-                              const showRedX = chapter.status === "graded" && hasSavedWinners && !isCorrect;
+                              const showRedX =
+                                hasSavedWinners &&
+                                !isCorrect &&
+                                ((chapter.slug === "group-stage" && chapter.status === "graded") ||
+                                  (chapter.slug === "knockout-stage" && isKnockoutStageGraded));
                               return (
                                 <li key={p.id}>
                                   {`${shortPlayerName(p.profiles?.display_name ?? null, p.profiles?.email ?? null)}: `}

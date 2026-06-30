@@ -77,6 +77,7 @@ export default function PlayerProfilePage() {
   );
   const groupStageRevealed = Boolean(payload?.revealed?.group_stage_revealed ?? hasRevealedPickData);
   const groupStageGraded = Boolean(payload?.revealed?.group_stage_graded);
+  const knockoutStageGraded = Boolean(payload?.revealed?.knockout_stage_graded);
   const knockoutStageRevealed = Boolean(payload?.revealed?.knockout_stage_revealed ?? knockoutPicks.length > 0);
   const viewerIsMember = Boolean(payload?.viewer?.is_member ?? isRegisteredViewer);
 
@@ -157,9 +158,9 @@ export default function PlayerProfilePage() {
                             <span className="text-slate-300">{pick.label}:</span>{" "}
                             {`${flagForCode(pick.code)} ${pick.name}`}
                           </span>
-                          {pick.correct !== null && pick.correct !== undefined ? (
-                            <span className={pick.correct ? "text-emerald-300" : "text-red-300"}>
-                              {pick.correct ? "✓" : "✕"}
+                          {pick.correct === true || (knockoutStageGraded && pick.correct === false) ? (
+                            <span className={pick.correct === true ? "text-emerald-300" : "text-red-300"}>
+                              {pick.correct === true ? "✓" : "✕"}
                             </span>
                           ) : null}
                         </div>
@@ -242,6 +243,7 @@ type PublicProfilePayload = {
   revealed: {
     group_stage_revealed?: boolean;
     group_stage_graded?: boolean;
+    knockout_stage_graded?: boolean;
     knockout_stage_revealed?: boolean;
     knockout_picks?: KnockoutPickSummary[];
     champion: TeamSummary | null;

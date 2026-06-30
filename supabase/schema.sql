@@ -291,6 +291,7 @@ declare
   knockout_stage_id bigint;
   group_stage_revealed boolean := false;
   group_stage_graded boolean := false;
+  knockout_stage_graded boolean := false;
   knockout_stage_revealed boolean := false;
   total_points_value int := 0;
   correct_picks_value int := 0;
@@ -354,6 +355,14 @@ begin
       and c.status = 'graded'
   )
   into group_stage_graded;
+
+  select exists (
+    select 1
+    from public.chapters c
+    where c.id = knockout_stage_id
+      and c.status = 'graded'
+  )
+  into knockout_stage_graded;
 
   select exists (
     select 1
@@ -554,6 +563,7 @@ begin
       jsonb_build_object(
         'group_stage_revealed', group_stage_revealed,
         'group_stage_graded', group_stage_graded,
+        'knockout_stage_graded', knockout_stage_graded,
         'knockout_stage_revealed', knockout_stage_revealed,
         'knockout_picks', knockout_picks_value,
         'champion', champion_value,
