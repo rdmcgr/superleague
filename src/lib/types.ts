@@ -1,5 +1,12 @@
 export type ChapterStatus = "draft" | "open" | "locked" | "graded";
 
+export type AppSetting = {
+  key: string;
+  value_text: string | null;
+  value_date: string | null;
+  updated_at: string;
+};
+
 export type Team = {
   id: number;
   name: string;

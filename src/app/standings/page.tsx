@@ -10,7 +10,7 @@ import Notice from "@/components/Notice";
 import { supabase } from "@/lib/supabase-browser";
 import { flagForCode } from "@/lib/flags";
 import Image from "next/image";
-import type { Chapter, Profile, Question, ResultTeam, StandingRow, Team } from "@/lib/types";
+import type { AppSetting, Chapter, Profile, Question, ResultTeam, StandingRow, Team } from "@/lib/types";
 import { useAuthResync } from "@/lib/useAuthResync";
 
 function shortPlayerName(displayName: string | null, email: string | null) {
@@ -46,6 +46,7 @@ export default function StandingsPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [resultTeams, setResultTeams] = useState<ResultTeam[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [standingsUpdatedThrough, setStandingsUpdatedThrough] = useState<string | null>(null);
   const [visiblePicks, setVisiblePicks] = useState<PickWithUser[]>([]);
   const [detail, setDetail] = useState<{ chapterId: number | null; teamId: number; top: number; combined?: boolean } | null>(null);
   const [talkDetail, setTalkDetail] = useState<{ userId: string; top: number } | null>(null);
@@ -85,16 +86,17 @@ export default function StandingsPage() {
       return;
     }
 
-    const [standingsRes, chaptersRes, questionsRes, teamsRes, avatarsRes, resultsRes] = await Promise.all([
+    const [standingsRes, chaptersRes, questionsRes, teamsRes, avatarsRes, resultsRes, standingsUpdatedRes] = await Promise.all([
       supabase.from("standings_live").select("user_id,display_name,total_points,correct_picks,total_picks").order("total_points", { ascending: false }),
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code,is_active").order("name"),
       supabase.from("profiles").select("id,public_slug,avatar_url,shit_talk,shit_talk_updated_at"),
-      supabase.from("result_teams").select("question_id,team_id,points")
+      supabase.from("result_teams").select("question_id,team_id,points"),
+      supabase.from("app_settings").select("key,value_text,value_date,updated_at").eq("key", "standings_updated_through").maybeSingle()
     ]);
 
-    if (standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error || resultsRes.error) {
+    if (standingsRes.error || chaptersRes.error || questionsRes.error || teamsRes.error || avatarsRes.error || resultsRes.error || standingsUpdatedRes.error) {
       setError("Could not load standings. Ensure SQL view standings_live exists.");
       setLoading(false);
       return;
@@ -104,6 +106,8 @@ export default function StandingsPage() {
     setQuestions(questionsRes.data ?? []);
     setResultTeams((resultsRes.data ?? []) as ResultTeam[]);
     setTeams(teamsRes.data ?? []);
+    const standingsSetting = standingsUpdatedRes.data as AppSetting | null;
+    setStandingsUpdatedThrough(standingsSetting?.value_date ?? null);
     const avatarMap: Record<string, string> = {};
     const slugMap: Record<string, string> = {};
     const talkMap: Record<string, string> = {};
@@ -231,6 +235,12 @@ export default function StandingsPage() {
     const preferredTop = rect.bottom + 12;
     return Math.max(preferredTop, 16);
   };
+  const standingsUpdatedThroughLabel = standingsUpdatedThrough
+    ? new Date(`${standingsUpdatedThrough}T12:00:00`).toLocaleDateString("en-US", {
+        month: "numeric",
+        day: "numeric"
+      })
+    : null;
 
   return (
     <>
@@ -412,6 +422,9 @@ export default function StandingsPage() {
               </tbody>
             </table>
           </div>
+          {standingsUpdatedThroughLabel ? (
+            <p className="mt-3 text-xs text-slate-400">Updated through matches on {standingsUpdatedThroughLabel}.</p>
+          ) : null}
 
           {chapters.some((chapter) => chapter.slug === "group-stage" && (chapter.status === "locked" || chapter.status === "graded")) ? (
             <section className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4">

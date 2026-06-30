@@ -8,7 +8,7 @@ import Loading from "@/components/Loading";
 import Notice from "@/components/Notice";
 import { prettyStatus } from "@/lib/format";
 import { supabase } from "@/lib/supabase-browser";
-import type { Chapter, Pick, PlayerCompletionRow, Profile, Question, ResultTeam, Team } from "@/lib/types";
+import type { AppSetting, Chapter, Pick, PlayerCompletionRow, Profile, Question, ResultTeam, Team } from "@/lib/types";
 import { useAuthResync } from "@/lib/useAuthResync";
 
 function buildGradeState(qs: Question[], rows: ResultTeam[]) {
@@ -46,6 +46,7 @@ export default function AdminPage() {
   const [deleteTargetId, setDeleteTargetId] = useState<string>("");
   const [cooldownTargetId, setCooldownTargetId] = useState<string>("");
   const [clearPicksTargetId, setClearPicksTargetId] = useState<string>("");
+  const [standingsUpdatedThrough, setStandingsUpdatedThrough] = useState("");
 
   const loadAdmin = useCallback(async () => {
     setLoading(true);
@@ -79,14 +80,15 @@ export default function AdminPage() {
       return;
     }
 
-    const [chaptersRes, questionsRes, teamsRes, resultTeamsRes, profilesRes, picksRes, completionRes] = await Promise.all([
+    const [chaptersRes, questionsRes, teamsRes, resultTeamsRes, profilesRes, picksRes, completionRes, standingsUpdatedRes] = await Promise.all([
       supabase.from("chapters").select("id,slug,name,status,opens_at,locks_at").order("id"),
       supabase.from("questions").select("id,chapter_id,prompt,order_index,points,short_label,is_active").order("chapter_id").order("order_index"),
       supabase.from("teams").select("id,name,code,is_active").order("name"),
       supabase.from("result_teams").select("question_id,team_id,points"),
       supabase.from("profiles").select("id,email,display_name,public_slug,avatar_url,allegiance_team_id,shit_talk,shit_talk_updated_at,invite_code_used,invite_approved_at,is_admin").order("created_at"),
       supabase.from("picks").select("id,user_id,question_id,chapter_id,team_id,created_at,updated_at"),
-      supabase.rpc("admin_player_completion")
+      supabase.rpc("admin_player_completion"),
+      supabase.from("app_settings").select("key,value_text,value_date,updated_at").eq("key", "standings_updated_through").maybeSingle()
     ]);
 
     if (
@@ -96,7 +98,8 @@ export default function AdminPage() {
       resultTeamsRes.error ||
       profilesRes.error ||
       picksRes.error ||
-      completionRes.error
+      completionRes.error ||
+      standingsUpdatedRes.error
     ) {
       setNotice({ text: "Could not load admin data.", tone: "danger" });
       setLoading(false);
@@ -109,6 +112,8 @@ export default function AdminPage() {
     setAllProfiles(profilesRes.data ?? []);
     setAllPicks(picksRes.data ?? []);
     setPlayerCompletion((completionRes.data ?? []) as PlayerCompletionRow[]);
+    const standingsSetting = standingsUpdatedRes.data as AppSetting | null;
+    setStandingsUpdatedThrough(standingsSetting?.value_date ?? "");
     setLoading(false);
   }, [router]);
 
@@ -301,6 +306,30 @@ export default function AdminPage() {
     setSaving(false);
   }
 
+  async function saveStandingsUpdatedThrough(nextValue = standingsUpdatedThrough) {
+    setSaving(true);
+    setNotice(null);
+    const res = await supabase.from("app_settings").upsert(
+      {
+        key: "standings_updated_through",
+        value_date: nextValue || null,
+        updated_at: new Date().toISOString()
+      },
+      { onConflict: "key" }
+    );
+    if (res.error) {
+      setNotice({ text: res.error.message, tone: "danger" });
+      setSaving(false);
+      return;
+    }
+    setNotice({
+      text: nextValue ? "Standings update date saved." : "Standings update date cleared.",
+      tone: "success"
+    });
+    await loadAdmin();
+    setSaving(false);
+  }
+
   if (loading) return <Loading label="Loading admin dashboard..." />;
 
   const isAdmin = Boolean(profile?.is_admin);
@@ -424,6 +453,46 @@ export default function AdminPage() {
               </div>
             </section>
           ))}
+
+          <section className="glass rounded-2xl p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="section-title">Standings Footer</h2>
+              <span className="chip">Admin</span>
+            </div>
+            <p className="mb-3 text-sm text-slate-300">
+              Controls the note shown under the standings table.
+            </p>
+            <div className="flex flex-wrap items-end gap-3">
+              <label className="text-sm text-slate-200">
+                Updated through matches on
+                <input
+                  className="mt-1 block w-[180px] rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
+                  type="date"
+                  value={standingsUpdatedThrough}
+                  onChange={(e) => setStandingsUpdatedThrough(e.target.value)}
+                />
+              </label>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                disabled={saving}
+                onClick={() => void saveStandingsUpdatedThrough()}
+              >
+                Save Date
+              </button>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  setStandingsUpdatedThrough("");
+                  void saveStandingsUpdatedThrough("");
+                }}
+              >
+                Clear Date
+              </button>
+            </div>
+          </section>
 
           <section className="glass rounded-2xl p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">

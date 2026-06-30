@@ -106,6 +106,13 @@ create table if not exists public.side_bet_comments (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.app_settings (
+  key text primary key,
+  value_text text,
+  value_date date,
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.shit_talk_replies (
   id bigint generated always as identity primary key,
   target_user_id uuid not null references public.profiles(id) on delete cascade,
@@ -585,6 +592,7 @@ alter table public.result_teams enable row level security;
 alter table public.side_bets enable row level security;
 alter table public.side_bet_comments enable row level security;
 alter table public.shit_talk_replies enable row level security;
+alter table public.app_settings enable row level security;
 
 -- Profiles
 create policy "Profiles readable by authenticated users"
@@ -935,6 +943,17 @@ using (
   )
 );
 
+create policy "App settings readable"
+on public.app_settings
+for select
+using (
+  exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and (p.invite_code_used is not null or p.is_admin)
+  )
+);
+
 -- Admin write policies
 create policy "Admin can manage chapters"
 on public.chapters
@@ -962,6 +981,12 @@ with check (exists (select 1 from public.profiles p where p.id = auth.uid() and 
 
 create policy "Admin can manage result teams"
 on public.result_teams
+for all
+using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin))
+with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
+
+create policy "Admin can manage app settings"
+on public.app_settings
 for all
 using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin))
 with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
