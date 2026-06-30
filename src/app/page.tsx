@@ -421,23 +421,25 @@ export default function HomePage() {
                                   { sensitivity: "base" }
                                 )
                               )
-                              .map((p) => {
-                                const team = teamMap.get(p.team_id);
-                                const winners = gradedTeams.get(q.id);
-                                const isGraded = chapter.status === "graded" && winners;
-                                const isCorrect = Boolean(winners?.has(p.team_id));
-                                return (
-                                  <li key={p.id}>
-                                    {`${shortPlayerName(p.profiles?.display_name ?? null, p.profiles?.email ?? null)}: `}
-                                    {team ? `${flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}${team.name}` : "Unknown"}
-                                    {isGraded ? (
-                                      <span className={`ml-1 ${isCorrect ? "text-emerald-300" : "text-red-300"}`}>
-                                        {isCorrect ? "✓" : "✕"}
-                                      </span>
-                                    ) : null}
-                                  </li>
-                                );
-                              })}
+                            .map((p) => {
+                              const team = teamMap.get(p.team_id);
+                              const winners = gradedTeams.get(q.id);
+                              const hasSavedWinners = Boolean(winners && winners.size > 0);
+                              const isCorrect = Boolean(winners?.has(p.team_id));
+                              const showGreenCheck = hasSavedWinners && isCorrect;
+                              const showRedX = chapter.status === "graded" && hasSavedWinners && !isCorrect;
+                              return (
+                                <li key={p.id}>
+                                  {`${shortPlayerName(p.profiles?.display_name ?? null, p.profiles?.email ?? null)}: `}
+                                  {team ? `${flagForCode(team.code) ? `${flagForCode(team.code)} ` : ""}${team.name}` : "Unknown"}
+                                  {showGreenCheck || showRedX ? (
+                                    <span className={`ml-1 ${showGreenCheck ? "text-emerald-300" : "text-red-300"}`}>
+                                      {showGreenCheck ? "✓" : "✕"}
+                                    </span>
+                                  ) : null}
+                                </li>
+                              );
+                            })}
                           </ul>
                         </div>
                       ) : null}

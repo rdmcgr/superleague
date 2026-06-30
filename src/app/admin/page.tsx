@@ -464,7 +464,7 @@ export default function AdminPage() {
             </p>
             <div className="flex flex-wrap items-end gap-3">
               <label className="text-sm text-slate-200">
-                Updated through matches on
+                Updated through matches on:
                 <input
                   className="mt-1 block w-[180px] rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm"
                   type="date"
